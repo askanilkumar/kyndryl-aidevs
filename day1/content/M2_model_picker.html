@@ -1,0 +1,470 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Model Picker Scorecard</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Day 1 design tokens. Layout: sticky top bar, one wide column (max 1500px) sized for a classroom TV. */
+:root{
+  --bg:#F1F5F4; --surface:#FFFFFF; --surface2:#E6EDEB; --ink:#0D2226; --muted:#475F63; --line:#C5D3D0;
+  --accent:#0A7A72; --accent-ink:#FFFFFF; --accent-soft:#D3EDE9;
+  --warn:#9A5B00; --warn-soft:#FAEBD0; --bad:#B3261E; --bad-soft:#F8DBD8; --good:#1B7A3A; --good-soft:#D7EEDD;
+  --code-bg:#0D2226; --code-ink:#DCEFEA; --code-dim:#8FB0AB;
+  --font:"Aptos Narrow","Barlow Semi Condensed","Arial Narrow",sans-serif;
+  --mono:"JetBrains Mono","Cascadia Mono",Consolas,monospace;
+  --shadow:0 1px 2px rgba(13,34,38,.08);
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0A1517; --surface:#12262A; --surface2:#1A343A; --ink:#E3EFED; --muted:#9DB6B3; --line:#2A4549;
+    --accent:#4FD1C5; --accent-ink:#04201D; --accent-soft:#12383A;
+    --warn:#F0B35A; --warn-soft:#3A2B10; --bad:#FF8E85; --bad-soft:#3F1B18; --good:#7ED99A; --good-soft:#143322;
+    --code-bg:#07100F; --code-ink:#DCEFEA; --code-dim:#7FA09B; --shadow:none; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0A1517; --surface:#12262A; --surface2:#1A343A; --ink:#E3EFED; --muted:#9DB6B3; --line:#2A4549;
+  --accent:#4FD1C5; --accent-ink:#04201D; --accent-soft:#12383A;
+  --warn:#F0B35A; --warn-soft:#3A2B10; --bad:#FF8E85; --bad-soft:#3F1B18; --good:#7ED99A; --good-soft:#143322;
+  --code-bg:#07100F; --code-ink:#DCEFEA; --code-dim:#7FA09B; --shadow:none; color-scheme:dark;
+}
+
+*{box-sizing:border-box}
+html{font-size:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:1.2rem;line-height:1.5;-webkit-text-size-adjust:100%}
+h1,h2,h3,h4{line-height:1.15;margin:0;text-wrap:balance;font-weight:700}
+h1{font-size:2.45rem;letter-spacing:-.01em}
+h2{font-size:1.85rem}
+h3{font-size:1.4rem}
+h4{font-size:1.2rem}
+p{margin:0}
+a{color:var(--accent)}
+code,kbd,pre{font-family:var(--mono)}
+code{font-size:.92em;background:var(--surface2);padding:.05em .35em;border-radius:4px}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+[hidden]{display:none!important}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* top bar */
+.topbar{position:sticky;top:0;z-index:30;background:var(--bg);border-bottom:1px solid var(--line)}
+.topbar-in{max-width:1500px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;gap:.4rem 1.2rem;padding:.55rem max(16px,env(safe-area-inset-right,0px)) .55rem max(16px,env(safe-area-inset-left,0px))}
+.brand{font-weight:700;letter-spacing:.01em;white-space:nowrap}
+.brand small{color:var(--muted);font-weight:500;margin-left:.5rem}
+.nav{display:flex;flex-wrap:wrap;gap:.25rem;margin-left:auto}
+.nav a{padding:.2rem .75rem;border-radius:7px;color:var(--muted);text-decoration:none;font-weight:600;font-size:1.05rem}
+.nav a:hover{background:var(--surface2);color:var(--ink)}
+.nav a[aria-current="page"]{background:var(--accent);color:var(--accent-ink)}
+.themebtn{border:1px solid var(--line);background:var(--surface);border-radius:7px;padding:.2rem .7rem;cursor:pointer;font-size:1.05rem;color:var(--muted)}
+
+/* page */
+.wrap{max-width:1500px;margin:0 auto;padding:1.6rem max(16px,env(safe-area-inset-right,0px)) 4rem max(16px,env(safe-area-inset-left,0px))}
+.kicker{font-size:1.05rem;letter-spacing:.09em;text-transform:uppercase;color:var(--accent);font-weight:700;margin-bottom:.3rem}
+.lede{color:var(--muted);max-width:62rem;margin-top:.6rem}
+.head{display:flex;flex-wrap:wrap;gap:.6rem 2rem;justify-content:space-between;align-items:flex-end;margin-bottom:1.2rem}
+.timebox{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:.4rem .9rem;font-weight:600;color:var(--muted);white-space:nowrap}
+.timebox b{color:var(--ink)}
+
+/* tabs */
+.tabs{display:flex;flex-wrap:wrap;gap:.35rem;border-bottom:2px solid var(--line);margin-bottom:1.4rem}
+.tabs button{border:0;background:transparent;padding:.55rem 1.1rem;font-weight:700;font-size:1.15rem;color:var(--muted);cursor:pointer;border-radius:8px 8px 0 0;margin-bottom:-2px;border-bottom:3px solid transparent}
+.tabs button:hover{color:var(--ink);background:var(--surface2)}
+.tabs button[aria-selected="true"]{color:var(--accent);border-bottom-color:var(--accent);background:var(--surface)}
+.panel[hidden]{display:none!important}
+
+/* blocks */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:1.1rem 1.3rem;box-shadow:var(--shadow);min-width:0}
+.card h3{margin-bottom:.4rem}
+.grid{display:grid;gap:1rem;min-width:0}
+.g2{grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr))}
+.g4{grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr))}
+.split{display:grid;gap:1.2rem;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);align-items:start}
+@media (max-width:980px){.split{grid-template-columns:minmax(0,1fr)}}
+.muted{color:var(--muted)}
+.row{display:flex;flex-wrap:wrap;gap:.6rem;align-items:center}
+.stack{display:flex;flex-direction:column;gap:.8rem}
+
+.pill{display:inline-block;border-radius:999px;padding:.05rem .7rem;font-size:1rem;font-weight:700;border:1px solid var(--line);background:var(--surface2);color:var(--muted);white-space:nowrap}
+.pill.ok{background:var(--good-soft);color:var(--good);border-color:transparent}
+.pill.warn{background:var(--warn-soft);color:var(--warn);border-color:transparent}
+.pill.bad{background:var(--bad-soft);color:var(--bad);border-color:transparent}
+.pill.acc{background:var(--accent-soft);color:var(--accent);border-color:transparent}
+
+.btn{border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:.45rem 1.05rem;border-radius:9px;font-weight:700;cursor:pointer;font-size:1.1rem}
+.btn:hover{background:var(--surface2)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.sm{padding:.2rem .7rem;font-size:1rem}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+
+.callout{border-radius:10px;padding:.8rem 1.1rem;border:1px solid var(--line);background:var(--surface2)}
+.callout.warn{background:var(--warn-soft);border-color:transparent}
+.callout.bad{background:var(--bad-soft);border-color:transparent}
+.callout.good{background:var(--good-soft);border-color:transparent}
+.callout.acc{background:var(--accent-soft);border-color:transparent}
+.callout b:first-child{display:block;margin-bottom:.15rem}
+
+ul.clean{margin:.3rem 0 0;padding-left:1.25rem}
+ul.clean li{margin:.2rem 0}
+.tbl{width:100%;border-collapse:collapse;font-size:1.1rem}
+.tbl th,.tbl td{text-align:left;padding:.5rem .7rem;border-bottom:1px solid var(--line);vertical-align:top}
+.tbl th{font-size:1rem;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.tblwrap{overflow-x:auto;min-width:0}
+.num{font-variant-numeric:tabular-nums}
+
+/* code */
+.codeblock{background:var(--code-bg);border-radius:10px;overflow:hidden;min-width:0}
+.cb-head{display:flex;justify-content:space-between;align-items:center;gap:1rem;padding:.35rem .5rem .35rem .9rem;border-bottom:1px solid rgba(255,255,255,.1);color:var(--code-dim);font-family:var(--mono);font-size:1rem}
+.cb-head button{background:transparent;border:1px solid rgba(255,255,255,.25);color:var(--code-ink);border-radius:6px;padding:.1rem .7rem;cursor:pointer;font-size:1rem;font-family:var(--font);font-weight:600}
+.cb-head button:hover{background:rgba(255,255,255,.12)}
+.codeblock pre{margin:0;padding:.8rem 1rem;overflow-x:auto;color:var(--code-ink);font-size:1.12rem;line-height:1.5;tab-size:4}
+.codeblock.short pre{padding:.6rem 1rem}
+
+/* form bits */
+.field{display:flex;flex-direction:column;gap:.25rem;min-width:0}
+.field label{font-weight:700;font-size:1.05rem;color:var(--muted)}
+.field select,.field input[type=number],.field input[type=text],.field textarea{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:.4rem .6rem;min-width:0;width:100%}
+input[type=range]{width:100%;accent-color:var(--accent)}
+
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+
+.layer{display:grid;grid-template-columns:200px minmax(0,1fr);gap:1rem;align-items:start}
+@media (max-width:820px){.layer{grid-template-columns:minmax(0,1fr)}}
+.layer .nm{font-weight:700;font-size:1.3rem}
+.layer .nm span{display:block;color:var(--muted);font-size:1rem;font-weight:500}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:.8rem}
+.two h4{font-size:1rem;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-bottom:.15rem}
+.chk{display:flex;gap:.7rem;align-items:flex-start;padding:.55rem .2rem;border-bottom:1px solid var(--line)}
+.chk input{width:1.4rem;height:1.4rem;margin-top:.2rem;accent-color:var(--accent);flex:none}
+.chk b{display:block}
+.verdict{font-size:1.5rem;font-weight:700;padding:.8rem 1.1rem;border-radius:10px}
+.verdict.ok{background:var(--good-soft);color:var(--good)}
+.verdict.warn{background:var(--warn-soft);color:var(--warn)}
+.verdict.bad{background:var(--bad-soft);color:var(--bad)}
+.wgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:.7rem 1.4rem}
+.wgrid .w{display:grid;grid-template-columns:minmax(0,1fr) 3.2rem;gap:.1rem .6rem;align-items:center}
+.wgrid .w label{font-weight:700;font-size:1.05rem}
+.wgrid .w output{font-weight:700;text-align:right}
+.wgrid .w input{grid-column:1 / -1}
+.score td select{border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:.15rem .3rem;font-size:1.1rem}
+.score td:first-child{min-width:230px}
+.score th{font-size:.95rem}
+.score td.tot{font-weight:700;font-size:1.25rem}
+.bar{height:1.1rem;border-radius:6px;background:var(--surface2);overflow:hidden;min-width:90px}
+.bar i{display:block;height:100%;background:var(--accent)}
+.rank{display:grid;grid-template-columns:minmax(0,260px) minmax(0,1fr) 4rem;gap:.5rem 1rem;align-items:center}
+.rank .nm{overflow-wrap:anywhere}
+.sort{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,260px);gap:.6rem 1rem;align-items:center;padding:.7rem 0;border-bottom:1px solid var(--line)}
+@media (max-width:760px){.sort{grid-template-columns:minmax(0,1fr)}}
+.sort select{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:.35rem .5rem;width:100%}
+.sort .res{grid-column:1 / -1}
+.name-in{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:.35rem .6rem;min-width:0;width:min(100%,320px)}
+</style></head>
+<body>
+<header class="topbar"><div class="topbar-in"><div class="brand">Day 1<small>Kyndryl · Enterprise Agentic AI Engineering</small></div><nav class="nav" aria-label="Day 1 pages"><a href="overview.html">Overview</a><a href="index.html">Control Room</a><a href="M1_request_path.html">M1 Request path</a><a href="M2_model_picker.html" aria-current="page">M2 Model picker</a><a href="M3_vram_calculator.html">M3 VRAM calculator</a><a href="M4_decision_clinic.html">M4 Decision clinic</a><a href="../labs/Day1_Lab_Guide.html">Lab guide</a></nav><button class="themebtn" id="themebtn" type="button">Theme</button></div></header>
+<main class="wrap">
+  <div class="head">
+    <div>
+      <div class="kicker">Day 1 · Talk 2</div>
+      <h1>Choose a model like an architect</h1>
+      <p class="lede">Gate first, then score. A model that fails the gate never reaches the scorecard, however good its benchmark.</p>
+    </div>
+    <div class="timebox"><b>25 min</b> talk, then Lab 2</div>
+  </div>
+
+  <div class="tabs" role="tablist" aria-label="Sections">
+    <button role="tab" id="t0" aria-controls="p0" data-token="stack">1 · Approved stack</button>
+    <button role="tab" id="t1" aria-controls="p1" data-token="gate">2 · The gate</button>
+    <button role="tab" id="t2" aria-controls="p2" data-token="score">3 · Scorecard</button>
+    <button role="tab" id="t3" aria-controls="p3" data-token="sort">4 · Card sort</button>
+  </div>
+
+  <section class="panel" id="p0" role="tabpanel" aria-labelledby="t0">
+    <div class="callout acc" style="margin-bottom:1rem"><b>Reference stack for this week</b>Your organisation's approved list may differ. Bring this table to your own architecture review and replace the choices.</div>
+    <div class="stack" id="stack"></div>
+  </section>
+
+  <section class="panel" id="p1" role="tabpanel" aria-labelledby="t1" hidden>
+    <div class="split">
+      <div class="card">
+        <div class="row" style="margin-bottom:.8rem">
+          <div class="field" style="flex:1;min-width:240px"><label for="cand">Candidate model class</label><select id="cand"></select></div>
+        </div>
+        <div class="callout" id="licnote" style="margin-bottom:.6rem"></div>
+        <div id="checks"></div>
+      </div>
+      <div class="stack">
+        <div class="verdict" id="verdict"></div>
+        <div class="card"><h3>Still open</h3><ul class="clean" id="open"></ul></div>
+        <div class="callout warn"><b>Licences change per version</b>The notes above describe a typical licence for each family. Read the exact licence on the exact model card before you approve anything.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" id="p2" role="tabpanel" aria-labelledby="t2" hidden>
+    <div class="callout warn" style="margin-bottom:1rem"><b>Starter scores are rough guesses</b>They describe classes of model, not specific versions. After Lab 2, overwrite quality, latency and cost with your own measurements.</div>
+    <div class="card" style="margin-bottom:1rem">
+      <div class="row" style="justify-content:space-between;margin-bottom:.6rem"><h3>1 · What matters for your use case? <span class="muted" style="font-weight:500">(0 = ignore, 5 = critical)</span></h3><button class="btn sm" id="resetw">Reset all</button></div>
+      <div class="wgrid" id="weights"></div>
+    </div>
+    <div class="grid" style="grid-template-columns:minmax(0,1fr)">
+      <div class="card tblwrap">
+        <h3>2 · Score each model (1 = poor, 5 = excellent)</h3>
+        <table class="tbl score" id="scoretbl"></table>
+        <div class="row" style="margin-top:.8rem"><input class="name-in" id="newname" type="text" placeholder="Add a model, e.g. chat-llm-b" aria-label="New model name"><button class="btn" id="addc">Add model</button></div>
+      </div>
+      <div class="grid g2">
+        <div class="card"><h3>3 · Ranking</h3><div class="rank" id="rank" style="margin-top:.6rem"></div></div>
+        <div class="card"><h3>Lab 2 score helper</h3>
+          <p class="muted" style="margin-bottom:.6rem">Type your measured averages to get suggested scores.</p>
+          <div class="grid g2">
+            <div class="field"><label for="h-tok">Decode speed (tok/s)</label><input id="h-tok" type="number" min="0" value="45"></div>
+            <div class="field"><label for="h-cost">Cost per call (USD)</label><input id="h-cost" type="number" min="0" step="0.0001" value="0.0012"></div>
+            <div class="field"><label for="h-q">Judge quality (1–5)</label><input id="h-q" type="number" min="1" max="5" step="0.1" value="3.7"></div>
+          </div>
+          <div class="row" style="margin-top:.7rem" id="h-out"></div>
+          <p class="muted" style="margin-top:.5rem;font-size:1rem">Thresholds suit this lab's prompts. Change them for your own workload.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" id="p3" role="tabpanel" aria-labelledby="t3" hidden>
+    <p class="muted" style="margin-bottom:.6rem">Work in pairs. Place each task on the smallest model class you would trust, then check. Disagreement is the point.</p>
+    <div class="card"><div id="sort"></div>
+      <div class="row" style="margin-top:1rem"><button class="btn primary" id="checksort">Check all</button><span class="score" id="sortscore" style="font-weight:700"></span></div></div>
+  </section>
+</main>
+
+<script>
+/* shared helpers: safe storage, theme toggle, tabs, copy buttons */
+const store = {
+  get(k, d){ try { const v = localStorage.getItem("kyn1:" + k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v){ try { localStorage.setItem("kyn1:" + k, JSON.stringify(v)); } catch (e) {} }
+};
+
+(function theme(){
+  const saved = store.get("theme", null);
+  if (saved) document.documentElement.setAttribute("data-theme", saved);
+  const btn = document.getElementById("themebtn");
+  if (!btn) return;
+  btn.addEventListener("click", () => {
+    const cur = document.documentElement.getAttribute("data-theme");
+    const isDark = cur ? cur === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+    const next = isDark ? "light" : "dark";
+    document.documentElement.setAttribute("data-theme", next);
+    store.set("theme", next);
+  });
+})();
+
+function initTabs(root, opts){
+  opts = opts || {};
+  const tabs = Array.from(root.querySelectorAll('[role="tab"]'));
+  const panels = tabs.map(t => document.getElementById(t.getAttribute("aria-controls")));
+  function select(i, focus){
+    tabs.forEach((t, j) => {
+      t.setAttribute("aria-selected", j === i ? "true" : "false");
+      t.tabIndex = j === i ? 0 : -1;
+      panels[j].hidden = j !== i;
+    });
+    if (focus) tabs[i].focus();
+    if (opts.hash) { try { history.replaceState(null, "", "#" + tabs[i].dataset.token); } catch (e) {} }
+    if (opts.onSelect) opts.onSelect(i, tabs[i]);
+  }
+  tabs.forEach((t, i) => {
+    t.addEventListener("click", () => select(i));
+    t.addEventListener("keydown", e => {
+      if (e.key === "ArrowRight") { e.preventDefault(); select((i + 1) % tabs.length, true); }
+      if (e.key === "ArrowLeft") { e.preventDefault(); select((i - 1 + tabs.length) % tabs.length, true); }
+    });
+  });
+  let start = 0;
+  if (opts.hash && location.hash) {
+    const idx = tabs.findIndex(t => "#" + t.dataset.token === location.hash);
+    if (idx >= 0) start = idx;
+  }
+  select(start);
+  if (opts.hash) {
+    window.addEventListener("hashchange", () => {
+      const idx = tabs.findIndex(t => "#" + t.dataset.token === location.hash);
+      if (idx >= 0) select(idx);
+    });
+  }
+  return select;
+}
+
+function copyText(text, btn){
+  const done = () => { const o = btn.textContent; btn.textContent = "Copied"; setTimeout(() => { btn.textContent = o; }, 1400); };
+  const fallback = () => {
+    const ta = document.createElement("textarea");
+    ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand("copy"); done(); } catch (e) { btn.textContent = "Select and copy"; }
+    document.body.removeChild(ta);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, fallback);
+  else fallback();
+}
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-copy]");
+  if (!b) return;
+  const pre = b.closest(".codeblock").querySelector("pre");
+  copyText(pre.innerText, b);
+});
+
+function esc(s){ return String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
+
+
+/* ---------- 1 stack ---------- */
+const STACK = [
+ ["Models","Open-weight LLMs and SLMs; one embedding model; one reranker; one guard model.","Proprietary APIs (excluded this week).","The model passes the gate on the next tab.","The licence is unclear, or the weights come from an anonymous re-upload."],
+ ["Serving","vLLM for GPUs and many users. Ollama or llama.cpp for a laptop or CPU. Serverless endpoints when you want no GPU operations.","Text Generation Inference, TensorRT-LLM, SGLang.","vLLM when several people share a GPU and throughput matters.","Ollama for many concurrent users. vLLM for one person on a laptop."],
+ ["Gateway","LiteLLM: one API, virtual keys, budgets, retries, fallbacks, logs.","Direct calls to each provider; cloud-native API gateways.","More than one app, model or person.","One app, one model, one developer. It is more moving parts."],
+ ["Retrieval","Qdrant with embeddings, hybrid search and a reranker (Day 2).","pgvector, OpenSearch, Milvus.","Answers depend on documents that change.","The knowledge fits in the prompt and rarely changes."],
+ ["Agents and tools","LangGraph for state and control flow; MCP for tools (Days 3 and 4).","Plain Python loops, other agent frameworks.","Multi-step work with state, tools and approvals.","A single prompt does the job. A framework adds nothing."],
+ ["Safety and observability","Guardrails, tracing (Phoenix or Langfuse), evals (Day 5).","Custom filters, log files.","Anything that touches real users or real data.","Never skip for production. Keep it light for a prototype."],
+ ["Platform","Docker Compose on VMs for this course. GPUs on demand.","Kubernetes, managed container services.","Compose: training, prototypes, small teams.","Kubernetes before you need autoscaling or multi-team isolation."]
+];
+document.getElementById("stack").innerHTML = STACK.map((r, i) => `
+  <div class="card layer"><div class="nm"><span>Layer ${STACK.length - i}</span>${esc(r[0])}</div>
+  <div class="two">
+    <div><h4>Approved choice</h4><p>${esc(r[1])}</p></div>
+    <div><h4>Alternatives</h4><p>${esc(r[2])}</p></div>
+    <div><h4>Use it when</h4><p>${esc(r[3])}</p></div>
+    <div><h4>Skip it when</h4><p>${esc(r[4])}</p></div>
+  </div></div>`).join("");
+
+/* ---------- 2 gate ---------- */
+const CANDS = [
+ ["Kimi-class large MoE","Typically a modified MIT licence with an attribution clause for very large deployments."],
+ ["DeepSeek-class large MoE","Typically MIT for code and weights on recent releases."],
+ ["Qwen-class dense or MoE","Typically Apache-2.0 for many sizes, with some larger sizes under a different licence."],
+ ["gpt-oss-class open-weight","Typically Apache-2.0 with a usage policy."],
+ ["Llama-class","A community licence with use conditions and a scale threshold. Read it fully."],
+ ["Gemma-class","Its own terms of use with usage restrictions. Read it fully."],
+ ["Phi-class SLM","Typically MIT."],
+ ["Anonymous fine-tune from a model hub","No reliable licence or provenance. Treat as blocked until proven otherwise."]
+];
+const CHECKS = [
+ ["Licence allows commercial use and modification","must"],
+ ["Weights are downloadable, so we can self-host if needed","should"],
+ ["Model card states training data, limits and safety notes","should"],
+ ["Publisher is identifiable and trusted","must"],
+ ["Data terms are acceptable (for serverless: where prompts go, whether they are logged or trained on)","must"],
+ ["Country-of-origin and customer policy reviewed","must"],
+ ["Files pass a security scan (safetensors, hashes match)","must"],
+ ["Evaluated on our own tasks, not only public leaderboards","should"]
+];
+const cand = document.getElementById("cand");
+CANDS.forEach((c, i) => cand.add(new Option(c[0], i)));
+let gate = store.get("gate", {});
+function renderGate(){
+  const i = cand.value, st = gate[i] || [];
+  document.getElementById("licnote").innerHTML = "<b>Typical licence</b>" + esc(CANDS[i][1]);
+  document.getElementById("checks").innerHTML = CHECKS.map((c, j) => `<label class="chk"><input type="checkbox" data-j="${j}" ${st[j] ? "checked" : ""}><span><b>${esc(c[0])}</b><span class="pill ${c[1] === "must" ? "bad" : "warn"}">${c[1]}</span></span></label>`).join("");
+  verdict(st);
+}
+function verdict(st){
+  const mustOpen = CHECKS.filter((c, j) => c[1] === "must" && !st[j]);
+  const shouldOpen = CHECKS.filter((c, j) => c[1] === "should" && !st[j]);
+  const v = document.getElementById("verdict");
+  if (mustOpen.length) { v.className = "verdict bad"; v.textContent = "Blocked: " + mustOpen.length + " must-have open"; }
+  else if (shouldOpen.length) { v.className = "verdict warn"; v.textContent = "Conditional: pilot only"; }
+  else { v.className = "verdict ok"; v.textContent = "Approved for pilot"; }
+  const open = mustOpen.concat(shouldOpen);
+  document.getElementById("open").innerHTML = open.length ? open.map(c => "<li>" + esc(c[0]) + "</li>").join("") : "<li>Nothing. Still re-check when the version changes.</li>";
+}
+cand.onchange = renderGate;
+document.getElementById("checks").addEventListener("change", e => {
+  const i = cand.value; gate[i] = gate[i] || []; gate[i][+e.target.dataset.j] = e.target.checked; store.set("gate", gate); verdict(gate[i]);
+});
+renderGate();
+
+/* ---------- 3 scorecard ---------- */
+const CRIT = [
+ ["Quality on our task",5],["Tool-calling reliability",4],["Latency",3],["Cost",3],["Licence and approval fit",5],["Context length",2],["Hardware fit",2],["Domain and language",2]
+];
+const START = [
+ ["Large open MoE, serverless",[5,4,3,3,3,5,1,4]],
+ ["Mid-size (27–32B), self-hosted",[4,4,4,4,4,4,4,3]],
+ ["Open-weight reasoning MoE (~100B class)",[4,4,3,4,5,4,3,3]],
+ ["SLM 3–8B on CPU or small GPU",[2,2,3,5,5,2,5,2]]
+];
+let W = store.get("w", CRIT.map(c => c[1]));
+let C = store.get("c", START.map(s => ({n:s[0], s:s[1].slice()})));
+function saveSC(){ store.set("w", W); store.set("c", C); }
+function renderWeights(){
+  document.getElementById("weights").innerHTML = CRIT.map((c, i) => `<div class="w"><label for="w${i}">${esc(c[0])}</label><output id="wo${i}">${W[i]}</output><input id="w${i}" type="range" min="0" max="5" step="1" value="${W[i]}"></div>`).join("");
+  CRIT.forEach((c, i) => { const el = document.getElementById("w" + i); el.oninput = () => { W[i] = +el.value; document.getElementById("wo" + i).textContent = W[i]; saveSC(); calc(); }; });
+}
+function renderTable(){
+  let h = "<thead><tr><th>Model</th>" + CRIT.map(c => "<th>" + esc(c[0]) + "</th>").join("") + "<th>Total</th></tr></thead><tbody>";
+  C.forEach((m, r) => {
+    h += `<tr><td>${esc(m.n)} <button class="btn sm" data-del="${r}" aria-label="Remove ${esc(m.n)}">×</button></td>` +
+      CRIT.map((c, i) => `<td><select data-r="${r}" data-i="${i}" aria-label="${esc(m.n)}: ${esc(c[0])}">${[1,2,3,4,5].map(v => `<option ${m.s[i] === v ? "selected" : ""}>${v}</option>`).join("")}</select></td>`).join("") +
+      `<td class="tot num" id="tot${r}"></td></tr>`;
+  });
+  document.getElementById("scoretbl").innerHTML = h + "</tbody>";
+}
+function totals(){
+  const sw = W.reduce((a, b) => a + b, 0) || 1;
+  return C.map(m => 100 * m.s.reduce((a, s, i) => a + s * W[i], 0) / (5 * sw));
+}
+function calc(){
+  const t = totals();
+  t.forEach((v, r) => { const el = document.getElementById("tot" + r); if (el) el.textContent = v.toFixed(0); });
+  const order = t.map((v, i) => [v, i]).sort((a, b) => b[0] - a[0]);
+  document.getElementById("rank").innerHTML = order.map(([v, i]) => `<div class="nm">${esc(C[i].n)}</div><div class="bar"><i style="width:${v}%"></i></div><div class="num"><b>${v.toFixed(0)}</b></div>`).join("");
+}
+document.getElementById("scoretbl").addEventListener("change", e => {
+  if (e.target.matches("select")) { C[+e.target.dataset.r].s[+e.target.dataset.i] = +e.target.value; saveSC(); calc(); }
+});
+document.getElementById("scoretbl").addEventListener("click", e => {
+  const b = e.target.closest("[data-del]"); if (!b) return; C.splice(+b.dataset.del, 1); saveSC(); renderTable(); calc();
+});
+document.getElementById("addc").onclick = () => {
+  const el = document.getElementById("newname"), n = el.value.trim(); if (!n) return;
+  C.push({n, s:CRIT.map(() => 3)}); el.value = ""; saveSC(); renderTable(); calc();
+};
+document.getElementById("resetw").onclick = () => { W = CRIT.map(c => c[1]); C = START.map(s => ({n:s[0], s:s[1].slice()})); saveSC(); renderWeights(); renderTable(); calc(); };
+function helper(){
+  const tok = +document.getElementById("h-tok").value, cost = +document.getElementById("h-cost").value, q = +document.getElementById("h-q").value;
+  const lat = tok >= 80 ? 5 : tok >= 50 ? 4 : tok >= 30 ? 3 : tok >= 15 ? 2 : 1;
+  const cst = cost <= 0.0005 ? 5 : cost <= 0.002 ? 4 : cost <= 0.005 ? 3 : cost <= 0.02 ? 2 : 1;
+  const ql = Math.max(1, Math.min(5, Math.round(q)));
+  document.getElementById("h-out").innerHTML = `<span class="pill acc">Latency ${lat}</span><span class="pill acc">Cost ${cst}</span><span class="pill acc">Quality ${ql}</span>`;
+}
+["h-tok", "h-cost", "h-q"].forEach(id => document.getElementById(id).oninput = helper);
+renderWeights(); renderTable(); calc(); helper();
+
+/* ---------- 4 card sort ---------- */
+const CLASSES = ["Large open model, serverless","Mid-size (≈27–32B), self-hosted","Small model (SLM, 3–8B)"];
+const TASKS = [
+ ["Summarise a 20-page incident report",[0,1],"Long input and moderate reasoning. A small model's context and quality fall short."],
+ ["Classify 2 million tickets a day into 40 categories, under 100 ms",[2],"Narrow, high volume, tight latency, tiny budget. A small tuned model wins on every axis."],
+ ["Agent that calls six tools to resolve a billing dispute",[0],"Reliable multi-step tool calling still favours the largest models. Test a mid-size one before you settle."],
+ ["Offline assistant on a field engineer's laptop",[2],"No network and little memory. Only a small quantised model fits."],
+ ["Extract fields from invoices with varying layouts into JSON",[1,2],"Narrow extraction. A fine-tuned mid or small model is often enough. Measure before paying for more."],
+ ["Explain a 3GPP clause to a new joiner",[0,1],"Needs good language and domain grounding. Pair with RAG; the model class matters less than the retrieved text."],
+ ["Code assistant for an internal Python repository",[0,1],"Code quality rises with size. A mid-size coder model is a sensible self-hosted default."],
+ ["Customer chat containing personal data that must stay in your data centre",[1,2],"Residency rules out serverless. Self-host, and size the GPU with the calculator in M3."]
+];
+let picks = store.get("picks", {});
+document.getElementById("sort").innerHTML = TASKS.map((t, i) => `<div class="sort"><div><b>${i + 1}.</b> ${esc(t[0])}</div>
+ <select id="s${i}" aria-label="Model class for task ${i + 1}"><option value="">Choose…</option>${CLASSES.map((c, j) => `<option value="${j}" ${picks[i] === String(j) ? "selected" : ""}>${esc(c)}</option>`).join("")}</select><div class="res" id="r${i}" hidden></div></div>`).join("");
+TASKS.forEach((t, i) => document.getElementById("s" + i).onchange = e => { picks[i] = e.target.value; store.set("picks", picks); });
+document.getElementById("checksort").onclick = () => {
+  let ok = 0;
+  TASKS.forEach((t, i) => {
+    const v = document.getElementById("s" + i).value, r = document.getElementById("r" + i); r.hidden = false;
+    const good = v !== "" && t[1].includes(+v); if (good) ok++;
+    r.innerHTML = `<span class="pill ${good ? "ok" : "warn"}">${good ? "Defensible" : "Discuss"}</span> Typical fit: <b>${t[1].map(k => esc(CLASSES[k])).join(" or ")}</b>. ${esc(t[2])}`;
+  });
+  document.getElementById("sortscore").textContent = ok + " of " + TASKS.length + " defensible";
+};
+
+initTabs(document.querySelector(".tabs"), {hash:true});
+</script>
+</body></html>

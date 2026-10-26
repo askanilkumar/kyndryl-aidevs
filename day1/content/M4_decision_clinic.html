@@ -1,0 +1,472 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Decision Clinic</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Day 1 design tokens. Layout: sticky top bar, one wide column (max 1500px) sized for a classroom TV. */
+:root{
+  --bg:#F1F5F4; --surface:#FFFFFF; --surface2:#E6EDEB; --ink:#0D2226; --muted:#475F63; --line:#C5D3D0;
+  --accent:#0A7A72; --accent-ink:#FFFFFF; --accent-soft:#D3EDE9;
+  --warn:#9A5B00; --warn-soft:#FAEBD0; --bad:#B3261E; --bad-soft:#F8DBD8; --good:#1B7A3A; --good-soft:#D7EEDD;
+  --code-bg:#0D2226; --code-ink:#DCEFEA; --code-dim:#8FB0AB;
+  --font:"Aptos Narrow","Barlow Semi Condensed","Arial Narrow",sans-serif;
+  --mono:"JetBrains Mono","Cascadia Mono",Consolas,monospace;
+  --shadow:0 1px 2px rgba(13,34,38,.08);
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0A1517; --surface:#12262A; --surface2:#1A343A; --ink:#E3EFED; --muted:#9DB6B3; --line:#2A4549;
+    --accent:#4FD1C5; --accent-ink:#04201D; --accent-soft:#12383A;
+    --warn:#F0B35A; --warn-soft:#3A2B10; --bad:#FF8E85; --bad-soft:#3F1B18; --good:#7ED99A; --good-soft:#143322;
+    --code-bg:#07100F; --code-ink:#DCEFEA; --code-dim:#7FA09B; --shadow:none; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0A1517; --surface:#12262A; --surface2:#1A343A; --ink:#E3EFED; --muted:#9DB6B3; --line:#2A4549;
+  --accent:#4FD1C5; --accent-ink:#04201D; --accent-soft:#12383A;
+  --warn:#F0B35A; --warn-soft:#3A2B10; --bad:#FF8E85; --bad-soft:#3F1B18; --good:#7ED99A; --good-soft:#143322;
+  --code-bg:#07100F; --code-ink:#DCEFEA; --code-dim:#7FA09B; --shadow:none; color-scheme:dark;
+}
+
+*{box-sizing:border-box}
+html{font-size:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:1.2rem;line-height:1.5;-webkit-text-size-adjust:100%}
+h1,h2,h3,h4{line-height:1.15;margin:0;text-wrap:balance;font-weight:700}
+h1{font-size:2.45rem;letter-spacing:-.01em}
+h2{font-size:1.85rem}
+h3{font-size:1.4rem}
+h4{font-size:1.2rem}
+p{margin:0}
+a{color:var(--accent)}
+code,kbd,pre{font-family:var(--mono)}
+code{font-size:.92em;background:var(--surface2);padding:.05em .35em;border-radius:4px}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+[hidden]{display:none!important}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* top bar */
+.topbar{position:sticky;top:0;z-index:30;background:var(--bg);border-bottom:1px solid var(--line)}
+.topbar-in{max-width:1500px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;gap:.4rem 1.2rem;padding:.55rem max(16px,env(safe-area-inset-right,0px)) .55rem max(16px,env(safe-area-inset-left,0px))}
+.brand{font-weight:700;letter-spacing:.01em;white-space:nowrap}
+.brand small{color:var(--muted);font-weight:500;margin-left:.5rem}
+.nav{display:flex;flex-wrap:wrap;gap:.25rem;margin-left:auto}
+.nav a{padding:.2rem .75rem;border-radius:7px;color:var(--muted);text-decoration:none;font-weight:600;font-size:1.05rem}
+.nav a:hover{background:var(--surface2);color:var(--ink)}
+.nav a[aria-current="page"]{background:var(--accent);color:var(--accent-ink)}
+.themebtn{border:1px solid var(--line);background:var(--surface);border-radius:7px;padding:.2rem .7rem;cursor:pointer;font-size:1.05rem;color:var(--muted)}
+
+/* page */
+.wrap{max-width:1500px;margin:0 auto;padding:1.6rem max(16px,env(safe-area-inset-right,0px)) 4rem max(16px,env(safe-area-inset-left,0px))}
+.kicker{font-size:1.05rem;letter-spacing:.09em;text-transform:uppercase;color:var(--accent);font-weight:700;margin-bottom:.3rem}
+.lede{color:var(--muted);max-width:62rem;margin-top:.6rem}
+.head{display:flex;flex-wrap:wrap;gap:.6rem 2rem;justify-content:space-between;align-items:flex-end;margin-bottom:1.2rem}
+.timebox{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:.4rem .9rem;font-weight:600;color:var(--muted);white-space:nowrap}
+.timebox b{color:var(--ink)}
+
+/* tabs */
+.tabs{display:flex;flex-wrap:wrap;gap:.35rem;border-bottom:2px solid var(--line);margin-bottom:1.4rem}
+.tabs button{border:0;background:transparent;padding:.55rem 1.1rem;font-weight:700;font-size:1.15rem;color:var(--muted);cursor:pointer;border-radius:8px 8px 0 0;margin-bottom:-2px;border-bottom:3px solid transparent}
+.tabs button:hover{color:var(--ink);background:var(--surface2)}
+.tabs button[aria-selected="true"]{color:var(--accent);border-bottom-color:var(--accent);background:var(--surface)}
+.panel[hidden]{display:none!important}
+
+/* blocks */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:1.1rem 1.3rem;box-shadow:var(--shadow);min-width:0}
+.card h3{margin-bottom:.4rem}
+.grid{display:grid;gap:1rem;min-width:0}
+.g2{grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr))}
+.g4{grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr))}
+.split{display:grid;gap:1.2rem;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);align-items:start}
+@media (max-width:980px){.split{grid-template-columns:minmax(0,1fr)}}
+.muted{color:var(--muted)}
+.row{display:flex;flex-wrap:wrap;gap:.6rem;align-items:center}
+.stack{display:flex;flex-direction:column;gap:.8rem}
+
+.pill{display:inline-block;border-radius:999px;padding:.05rem .7rem;font-size:1rem;font-weight:700;border:1px solid var(--line);background:var(--surface2);color:var(--muted);white-space:nowrap}
+.pill.ok{background:var(--good-soft);color:var(--good);border-color:transparent}
+.pill.warn{background:var(--warn-soft);color:var(--warn);border-color:transparent}
+.pill.bad{background:var(--bad-soft);color:var(--bad);border-color:transparent}
+.pill.acc{background:var(--accent-soft);color:var(--accent);border-color:transparent}
+
+.btn{border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:.45rem 1.05rem;border-radius:9px;font-weight:700;cursor:pointer;font-size:1.1rem}
+.btn:hover{background:var(--surface2)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.sm{padding:.2rem .7rem;font-size:1rem}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+
+.callout{border-radius:10px;padding:.8rem 1.1rem;border:1px solid var(--line);background:var(--surface2)}
+.callout.warn{background:var(--warn-soft);border-color:transparent}
+.callout.bad{background:var(--bad-soft);border-color:transparent}
+.callout.good{background:var(--good-soft);border-color:transparent}
+.callout.acc{background:var(--accent-soft);border-color:transparent}
+.callout b:first-child{display:block;margin-bottom:.15rem}
+
+ul.clean{margin:.3rem 0 0;padding-left:1.25rem}
+ul.clean li{margin:.2rem 0}
+.tbl{width:100%;border-collapse:collapse;font-size:1.1rem}
+.tbl th,.tbl td{text-align:left;padding:.5rem .7rem;border-bottom:1px solid var(--line);vertical-align:top}
+.tbl th{font-size:1rem;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.tblwrap{overflow-x:auto;min-width:0}
+.num{font-variant-numeric:tabular-nums}
+
+/* code */
+.codeblock{background:var(--code-bg);border-radius:10px;overflow:hidden;min-width:0}
+.cb-head{display:flex;justify-content:space-between;align-items:center;gap:1rem;padding:.35rem .5rem .35rem .9rem;border-bottom:1px solid rgba(255,255,255,.1);color:var(--code-dim);font-family:var(--mono);font-size:1rem}
+.cb-head button{background:transparent;border:1px solid rgba(255,255,255,.25);color:var(--code-ink);border-radius:6px;padding:.1rem .7rem;cursor:pointer;font-size:1rem;font-family:var(--font);font-weight:600}
+.cb-head button:hover{background:rgba(255,255,255,.12)}
+.codeblock pre{margin:0;padding:.8rem 1rem;overflow-x:auto;color:var(--code-ink);font-size:1.12rem;line-height:1.5;tab-size:4}
+.codeblock.short pre{padding:.6rem 1rem}
+
+/* form bits */
+.field{display:flex;flex-direction:column;gap:.25rem;min-width:0}
+.field label{font-weight:700;font-size:1.05rem;color:var(--muted)}
+.field select,.field input[type=number],.field input[type=text],.field textarea{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:.4rem .6rem;min-width:0;width:100%}
+input[type=range]{width:100%;accent-color:var(--accent)}
+
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+
+.opt{display:inline-flex;align-items:center;gap:.5rem;border:2px solid var(--line);background:var(--surface);border-radius:999px;padding:.35rem 1rem;cursor:pointer;font-weight:700;font-size:1.1rem;user-select:none}
+.opt input{position:absolute;opacity:0;pointer-events:none}
+.opt:has(input:checked){background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.opt:has(input:focus-visible){outline:3px solid var(--accent);outline-offset:2px}
+.sc-nav{display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:1rem}
+.sc-nav button{width:2.6rem;height:2.6rem;border-radius:50%;border:2px solid var(--line);background:var(--surface);font-weight:700;cursor:pointer;font-size:1.1rem}
+.sc-nav button[aria-current="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.sc-nav button.done{border-color:var(--good);color:var(--good)}
+.scn{font-size:1.5rem;font-weight:600;line-height:1.35}
+.facts{display:grid;gap:.4rem;margin-top:.8rem}
+.facts div{background:var(--surface2);border-radius:8px;padding:.35rem .7rem}
+.res{margin-top:1rem}
+.cmp td:first-child,.cmp th:first-child{white-space:nowrap;font-weight:700}
+.fit{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.5rem}
+.bigrow{display:grid;gap:.8rem;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr))}
+.bigrow .card{padding:.8rem 1rem}
+.bigrow .lab{color:var(--muted);font-size:1.02rem}
+.bigrow .big{font-size:2rem;font-weight:700;line-height:1.1}
+.wiz label{display:flex;gap:.7rem;align-items:flex-start;padding:.5rem 0;border-bottom:1px solid var(--line);cursor:pointer}
+.wiz input{width:1.4rem;height:1.4rem;margin-top:.2rem;accent-color:var(--accent);flex:none}
+.reco{display:grid;gap:.6rem}
+.reco .card{padding:.7rem 1rem}
+</style></head>
+<body>
+<header class="topbar"><div class="topbar-in"><div class="brand">Day 1<small>Kyndryl · Enterprise Agentic AI Engineering</small></div><nav class="nav" aria-label="Day 1 pages"><a href="overview.html">Overview</a><a href="index.html">Control Room</a><a href="M1_request_path.html">M1 Request path</a><a href="M2_model_picker.html">M2 Model picker</a><a href="M3_vram_calculator.html">M3 VRAM calculator</a><a href="M4_decision_clinic.html" aria-current="page">M4 Decision clinic</a><a href="../labs/Day1_Lab_Guide.html">Lab guide</a></nav><button class="themebtn" id="themebtn" type="button">Theme</button></div></header>
+<main class="wrap">
+  <div class="head">
+    <div>
+      <div class="kicker">Day 1 · Talk 4</div>
+      <h1>RAG, fine-tuning or a small model?</h1>
+      <p class="lede">Knowledge problems and behaviour problems need different tools. Decide in your pair, defend it to the room.</p>
+    </div>
+    <div class="timebox"><b>25 min</b> talk, then the Team Build</div>
+  </div>
+
+  <div class="tabs" role="tablist" aria-label="Sections">
+    <button role="tab" id="t0" aria-controls="p0" data-token="frame">1 · Framework</button>
+    <button role="tab" id="t1" aria-controls="p1" data-token="clinic">2 · Clinic</button>
+    <button role="tab" id="t2" aria-controls="p2" data-token="lora">3 · LoRA sizer</button>
+  </div>
+
+  <!-- FRAMEWORK -->
+  <section class="panel" id="p0" role="tabpanel" aria-labelledby="t0">
+    <div class="callout acc" style="margin-bottom:1rem"><b>The one-line rule</b>RAG changes what the model can look up. Fine-tuning changes how the model behaves. A small model changes what it costs to run.</div>
+    <div class="card tblwrap" style="margin-bottom:1rem">
+      <table class="tbl cmp">
+        <thead><tr><th></th><th>Prompting</th><th>RAG</th><th>Fine-tune (LoRA)</th><th>Small model (SLM)</th></tr></thead>
+        <tbody>
+          <tr><td>Changes</td><td>Instructions in the request</td><td>The facts the model can see</td><td>Style, format, task skill</td><td>Cost, latency, footprint</td></tr>
+          <tr><td>Fresh facts</td><td>Only what fits in the prompt</td><td>Yes, update the index</td><td>No, retrain to change</td><td>Same as the model you pick</td></tr>
+          <tr><td>Needs</td><td>Nothing</td><td>Documents, chunking, a vector store</td><td>Hundreds to thousands of good examples, a GPU</td><td>An eval that proves it is good enough</td></tr>
+          <tr><td>Time to try</td><td>Minutes</td><td>Days</td><td>Days to weeks</td><td>Hours (prompted), days (tuned)</td></tr>
+          <tr><td>Main risk</td><td>Long prompts, drift</td><td>Bad retrieval looks like a bad model</td><td>Forgetting, stale knowledge baked in</td><td>Quality cliff on hard inputs</td></tr>
+          <tr><td>Reach for it when</td><td>Always first</td><td>Facts change or need citations</td><td>Prompting cannot hold the format or tone</td><td>High volume, tight latency, offline, strict residency</td></tr>
+          <tr><td>Skip it when</td><td>—</td><td>Knowledge is tiny and stable</td><td>The real gap is missing knowledge</td><td>Open-ended reasoning, many tools</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="split">
+      <div class="card wiz"><h3>Which move first? Tick what is true.</h3>
+        <label><input type="checkbox" data-k="fresh"><span>The facts change weekly or daily</span></label>
+        <label><input type="checkbox" data-k="cite"><span>Answers must quote a source</span></label>
+        <label><input type="checkbox" data-k="format"><span>Prompting still breaks the format or the tone</span></label>
+        <label><input type="checkbox" data-k="volume"><span>Millions of calls a day, or latency under 100 ms</span></label>
+        <label><input type="checkbox" data-k="private"><span>Data cannot leave your boundary, or it must run offline</span></label>
+        <label><input type="checkbox" data-k="hard"><span>The task needs multi-step reasoning or many tools</span></label>
+      </div>
+      <div class="stack"><h3>Suggested first moves</h3><div class="reco" id="reco"></div></div>
+    </div>
+  </section>
+
+  <!-- CLINIC -->
+  <section class="panel" id="p1" role="tabpanel" aria-labelledby="t1" hidden>
+    <div class="sc-nav" id="scnav" role="group" aria-label="Scenarios"></div>
+    <div class="split">
+      <div class="card">
+        <div class="kicker" id="sc-k"></div>
+        <div class="scn" id="sc-t"></div>
+        <div class="facts" id="sc-f"></div>
+        <h4 style="margin-top:1.1rem">Your pair's move (choose one or two)</h4>
+        <div class="fit" id="sc-opts"></div>
+        <div class="row" style="margin-top:1rem"><button class="btn primary" id="sc-reveal">Reveal</button><span class="muted" id="sc-tally"></span></div>
+      </div>
+      <div class="card res" id="sc-res" style="margin-top:0"><div class="muted">Decide first. The reasoning appears here after you reveal.</div></div>
+    </div>
+  </section>
+
+  <!-- LORA -->
+  <section class="panel" id="p2" role="tabpanel" aria-labelledby="t2" hidden>
+    <div class="card" style="margin-bottom:1rem">
+      <div class="inputs" style="display:grid;gap:.8rem 1.2rem;grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr))">
+        <div class="field"><label for="l-model">Base model</label><select id="l-model"></select></div>
+        <div class="field"><label for="l-rank">LoRA rank r</label><select id="l-rank"><option>4</option><option>8</option><option selected>16</option><option>32</option><option>64</option><option>128</option></select></div>
+        <div class="field"><label for="l-tgt">Layers adapted</label><select id="l-tgt"><option value="qv">Attention q, v only</option><option value="attn">All attention (q, k, v, o)</option><option value="all" selected>All linear (attention + MLP)</option></select></div>
+        <div class="field"><label for="l-seq">Training sequence length</label><select id="l-seq"><option>512</option><option>1024</option><option selected>2048</option><option>4096</option><option>8192</option></select></div>
+        <div class="field"><label for="l-b">Micro-batch size</label><select id="l-b"><option selected>1</option><option>2</option><option>4</option><option>8</option></select></div>
+      </div>
+    </div>
+    <div class="bigrow" id="l-kpi" style="margin-bottom:1rem"></div>
+    <div class="grid g2">
+      <div class="card tblwrap"><h3>Memory to train, roughly</h3>
+        <table class="tbl" id="l-tbl" style="margin-top:.5rem"></table>
+        <p class="muted" style="margin-top:.6rem;font-size:1.02rem">Estimates within about ±20%. Real use depends on the trainer, flash attention and checkpointing settings.</p></div>
+      <div class="card"><h3>What to notice</h3><ul class="clean" id="l-notes"></ul>
+        <div class="callout acc" style="margin-top:.8rem"><b>Stretch for fast teams</b>Can a 32B-class model be QLoRA-tuned on one 24 GB card? Pick the base model, then find a rank, sequence length and micro-batch that fits. If none does, say what you would change.</div></div>
+    </div>
+  </section>
+</main>
+
+<script>
+/* shared helpers: safe storage, theme toggle, tabs, copy buttons */
+const store = {
+  get(k, d){ try { const v = localStorage.getItem("kyn1:" + k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v){ try { localStorage.setItem("kyn1:" + k, JSON.stringify(v)); } catch (e) {} }
+};
+
+(function theme(){
+  const saved = store.get("theme", null);
+  if (saved) document.documentElement.setAttribute("data-theme", saved);
+  const btn = document.getElementById("themebtn");
+  if (!btn) return;
+  btn.addEventListener("click", () => {
+    const cur = document.documentElement.getAttribute("data-theme");
+    const isDark = cur ? cur === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+    const next = isDark ? "light" : "dark";
+    document.documentElement.setAttribute("data-theme", next);
+    store.set("theme", next);
+  });
+})();
+
+function initTabs(root, opts){
+  opts = opts || {};
+  const tabs = Array.from(root.querySelectorAll('[role="tab"]'));
+  const panels = tabs.map(t => document.getElementById(t.getAttribute("aria-controls")));
+  function select(i, focus){
+    tabs.forEach((t, j) => {
+      t.setAttribute("aria-selected", j === i ? "true" : "false");
+      t.tabIndex = j === i ? 0 : -1;
+      panels[j].hidden = j !== i;
+    });
+    if (focus) tabs[i].focus();
+    if (opts.hash) { try { history.replaceState(null, "", "#" + tabs[i].dataset.token); } catch (e) {} }
+    if (opts.onSelect) opts.onSelect(i, tabs[i]);
+  }
+  tabs.forEach((t, i) => {
+    t.addEventListener("click", () => select(i));
+    t.addEventListener("keydown", e => {
+      if (e.key === "ArrowRight") { e.preventDefault(); select((i + 1) % tabs.length, true); }
+      if (e.key === "ArrowLeft") { e.preventDefault(); select((i - 1 + tabs.length) % tabs.length, true); }
+    });
+  });
+  let start = 0;
+  if (opts.hash && location.hash) {
+    const idx = tabs.findIndex(t => "#" + t.dataset.token === location.hash);
+    if (idx >= 0) start = idx;
+  }
+  select(start);
+  if (opts.hash) {
+    window.addEventListener("hashchange", () => {
+      const idx = tabs.findIndex(t => "#" + t.dataset.token === location.hash);
+      if (idx >= 0) select(idx);
+    });
+  }
+  return select;
+}
+
+function copyText(text, btn){
+  const done = () => { const o = btn.textContent; btn.textContent = "Copied"; setTimeout(() => { btn.textContent = o; }, 1400); };
+  const fallback = () => {
+    const ta = document.createElement("textarea");
+    ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand("copy"); done(); } catch (e) { btn.textContent = "Select and copy"; }
+    document.body.removeChild(ta);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, fallback);
+  else fallback();
+}
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-copy]");
+  if (!b) return;
+  const pre = b.closest(".codeblock").querySelector("pre");
+  copyText(pre.innerText, b);
+});
+
+function esc(s){ return String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
+
+
+/* ---------- framework wizard ---------- */
+const RECO = {
+ fresh:["RAG","Facts that change need an index you can update, not weights you must retrain."],
+ cite:["RAG","Citations come from retrieved passages. A fine-tuned model cannot point to a source."],
+ format:["Fine-tune (LoRA)","If prompting plus structured output still fails your eval, tune for the format or tone."],
+ volume:["Small model (SLM)","At that volume, a tuned small model on cheap hardware beats a large model on cost and latency."],
+ private:["Self-hosted small or mid model","Residency rules out serverless. Size the GPU in M3."],
+ hard:["Larger model with tools","Multi-step reasoning and tool use are where small models fall off. Test a mid-size one before you pay for the largest."]
+};
+const chosen = {};
+function renderReco(){
+  const keys = Object.keys(chosen).filter(k => chosen[k]);
+  const el = document.getElementById("reco");
+  if (!keys.length) { el.innerHTML = '<div class="card"><b>Prompting + few-shot examples</b><p class="muted">Nothing is forcing a bigger move. Start here and measure.</p></div>'; return; }
+  el.innerHTML = keys.map(k => `<div class="card"><b>${esc(RECO[k][0])}</b><p class="muted">${esc(RECO[k][1])}</p></div>`).join("");
+}
+document.querySelector(".wiz").addEventListener("change", e => { chosen[e.target.dataset.k] = e.target.checked; renderReco(); });
+renderReco();
+
+/* ---------- clinic ---------- */
+const OPTS = ["Prompting + few-shot","RAG","Fine-tune (LoRA)","Small model (SLM)","Larger model + tools"];
+const SCN = [
+ {t:"Customers ask about plans, roaming packs and offers. Offers change every week, and answers must quote the current price.",
+  f:["Facts change weekly","Wrong price = billing complaint","Volume: 50,000 chats a day"],
+  best:[1], ok:[[1,4]], why:"This is a knowledge problem with a freshness clock. Index the offer sheets and retrieve at question time. Add the effective date as metadata so the model can say which offer it quoted.",
+  wrong:"If there are only 20 plans and they change twice a year, put them in the prompt. A vector store is overhead."},
+ {t:"Two million support tickets arrive every day. Each needs one of 40 categories in under 100 ms, on a small budget.",
+  f:["Narrow task, fixed labels","Labelled history exists","Latency and cost dominate"],
+  best:[2,3], ok:[[3]], why:"A narrow, high-volume task is the home of a small model. Tune a 1–3B model, or even a classifier, on your labelled history. Send low-confidence tickets to a larger model.",
+  wrong:"If categories change every week and you have almost no labels, start with a prompted larger model and collect labels first."},
+ {t:"Replies must follow the company's tone and always return one fixed JSON schema. The prompt holds 2,000 tokens of rules and the cost is climbing.",
+  f:["Behaviour, not knowledge","Rules repeated on every call","Failures: about 6% invalid JSON"],
+  best:[2], ok:[[0],[0,2]], why:"First try structured output or constrained decoding. If the failures and the prompt cost remain, tune with LoRA so the behaviour lives in the weights and the prompt can shrink.",
+  wrong:"If the tone rules change monthly, retraining each time is a tax. Keep them in the prompt."},
+ {t:"A field engineer describes a network fault. The assistant must use runbooks, read live alarms and propose a multi-step plan.",
+  f:["Runbooks change","Live data from tools","Several dependent steps"],
+  best:[1,4], ok:[[1,2,4]], why:"Runbooks are knowledge (RAG), alarms are tools, and planning needs a model strong at tool use. This is the agent shape you build on Days 3 and 4.",
+  wrong:"If the fault types are a closed list of ten, a decision tree plus a small model may beat an agent on cost and predictability."},
+ {t:"Billing disputes contain personal data that must not leave your data centre. The network team has two GPUs.",
+  f:["Residency is a hard rule","Two GPUs available","Knowledge: policy documents"],
+  best:[1,3], ok:[[1,2],[1,3]], why:"Self-host a small or mid-size model with vLLM, and ground it with RAG over the policy documents. Serverless is ruled out by residency, whatever its quality.",
+  wrong:"If the data is already masked before it reaches the model, a serverless endpoint may be acceptable. Check with your security team, do not assume."},
+ {t:"A model misreads telecom abbreviations such as gNB, AMF and UPF and mixes up their roles.",
+  f:["Domain vocabulary gap","3GPP documents available","Few labelled examples"],
+  best:[1], ok:[[1,2],[0,1]], why:"Supply a glossary and the relevant spec passages through retrieval first. It is cheap and testable. Only if misreadings persist after good retrieval is a tune worth its cost.",
+  wrong:"If you answer thousands of such questions offline with no retrieval step possible, a domain-tuned model starts to pay."}
+];
+const votes = store.get("votes", {});
+let cur = 0;
+const nav = document.getElementById("scnav");
+SCN.forEach((s, i) => { const b = document.createElement("button"); b.textContent = i + 1; b.setAttribute("aria-label", "Scenario " + (i + 1)); b.onclick = () => show(i); nav.appendChild(b); });
+function sameSet(a, b){ return a.length === b.length && a.every(x => b.includes(x)); }
+function show(i){
+  cur = i; const s = SCN[i], v = votes[i] || {sel:[], shown:false};
+  [...nav.children].forEach((b, j) => { b.setAttribute("aria-current", j === i ? "true" : "false"); b.classList.toggle("done", !!(votes[j] && votes[j].shown)); });
+  document.getElementById("sc-k").textContent = "Scenario " + (i + 1) + " of " + SCN.length;
+  document.getElementById("sc-t").textContent = s.t;
+  document.getElementById("sc-f").innerHTML = s.f.map(x => "<div>" + esc(x) + "</div>").join("");
+  document.getElementById("sc-opts").innerHTML = OPTS.map((o, j) => `<label class="opt"><input type="checkbox" value="${j}" ${v.sel.includes(j) ? "checked" : ""}>${esc(o)}</label>`).join("");
+  paint(i);
+}
+function paint(i){
+  const s = SCN[i], v = votes[i] || {sel:[], shown:false}, res = document.getElementById("sc-res");
+  if (!v.shown) { res.innerHTML = '<div class="muted">Decide first. The reasoning appears here after you reveal.</div>'; return; }
+  const sel = v.sel.slice().sort(), best = s.best.slice().sort();
+  let verdict, cls;
+  if (sameSet(sel, best)) { verdict = "Matches the typical answer"; cls = "ok"; }
+  else if (s.ok.some(o => sameSet(sel, o.slice().sort()))) { verdict = "Defensible alternative"; cls = "acc"; }
+  else { verdict = "Discuss: different from the typical answer"; cls = "warn"; }
+  res.innerHTML = `<span class="pill ${cls}">${verdict}</span>
+   <h4 style="margin-top:.7rem">Typical first move</h4><p><b>${best.map(j => esc(OPTS[j])).join(" + ")}</b></p>
+   <h4 style="margin-top:.7rem">Why</h4><p>${esc(s.why)}</p>
+   <h4 style="margin-top:.7rem">When this answer is wrong</h4><p>${esc(s.wrong)}</p>
+   <h4 style="margin-top:.7rem">Defend it</h4><p class="muted">One sentence: what evidence would make you change your mind?</p>`;
+}
+document.getElementById("sc-opts").addEventListener("change", () => {
+  const sel = [...document.querySelectorAll("#sc-opts input:checked")].map(x => +x.value);
+  votes[cur] = {sel, shown:false}; store.set("votes", votes); paint(cur);
+});
+document.getElementById("sc-reveal").onclick = () => {
+  const sel = [...document.querySelectorAll("#sc-opts input:checked")].map(x => +x.value);
+  if (!sel.length) { document.getElementById("sc-tally").textContent = "Pick at least one move first."; return; }
+  votes[cur] = {sel, shown:true}; store.set("votes", votes); paint(cur); show(cur);
+  const done = Object.values(votes).filter(x => x.shown).length;
+  document.getElementById("sc-tally").textContent = done + " of " + SCN.length + " revealed";
+};
+show(0);
+
+/* ---------- LoRA sizer ---------- */
+/*CALC_START*/
+const BASES = [
+ {n:"Llama 3.2 3B", p:3.2, L:28, d:3072, q:3072, kv:1024, ff:8192, voc:128256},
+ {n:"Qwen2.5 7B", p:7.6, L:28, d:3584, q:3584, kv:512, ff:18944, voc:152064},
+ {n:"Llama 3.1 8B", p:8.0, L:32, d:4096, q:4096, kv:1024, ff:14336, voc:128256},
+ {n:"Qwen3 8B", p:8.2, L:36, d:4096, q:4096, kv:1024, ff:12288, voc:151936},
+ {n:"Qwen3 32B", p:32.8, L:64, d:5120, q:8192, kv:1024, ff:25600, voc:151936},
+ {n:"Llama 3.1 70B", p:70.6, L:80, d:8192, q:8192, kv:1024, ff:28672, voc:128256}
+];
+function loraParams(m, r, tgt){
+  let per = r * (m.d + m.q) + r * (m.q + m.d);            // q and o
+  if (tgt === "qv") per = r * (m.d + m.q) + r * (m.d + m.kv); // q and v only
+  if (tgt === "attn" || tgt === "all") per = r * (m.d + m.q) + 2 * r * (m.d + m.kv) + r * (m.q + m.d);
+  if (tgt === "all") per += 3 * r * (m.d + m.ff);
+  return per * m.L;
+}
+function trainMem(m, r, tgt, seq, b){
+  const lp = loraParams(m, r, tgt) / 1e9;                  // billions of trainable params
+  const embed = 2 * m.voc * m.d / 1e9;                     // embedding + output head, kept in 16-bit
+  const act = (m.L * seq * b * m.d * 2 + 34 * seq * b * m.d + seq * b * m.voc * 6) / 1e9; // checkpointed activations + logits
+  const adapter = lp * 16;                                 // fp32 weights + grads + Adam states, bytes per param
+  const base16 = m.p * 2;
+  const base4 = (m.p - embed) * 4.13 / 8 + embed * 2;
+  const over = 1.5;
+  return {
+    lp, act, adapter, base16, base4,
+    full: m.p * 16 + act + over,
+    lora: base16 + adapter + act + over,
+    qlora: base4 + adapter + act + over
+  };
+}
+/*CALC_END*/
+const L = id => document.getElementById(id);
+BASES.forEach((m, i) => L("l-model").add(new Option(m.n, i)));
+L("l-model").value = 2;
+function gb(v){ return v >= 100 ? v.toFixed(0) : v.toFixed(1); }
+function renderLora(){
+  const m = BASES[+L("l-model").value], r = +L("l-rank").value, tgt = L("l-tgt").value, seq = +L("l-seq").value, b = +L("l-b").value;
+  const t = trainMem(m, r, tgt, seq, b), pct = 100 * t.lp / m.p;
+  L("l-kpi").innerHTML = [
+    ["Trainable parameters", (t.lp * 1000).toFixed(t.lp * 1000 >= 100 ? 0 : 1) + " M", pct.toFixed(2) + "% of the model"],
+    ["Adapter file size", (t.lp * 2 * 1000).toFixed(0) + " MB", "saved in 16-bit"],
+    ["QLoRA memory", gb(t.qlora) + " GB", "4-bit base + adapter + activations"],
+    ["Full fine-tune memory", gb(t.full) + " GB", Math.round(t.full / t.qlora) + "× the QLoRA figure"]
+  ].map(x => `<div class="card"><div class="lab">${esc(x[0])}</div><div class="big num">${esc(x[1])}</div><div class="muted" style="font-size:1rem">${esc(x[2])}</div></div>`).join("");
+  const cards = [24, 48, 80];
+  const chip = (v, c) => `<span class="pill ${v * 1.05 <= c ? "ok" : "bad"}">${c} GB</span>`;
+  L("l-tbl").innerHTML = "<thead><tr><th>Method</th><th>Memory</th><th>Fits on</th></tr></thead><tbody>" +
+    [["Full fine-tune", t.full], ["LoRA (16-bit base)", t.lora], ["QLoRA (4-bit base)", t.qlora]].map(x => `<tr><td>${x[0]}</td><td class="num"><b>${gb(x[1])} GB</b></td><td>${cards.map(c => chip(x[1], c)).join(" ")}</td></tr>`).join("") + "</tbody>";
+  L("l-notes").innerHTML = [
+    `Only ${pct.toFixed(2)}% of the weights are trained. The base model stays frozen, so one base can serve many adapters.`,
+    `Optimizer state is paid for trainable parameters only: ${gb(t.adapter)} GB here, against ${gb(m.p * 14)} GB of gradients and optimizer state for a full fine-tune.`,
+    `Activations take ${gb(t.act)} GB at ${seq.toLocaleString()} tokens × batch ${b}. Longer sequences cost memory fast, not rank.`,
+    r >= 64 ? "High rank rarely helps small datasets and can overfit. Start at 8–16." : "Rank 8–16 is a sound start. Raise it only if the eval shows the adapter is too small to learn the task.",
+    "QLoRA saves memory, not time. It trains slower than LoRA because weights are dequantised on the fly."
+  ].map(x => "<li>" + esc(x) + "</li>").join("");
+}
+["l-model", "l-rank", "l-tgt", "l-seq", "l-b"].forEach(id => L(id).addEventListener("input", renderLora));
+renderLora();
+
+initTabs(document.querySelector(".tabs"), {hash:true});
+</script>
+</body></html>

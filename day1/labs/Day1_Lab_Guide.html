@@ -1,0 +1,862 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Day 1 Lab Guide</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Day 1 design tokens. Layout: sticky top bar, one wide column (max 1500px) sized for a classroom TV. */
+:root{
+  --bg:#F1F5F4; --surface:#FFFFFF; --surface2:#E6EDEB; --ink:#0D2226; --muted:#475F63; --line:#C5D3D0;
+  --accent:#0A7A72; --accent-ink:#FFFFFF; --accent-soft:#D3EDE9;
+  --warn:#9A5B00; --warn-soft:#FAEBD0; --bad:#B3261E; --bad-soft:#F8DBD8; --good:#1B7A3A; --good-soft:#D7EEDD;
+  --code-bg:#0D2226; --code-ink:#DCEFEA; --code-dim:#8FB0AB;
+  --font:"Aptos Narrow","Barlow Semi Condensed","Arial Narrow",sans-serif;
+  --mono:"JetBrains Mono","Cascadia Mono",Consolas,monospace;
+  --shadow:0 1px 2px rgba(13,34,38,.08);
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0A1517; --surface:#12262A; --surface2:#1A343A; --ink:#E3EFED; --muted:#9DB6B3; --line:#2A4549;
+    --accent:#4FD1C5; --accent-ink:#04201D; --accent-soft:#12383A;
+    --warn:#F0B35A; --warn-soft:#3A2B10; --bad:#FF8E85; --bad-soft:#3F1B18; --good:#7ED99A; --good-soft:#143322;
+    --code-bg:#07100F; --code-ink:#DCEFEA; --code-dim:#7FA09B; --shadow:none; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0A1517; --surface:#12262A; --surface2:#1A343A; --ink:#E3EFED; --muted:#9DB6B3; --line:#2A4549;
+  --accent:#4FD1C5; --accent-ink:#04201D; --accent-soft:#12383A;
+  --warn:#F0B35A; --warn-soft:#3A2B10; --bad:#FF8E85; --bad-soft:#3F1B18; --good:#7ED99A; --good-soft:#143322;
+  --code-bg:#07100F; --code-ink:#DCEFEA; --code-dim:#7FA09B; --shadow:none; color-scheme:dark;
+}
+
+*{box-sizing:border-box}
+html{font-size:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:1.2rem;line-height:1.5;-webkit-text-size-adjust:100%}
+h1,h2,h3,h4{line-height:1.15;margin:0;text-wrap:balance;font-weight:700}
+h1{font-size:2.45rem;letter-spacing:-.01em}
+h2{font-size:1.85rem}
+h3{font-size:1.4rem}
+h4{font-size:1.2rem}
+p{margin:0}
+a{color:var(--accent)}
+code,kbd,pre{font-family:var(--mono)}
+code{font-size:.92em;background:var(--surface2);padding:.05em .35em;border-radius:4px}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+[hidden]{display:none!important}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* top bar */
+.topbar{position:sticky;top:0;z-index:30;background:var(--bg);border-bottom:1px solid var(--line)}
+.topbar-in{max-width:1500px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;gap:.4rem 1.2rem;padding:.55rem max(16px,env(safe-area-inset-right,0px)) .55rem max(16px,env(safe-area-inset-left,0px))}
+.brand{font-weight:700;letter-spacing:.01em;white-space:nowrap}
+.brand small{color:var(--muted);font-weight:500;margin-left:.5rem}
+.nav{display:flex;flex-wrap:wrap;gap:.25rem;margin-left:auto}
+.nav a{padding:.2rem .75rem;border-radius:7px;color:var(--muted);text-decoration:none;font-weight:600;font-size:1.05rem}
+.nav a:hover{background:var(--surface2);color:var(--ink)}
+.nav a[aria-current="page"]{background:var(--accent);color:var(--accent-ink)}
+.themebtn{border:1px solid var(--line);background:var(--surface);border-radius:7px;padding:.2rem .7rem;cursor:pointer;font-size:1.05rem;color:var(--muted)}
+
+/* page */
+.wrap{max-width:1500px;margin:0 auto;padding:1.6rem max(16px,env(safe-area-inset-right,0px)) 4rem max(16px,env(safe-area-inset-left,0px))}
+.kicker{font-size:1.05rem;letter-spacing:.09em;text-transform:uppercase;color:var(--accent);font-weight:700;margin-bottom:.3rem}
+.lede{color:var(--muted);max-width:62rem;margin-top:.6rem}
+.head{display:flex;flex-wrap:wrap;gap:.6rem 2rem;justify-content:space-between;align-items:flex-end;margin-bottom:1.2rem}
+.timebox{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:.4rem .9rem;font-weight:600;color:var(--muted);white-space:nowrap}
+.timebox b{color:var(--ink)}
+
+/* tabs */
+.tabs{display:flex;flex-wrap:wrap;gap:.35rem;border-bottom:2px solid var(--line);margin-bottom:1.4rem}
+.tabs button{border:0;background:transparent;padding:.55rem 1.1rem;font-weight:700;font-size:1.15rem;color:var(--muted);cursor:pointer;border-radius:8px 8px 0 0;margin-bottom:-2px;border-bottom:3px solid transparent}
+.tabs button:hover{color:var(--ink);background:var(--surface2)}
+.tabs button[aria-selected="true"]{color:var(--accent);border-bottom-color:var(--accent);background:var(--surface)}
+.panel[hidden]{display:none!important}
+
+/* blocks */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:1.1rem 1.3rem;box-shadow:var(--shadow);min-width:0}
+.card h3{margin-bottom:.4rem}
+.grid{display:grid;gap:1rem;min-width:0}
+.g2{grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr))}
+.g4{grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr))}
+.split{display:grid;gap:1.2rem;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);align-items:start}
+@media (max-width:980px){.split{grid-template-columns:minmax(0,1fr)}}
+.muted{color:var(--muted)}
+.row{display:flex;flex-wrap:wrap;gap:.6rem;align-items:center}
+.stack{display:flex;flex-direction:column;gap:.8rem}
+
+.pill{display:inline-block;border-radius:999px;padding:.05rem .7rem;font-size:1rem;font-weight:700;border:1px solid var(--line);background:var(--surface2);color:var(--muted);white-space:nowrap}
+.pill.ok{background:var(--good-soft);color:var(--good);border-color:transparent}
+.pill.warn{background:var(--warn-soft);color:var(--warn);border-color:transparent}
+.pill.bad{background:var(--bad-soft);color:var(--bad);border-color:transparent}
+.pill.acc{background:var(--accent-soft);color:var(--accent);border-color:transparent}
+
+.btn{border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:.45rem 1.05rem;border-radius:9px;font-weight:700;cursor:pointer;font-size:1.1rem}
+.btn:hover{background:var(--surface2)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.sm{padding:.2rem .7rem;font-size:1rem}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+
+.callout{border-radius:10px;padding:.8rem 1.1rem;border:1px solid var(--line);background:var(--surface2)}
+.callout.warn{background:var(--warn-soft);border-color:transparent}
+.callout.bad{background:var(--bad-soft);border-color:transparent}
+.callout.good{background:var(--good-soft);border-color:transparent}
+.callout.acc{background:var(--accent-soft);border-color:transparent}
+.callout b:first-child{display:block;margin-bottom:.15rem}
+
+ul.clean{margin:.3rem 0 0;padding-left:1.25rem}
+ul.clean li{margin:.2rem 0}
+.tbl{width:100%;border-collapse:collapse;font-size:1.1rem}
+.tbl th,.tbl td{text-align:left;padding:.5rem .7rem;border-bottom:1px solid var(--line);vertical-align:top}
+.tbl th{font-size:1rem;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.tblwrap{overflow-x:auto;min-width:0}
+.num{font-variant-numeric:tabular-nums}
+
+/* code */
+.codeblock{background:var(--code-bg);border-radius:10px;overflow:hidden;min-width:0}
+.cb-head{display:flex;justify-content:space-between;align-items:center;gap:1rem;padding:.35rem .5rem .35rem .9rem;border-bottom:1px solid rgba(255,255,255,.1);color:var(--code-dim);font-family:var(--mono);font-size:1rem}
+.cb-head button{background:transparent;border:1px solid rgba(255,255,255,.25);color:var(--code-ink);border-radius:6px;padding:.1rem .7rem;cursor:pointer;font-size:1rem;font-family:var(--font);font-weight:600}
+.cb-head button:hover{background:rgba(255,255,255,.12)}
+.codeblock pre{margin:0;padding:.8rem 1rem;overflow-x:auto;color:var(--code-ink);font-size:1.12rem;line-height:1.5;tab-size:4}
+.codeblock.short pre{padding:.6rem 1rem}
+
+/* form bits */
+.field{display:flex;flex-direction:column;gap:.25rem;min-width:0}
+.field label{font-weight:700;font-size:1.05rem;color:var(--muted)}
+.field select,.field input[type=number],.field input[type=text],.field textarea{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:.4rem .6rem;min-width:0;width:100%}
+input[type=range]{width:100%;accent-color:var(--accent)}
+
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+
+.steps{display:flex;flex-direction:column;gap:.8rem;margin:0;padding:0;list-style:none}
+.step{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:.9rem 1.2rem;display:grid;grid-template-columns:auto minmax(0,1fr);gap:.2rem 1rem;align-items:start}
+.step.done{border-color:var(--good);background:linear-gradient(0deg,var(--good-soft),var(--good-soft)) padding-box}
+.step > input{width:1.7rem;height:1.7rem;accent-color:var(--good);margin-top:.15rem;cursor:pointer}
+.step h3{font-size:1.35rem;display:flex;flex-wrap:wrap;gap:.3rem .8rem;align-items:baseline}
+.step h3 .mins{font-size:1rem;color:var(--muted);font-weight:600}
+.step .body{display:flex;flex-direction:column;gap:.7rem;margin-top:.5rem;min-width:0}
+.step .body > p, .step .body > ul{margin:0}
+.prog{display:flex;align-items:center;gap:.8rem;margin:0 0 1rem}
+.bar{flex:1;height:.8rem;background:var(--surface2);border-radius:999px;overflow:hidden;border:1px solid var(--line)}
+.bar i{display:block;height:100%;width:0;background:var(--accent);transition:width .25s}
+.tabs button .n{font-size:.95rem;font-weight:600;color:var(--muted);margin-left:.4rem}
+details.more{background:var(--surface2);border-radius:10px;padding:.5rem .9rem}
+details.more summary{cursor:pointer;font-weight:700}
+details.more[open] summary{margin-bottom:.6rem}
+.say{border-left:5px solid var(--accent);background:var(--accent-soft);border-radius:0 10px 10px 0;padding:.6rem 1rem;font-style:normal}
+.tt td:first-child,.tt th:first-child{white-space:nowrap;font-weight:700}
+.tt input[type=text]{border:1px solid var(--line);background:var(--surface);border-radius:7px;padding:.25rem .5rem;width:100%;min-width:5.5rem}
+.tt select{border:1px solid var(--line);background:var(--surface);border-radius:7px;padding:.25rem .4rem}
+.tt select.s-pass{background:var(--good-soft);color:var(--good);font-weight:700}
+.tt select.s-fail{background:var(--bad-soft);color:var(--bad);font-weight:700}
+.tt select.s-part{background:var(--warn-soft);color:var(--warn);font-weight:700}
+.roles{display:grid;gap:.6rem;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr))}
+.roles .card{padding:.7rem 1rem}
+.dem li{margin:.25rem 0}
+a.go{font-weight:700}
+</style></head>
+<body>
+<header class="topbar"><div class="topbar-in"><div class="brand">Day 1<small>Kyndryl · Enterprise Agentic AI Engineering</small></div><nav class="nav" aria-label="Day 1 pages"><a href="../content/overview.html">Overview</a><a href="../content/index.html">Control Room</a><a href="../content/M1_request_path.html">M1 Request path</a><a href="../content/M2_model_picker.html">M2 Model picker</a><a href="../content/M3_vram_calculator.html">M3 VRAM calculator</a><a href="../content/M4_decision_clinic.html">M4 Decision clinic</a><a href="Day1_Lab_Guide.html" aria-current="page">Lab guide</a></nav><button class="themebtn" id="themebtn" type="button">Theme</button></div></header>
+<main class="wrap">
+  <div class="head">
+    <div>
+      <div class="kicker">Day 1 · Hands-on</div>
+      <h1>Lab guide</h1>
+      <p class="lede">Work through the steps in order. Tick each box when it works. Stuck for more than 10 minutes? Raise a hand with the exact error and what you already tried.</p>
+    </div>
+    <div class="timebox"><b>~190 min</b> of hands-on across the day</div>
+  </div>
+
+  <div class="prog" aria-label="Overall progress"><b id="allcount">0 / 0</b><div class="bar"><i id="allbar"></i></div></div>
+
+  <div class="tabs" role="tablist" aria-label="Labs">
+    <button role="tab" id="t0" aria-controls="p0" data-token="lab0">Lab 0 · Check<span class="n"></span></button>
+    <button role="tab" id="t1" aria-controls="p1" data-token="lab1">Lab 1 · Vibe-code<span class="n"></span></button>
+    <button role="tab" id="t2" aria-controls="p2" data-token="lab2">Lab 2 · Bake-off<span class="n"></span></button>
+    <button role="tab" id="t3" aria-controls="p3" data-token="lab3">Lab 3 · Predict &amp; measure<span class="n"></span></button>
+    <button role="tab" id="t4" aria-controls="p4" data-token="team">Team Build<span class="n"></span></button>
+    <button role="tab" id="t5" aria-controls="p5" data-token="stretch">Stretch</button>
+  </div>
+
+  <!-- ============ LAB 0 ============ -->
+  <section class="panel" id="p0" role="tabpanel" aria-labelledby="t0" data-lab="l0">
+    <div class="callout acc" style="margin-bottom:1rem"><b>Goal · 10 minutes</b>Your VM can reach the gateway with your own key, and both models answer. Everything later depends on this.</div>
+    <ol class="steps">
+      <li class="step"><input type="checkbox" id="l0a" aria-labelledby="l0a-h"><div><h3 id="l0a-h">Open the lab folder <span class="mins">1 min</span></h3>
+        <div class="body">
+          <div class="codeblock short"><div class="cb-head"><span>terminal</span><button type="button" data-copy>Copy</button></div><pre>cd ~/day1-labs
+ls</pre></div>
+          <p>You should see <code>common.py</code>, <code>lab0_check.py</code>, <code>bench.py</code>, <code>blind_test.py</code>, <code>ollama_bench.py</code>, <code>conc.py</code>, <code>ask.py</code> and a <code>team</code> folder.</p>
+        </div></div></li>
+
+      <li class="step"><input type="checkbox" id="l0b" aria-labelledby="l0b-h"><div><h3 id="l0b-h">Create your settings file <span class="mins">3 min</span></h3>
+        <div class="body">
+          <p>Make a file called <code>.env.lab</code> in that folder. Use the gateway address and the key on your key card.</p>
+          <div class="codeblock short"><div class="cb-head"><span>.env.lab</span><button type="button" data-copy>Copy</button></div><pre>GATEWAY=http://&lt;gateway-ip&gt;:4000
+LLM_KEY=sk-paste-your-own-key-here
+MODELS=chat-llm,chat-llm-b</pre></div>
+          <div class="callout warn"><b>Your key is yours</b>Do not paste it into chat, a screenshot, or a Git commit. The gateway tracks spend per key, so a shared key makes everyone's numbers wrong.</div>
+        </div></div></li>
+
+      <li class="step"><input type="checkbox" id="l0c" aria-labelledby="l0c-h"><div><h3 id="l0c-h">Install the two Python packages <span class="mins">2 min</span></h3>
+        <div class="body">
+          <div class="codeblock short"><div class="cb-head"><span>terminal</span><button type="button" data-copy>Copy</button></div><pre>python3 -m venv .venv
+source .venv/bin/activate
+pip install openai requests pytest</pre></div>
+          <p class="muted">Next time you open a terminal, run <code>source .venv/bin/activate</code> again from this folder.</p>
+        </div></div></li>
+
+      <li class="step"><input type="checkbox" id="l0d" aria-labelledby="l0d-h"><div><h3 id="l0d-h">Run the check <span class="mins">2 min</span></h3>
+        <div class="body">
+          <div class="codeblock short"><div class="cb-head"><span>terminal</span><button type="button" data-copy>Copy</button></div><pre>python lab0_check.py</pre></div>
+          <p>Every line should say <b>PASS</b>: gateway reachable, key accepted, both models listed, and one test answer from each model.</p>
+          <details class="more"><summary>A line says FAIL?</summary>
+            <div class="tblwrap"><table class="tbl">
+              <thead><tr><th>You see</th><th>Usually means</th><th>Try</th></tr></thead>
+              <tbody>
+                <tr><td>Gateway reachable: FAIL</td><td>Wrong address or port</td><td>Check <code>GATEWAY</code> has <code>http://</code>, the right IP and <code>:4000</code>. Try <code>curl &lt;gateway&gt;/health/liveliness</code>.</td></tr>
+                <tr><td>Key accepted: 401</td><td>Typo in the key, or a space at the end</td><td>Re-copy the key from your card. No quotes needed.</td></tr>
+                <tr><td>Model not in list</td><td><code>MODELS</code> names differ from the gateway</td><td>Use exactly the names the check prints under "models your key can use".</td></tr>
+                <tr><td>Test call: 429</td><td>Your key hit its rate limit</td><td>Wait one minute and run again. This is the gateway working as designed.</td></tr>
+                <tr><td>Test call: timeout</td><td>Model is slow or cold</td><td>Run once more. If it repeats, raise a hand.</td></tr>
+              </tbody></table></div>
+          </details>
+        </div></div></li>
+    </ol>
+  </section>
+
+  <!-- ============ LAB 1 ============ -->
+  <section class="panel" id="p1" role="tabpanel" aria-labelledby="t1" data-lab="l1" hidden>
+    <div class="callout acc" style="margin-bottom:1rem"><b>Goal · 30 minutes</b>Build a small working tool by chatting with an open-weight model through your own gateway key. Then find out whether the other model would have done better.</div>
+    <ol class="steps">
+      <li class="step"><input type="checkbox" id="l1a" aria-labelledby="l1a-h"><div><h3 id="l1a-h">Point Copilot at the gateway <span class="mins">8 min</span></h3>
+        <div class="body">
+          <ul class="clean dem">
+            <li>In VS Code press <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> and run <b>Chat: Manage Language Models</b>.</li>
+            <li>Choose <b>Add Models</b>, then the option for a <b>custom / OpenAI-compatible endpoint</b>.</li>
+            <li>URL: <code>http://&lt;gateway-ip&gt;:4000/v1</code>. Key: your <code>LLM_KEY</code>. Model ID: <code>chat-llm</code>.</li>
+            <li>Add a second entry with Model ID <code>chat-llm-b</code>.</li>
+            <li>Open the Chat view, click the model name, and pick <code>chat-llm</code>. Ask "reply with the word ready".</li>
+          </ul>
+          <div class="callout"><b>Menu names change between VS Code versions</b>Look for the words "custom", "OpenAI compatible" or "bring your own key". Cannot find it in 5 minutes? Raise a hand, and meanwhile use <code>python ask.py "your question"</code> to talk to the model from the terminal.</div>
+        </div></div></li>
+
+      <li class="step"><input type="checkbox" id="l1b" aria-labelledby="l1b-h"><div><h3 id="l1b-h">Make a project folder and ask for the tool <span class="mins">10 min</span></h3>
+        <div class="body">
+          <div class="codeblock short"><div class="cb-head"><span>terminal</span><button type="button" data-copy>Copy</button></div><pre>mkdir -p ~/plan_picker_a &amp;&amp; cd ~/plan_picker_a
+code .</pre></div>
+          <p>With <code>chat-llm</code> selected and Chat in <b>Agent</b> mode, paste this prompt.</p>
+          <div class="codeblock"><div class="cb-head"><span>prompt</span><button type="button" data-copy>Copy</button></div><pre>Build a small Python command-line tool in this folder called plan_picker.
+
+Data: put these in plans.json (all plans last 30 days):
+  Lite 199 INR, 20 GB; Plus 349 INR, 45 GB; Max 499 INR, 90 GB.
+Any plan can add 10 GB packs at 60 INR each.
+
+Behaviour: `python plan_picker.py --gb 60` prints a table of every option
+(plan, extra packs, total GB, total INR) and then the cheapest one that gives
+at least the requested GB. A value of 0 or less must print a clear error.
+
+Rules: standard library only, type hints, under 120 lines in total.
+Add test_plan_picker.py with exactly 5 pytest tests, including the 60 GB case
+(expected: Lite plus 4 packs = 439 INR). Run the tests and fix any failure.</pre></div>
+          <p>Let it work. Accept the file changes and terminal commands it asks for, but read them first.</p>
+        </div></div></li>
+
+      <li class="step"><input type="checkbox" id="l1c" aria-labelledby="l1c-h"><div><h3 id="l1c-h">Check it yourself <span class="mins">4 min</span></h3>
+        <div class="body">
+          <div class="codeblock"><div class="cb-head"><span>terminal</span><button type="button" data-copy>Copy</button></div><pre>python plan_picker.py --gb 60
+python plan_picker.py --gb 0
+python -m pytest -q
+wc -l plan_picker.py</pre></div>
+          <p>Expected: the cheapest line says <b>439</b>, <code>--gb 0</code> gives a clear error, 5 tests pass, and the file is under 120 lines. Count how many follow-up messages you needed.</p>
+        </div></div></li>
+
+      <li class="step"><input type="checkbox" id="l1d" aria-labelledby="l1d-h"><div><h3 id="l1d-h">Same prompt, other model <span class="mins">5 min</span></h3>
+        <div class="body">
+          <p>Make <code>~/plan_picker_b</code>, open it in a new window, switch the Chat model to <code>chat-llm-b</code>, paste the same prompt. Compare the two folders.</p>
+          <div class="tblwrap"><table class="tbl tt">
+            <thead><tr><th></th><th>chat-llm</th><th>chat-llm-b</th></tr></thead>
+            <tbody>
+              <tr><td>Follow-ups needed</td><td><input type="text" data-save="l1-fu-a" aria-label="chat-llm follow-ups"></td><td><input type="text" data-save="l1-fu-b" aria-label="chat-llm-b follow-ups"></td></tr>
+              <tr><td>Tests pass first run?</td><td><input type="text" data-save="l1-t-a" aria-label="chat-llm tests"></td><td><input type="text" data-save="l1-t-b" aria-label="chat-llm-b tests"></td></tr>
+              <tr><td>Lines of code</td><td><input type="text" data-save="l1-l-a" aria-label="chat-llm lines"></td><td><input type="text" data-save="l1-l-b" aria-label="chat-llm-b lines"></td></tr>
+              <tr><td>Anything wrong it said with confidence?</td><td><input type="text" data-save="l1-w-a" aria-label="chat-llm mistakes"></td><td><input type="text" data-save="l1-w-b" aria-label="chat-llm-b mistakes"></td></tr>
+            </tbody></table></div>
+        </div></div></li>
+
+      <li class="step"><input type="checkbox" id="l1e" aria-labelledby="l1e-h"><div><h3 id="l1e-h">Blind test, then check your spend <span class="mins">3 min</span></h3>
+        <div class="body">
+          <div class="codeblock short"><div class="cb-head"><span>terminal</span><button type="button" data-copy>Copy</button></div><pre>python blind_test.py</pre></div>
+          <p>You see two answers labelled X and Y. Vote before the reveal. Did your vote match the model you preferred in the previous step?</p>
+          <div class="codeblock short"><div class="cb-head"><span>terminal: what has my key cost so far?</span><button type="button" data-copy>Copy</button></div><pre>set -a; source .env.lab; set +a
+curl -s &quot;$GATEWAY/key/info&quot; -H &quot;Authorization: Bearer $LLM_KEY&quot; | python -m json.tool | grep -E &quot;spend|max_budget|rpm_limit|models&quot;</pre></div>
+          <p>You are watching the gateway meter your use. This is what lets a team give every person a budget.</p>
+        </div></div></li>
+
+      <li class="step"><input type="checkbox" id="l1f" aria-labelledby="l1f-h"><div><h3 id="l1f-h">Write three lines in <code>NOTES.md</code> <span class="mins">2 min</span></h3>
+        <div class="body">
+          <ul class="clean">
+            <li>Which model would you pick for coding help, and why (one number or observation)?</li>
+            <li>What did the model get wrong, or what would you not trust it with?</li>
+            <li>One thing you would change in the prompt next time.</li>
+          </ul>
+          <p class="muted">Keep <code>NOTES.md</code> in <code>~/day1-labs</code>. You will need it in Lab 2 and in the Team Build.</p>
+        </div></div></li>
+    </ol>
+  </section>
+
+  <!-- ============ LAB 2 ============ -->
+  <section class="panel" id="p2" role="tabpanel" aria-labelledby="t2" data-lab="l2" hidden>
+    <div class="callout acc" style="margin-bottom:1rem"><b>Goal · 25 minutes</b>Replace opinion with numbers: speed, cost and quality on three telecom tasks, for each model. Then use the numbers in the Model Picker scorecard.</div>
+    <ol class="steps">
+      <li class="step"><input type="checkbox" id="l2a" aria-labelledby="l2a-h"><div><h3 id="l2a-h">Predict before you run <span class="mins">3 min</span></h3>
+        <div class="body">
+          <p>The benchmark has three tasks: a strict-JSON ticket triage, a plan-arithmetic problem, and a fault-runbook answer. For each, write which model you expect to win on <b>quality</b> and which on <b>speed</b>.</p>
+          <div class="tblwrap"><table class="tbl tt">
+            <thead><tr><th>Task</th><th>Quality winner</th><th>Speed winner</th></tr></thead>
+            <tbody>
+              <tr><td>Ticket triage (JSON)</td><td><input type="text" data-save="l2-p1q" aria-label="triage quality guess"></td><td><input type="text" data-save="l2-p1s" aria-label="triage speed guess"></td></tr>
+              <tr><td>Plan arithmetic</td><td><input type="text" data-save="l2-p2q" aria-label="arithmetic quality guess"></td><td><input type="text" data-save="l2-p2s" aria-label="arithmetic speed guess"></td></tr>
+              <tr><td>Fault runbook</td><td><input type="text" data-save="l2-p3q" aria-label="runbook quality guess"></td><td><input type="text" data-save="l2-p3s" aria-label="runbook speed guess"></td></tr>
+            </tbody></table></div>
+        </div></div></li>
+
+      <li class="step"><input type="checkbox" id="l2b" aria-labelledby="l2b-h"><div><h3 id="l2b-h">Add prices so cost is real <span class="mins">2 min</span></h3>
+        <div class="body">
+          <p>Add one line to <code>.env.lab</code>. Use the price list on the room screen: USD per 1 million tokens, <code>input:output</code>. The numbers below are only an example.</p>
+          <div class="codeblock short"><div class="cb-head"><span>.env.lab (add)</span><button type="button" data-copy>Copy</button></div><pre>PRICES=chat-llm=0.60:2.50,chat-llm-b=0.30:1.20</pre></div>
+        </div></div></li>
+
+      <li class="step"><input type="checkbox" id="l2c" aria-labelledby="l2c-h"><div><h3 id="l2c-h">Run the bake-off <span class="mins">8 min</span></h3>
+        <div class="body">
+          <div class="codeblock short"><div class="cb-head"><span>terminal</span><button type="button" data-copy>Copy</button></div><pre>python bench.py</pre></div>
+          <p>It streams each answer, times the first token and the generation speed, prices the call, and asks a judge model to score quality 1 to 5 against a rubric. The summary table appears at the end, and two files are saved: <code>bench_results.csv</code> and <code>bench_answers.txt</code>.</p>
+          <details class="more"><summary>Optional: add the small model on your own VM</summary>
+            <div class="codeblock short"><div class="cb-head"><span>terminal</span><button type="button" data-copy>Copy</button></div><pre>python bench.py chat-llm chat-llm-b ollama:llama3.2:3b</pre></div>
+            <p>It runs on your VM's CPU, costs nothing per call, and will be slower. Watch what happens to quality on the arithmetic task.</p>
+          </details>
+        </div></div></li>
+
+      <li class="step"><input type="checkbox" id="l2d" aria-labelledby="l2d-h"><div><h3 id="l2d-h">Do not trust the judge blindly <span class="mins">4 min</span></h3>
+        <div class="body">
+          <p>Open <code>bench_answers.txt</code>. Find one task where the two scores differ. Read both answers. Do you agree with the score?</p>
+          <div class="say">A judge is also a model. It can be wrong, and it can prefer long answers. Read at least one answer yourself before you act on a score.</div>
+          <p>For the plan-arithmetic task the correct answer is <b>Lite plus 4 packs = 439 INR</b>. Check each model against that.</p>
+        </div></div></li>
+
+      <li class="step"><input type="checkbox" id="l2e" aria-labelledby="l2e-h"><div><h3 id="l2e-h">Feed the Model Picker <span class="mins">8 min</span></h3>
+        <div class="body">
+          <p>Open the <a class="go" href="../content/M2_model_picker.html#score">Model Picker scorecard</a>. Add your two models, set quality, speed and cost from your own table, and look at the ranking. Then change the weights so the answer fits two different use cases.</p>
+          <div class="tblwrap"><table class="tbl tt">
+            <thead><tr><th>Use case</th><th>Your pick</th><th>Because (one number)</th></tr></thead>
+            <tbody>
+              <tr><td>Ticket triage, millions per day</td><td><input type="text" data-save="l2-u1" aria-label="triage pick"></td><td><input type="text" data-save="l2-u1w" aria-label="triage reason"></td></tr>
+              <tr><td>Runbook helper for field engineers</td><td><input type="text" data-save="l2-u2" aria-label="runbook pick"></td><td><input type="text" data-save="l2-u2w" aria-label="runbook reason"></td></tr>
+            </tbody></table></div>
+        </div></div></li>
+    </ol>
+  </section>
+
+  <!-- ============ LAB 3 ============ -->
+  <section class="panel" id="p3" role="tabpanel" aria-labelledby="t3" data-lab="l3" hidden>
+    <div class="callout acc" style="margin-bottom:1rem"><b>Goal · 25 minutes</b>Predict the memory and speed of a model from first principles, then measure it on your VM and see how far off you were.</div>
+    <ol class="steps">
+      <li class="step"><input type="checkbox" id="l3a" aria-labelledby="l3a-h"><div><h3 id="l3a-h">Predict with the calculator <span class="mins">6 min</span></h3>
+        <div class="body">
+          <p>Open the <a class="go" href="../content/M3_vram_calculator.html#calc">VRAM calculator</a>. Choose <b>Llama 3.2 3B</b> (or enter 3.2 billion parameters), a CPU with about 20 GB/s memory bandwidth, and a short context. Read off the weight size and the decode speed for each precision, and write them below.</p>
+          <div class="tblwrap"><table class="tbl tt">
+            <thead><tr><th>Precision</th><th>Ollama tag</th><th>Predicted GB</th><th>Measured GB</th><th>Predicted tok/s</th><th>Measured tok/s</th></tr></thead>
+            <tbody>
+              <tr><td>Q4_K_M</td><td><code>llama3.2:3b</code></td><td><input type="text" data-save="l3-q4pg" aria-label="Q4 predicted GB"></td><td><input type="text" data-save="l3-q4mg" aria-label="Q4 measured GB"></td><td><input type="text" data-save="l3-q4pt" aria-label="Q4 predicted tok/s"></td><td><input type="text" data-save="l3-q4mt" aria-label="Q4 measured tok/s"></td></tr>
+              <tr><td>Q8_0</td><td><code>llama3.2:3b-instruct-q8_0</code></td><td><input type="text" data-save="l3-q8pg" aria-label="Q8 predicted GB"></td><td><input type="text" data-save="l3-q8mg" aria-label="Q8 measured GB"></td><td><input type="text" data-save="l3-q8pt" aria-label="Q8 predicted tok/s"></td><td><input type="text" data-save="l3-q8mt" aria-label="Q8 measured tok/s"></td></tr>
+              <tr><td>FP16</td><td><code>llama3.2:3b-instruct-fp16</code></td><td><input type="text" data-save="l3-f16pg" aria-label="FP16 predicted GB"></td><td><input type="text" data-save="l3-f16mg" aria-label="FP16 measured GB"></td><td><input type="text" data-save="l3-f16pt" aria-label="FP16 predicted tok/s"></td><td><input type="text" data-save="l3-f16mt" aria-label="FP16 measured tok/s"></td></tr>
+            </tbody></table></div>
+        </div></div></li>
+
+      <li class="step"><input type="checkbox" id="l3b" aria-labelledby="l3b-h"><div><h3 id="l3b-h">Measure each precision <span class="mins">9 min</span></h3>
+        <div class="body">
+          <div class="codeblock"><div class="cb-head"><span>terminal</span><button type="button" data-copy>Copy</button></div><pre>ollama list
+python ollama_bench.py llama3.2:3b
+python ollama_bench.py llama3.2:3b-instruct-q8_0
+python ollama_bench.py llama3.2:3b-instruct-fp16</pre></div>
+          <p>Each run prints load time, prompt speed, generation speed and the memory the model holds. The first call after loading is slow, so the summary uses the later runs. Fill the "measured" columns above.</p>
+          <p class="muted">A tag missing from <code>ollama list</code>? Skip it and tell the room which one. Do not pull large files over the shared connection without asking.</p>
+        </div></div></li>
+
+      <li class="step"><input type="checkbox" id="l3c" aria-labelledby="l3c-h"><div><h3 id="l3c-h">Stretch the context window <span class="mins">4 min</span></h3>
+        <div class="body">
+          <p>Predict first: when you ask for a bigger context window, what grows, the weights or the KV cache? Then check.</p>
+          <div class="codeblock short"><div class="cb-head"><span>terminal</span><button type="button" data-copy>Copy</button></div><pre>python ollama_bench.py llama3.2:3b 2048
+python ollama_bench.py llama3.2:3b 16384</pre></div>
+          <p>Compare the "memory held" line. The difference is the KV cache plus runtime buffers.</p>
+        </div></div></li>
+
+      <li class="step"><input type="checkbox" id="l3d" aria-labelledby="l3d-h"><div><h3 id="l3d-h">Many users at once <span class="mins">6 min</span></h3>
+        <div class="body">
+          <p>Now go through the gateway. Predict: when 16 people ask at the same time, does the total tokens per second go up or down? Does one person's speed go up or down?</p>
+          <div class="codeblock short"><div class="cb-head"><span>terminal</span><button type="button" data-copy>Copy</button></div><pre>python conc.py chat-llm 1
+python conc.py chat-llm 4
+python conc.py chat-llm 16</pre></div>
+          <div class="tblwrap"><table class="tbl tt">
+            <thead><tr><th>Concurrent</th><th>Total tok/s</th><th>p95 latency</th><th>Errors</th></tr></thead>
+            <tbody>
+              <tr><td>1</td><td><input type="text" data-save="l3-c1t" aria-label="1 request tok/s"></td><td><input type="text" data-save="l3-c1l" aria-label="1 request latency"></td><td><input type="text" data-save="l3-c1e" aria-label="1 request errors"></td></tr>
+              <tr><td>4</td><td><input type="text" data-save="l3-c4t" aria-label="4 requests tok/s"></td><td><input type="text" data-save="l3-c4l" aria-label="4 requests latency"></td><td><input type="text" data-save="l3-c4e" aria-label="4 requests errors"></td></tr>
+              <tr><td>16</td><td><input type="text" data-save="l3-c16t" aria-label="16 requests tok/s"></td><td><input type="text" data-save="l3-c16l" aria-label="16 requests latency"></td><td><input type="text" data-save="l3-c16e" aria-label="16 requests errors"></td></tr>
+            </tbody></table></div>
+          <p>If errors show <code>RateLimitError</code>, that is your key's request limit doing its job. Note it, do not fight it. If the gateway also lists <code>local-vllm</code>, repeat the three runs with it and compare.</p>
+        </div></div></li>
+
+      <li class="step"><input type="checkbox" id="l3e" aria-labelledby="l3e-h"><div><h3 id="l3e-h">Write the rule in your own words <span class="mins">2 min</span></h3>
+        <div class="body">
+          <p>Finish these two sentences in <code>NOTES.md</code>, using your numbers.</p>
+          <ul class="clean">
+            <li>"Generation speed on a CPU is limited by ________, so going from Q8 to Q4 changed speed by about ____ %."</li>
+            <li>"More concurrent users raised total throughput but ________ for each user, because the server ________."</li>
+          </ul>
+        </div></div></li>
+    </ol>
+  </section>
+
+  <!-- ============ TEAM BUILD ============ -->
+  <section class="panel" id="p4" role="tabpanel" aria-labelledby="t4" data-lab="tb" hidden>
+    <div class="callout acc" style="margin-bottom:1rem"><b>Goal · 100 minutes · two teams</b>Build your own LiteLLM gateway on a blank Ubuntu VM, connect it to the models, then move your teammates' VMs and Copilot onto it. Finish by breaking it on purpose and writing down what you learned.</div>
+
+    <div class="roles" style="margin-bottom:1rem">
+      <div class="card"><h3>Builder</h3><p class="muted">Hands on the keyboard of the team VM.</p></div>
+      <div class="card"><h3>Navigator</h3><p class="muted">Reads this guide aloud, checks every command before it runs.</p></div>
+      <div class="card"><h3>Tester</h3><p class="muted">Works from their own VM, proves each step from the client side.</p></div>
+    </div>
+    <p class="muted" style="margin-bottom:1rem">Rotate the roles at every numbered phase. Nobody should build two phases in a row.</p>
+
+    <div class="grid g2" style="margin-bottom:1rem">
+      <div class="card"><h3>Your team card (ask the trainer if anything is missing)</h3>
+        <ul class="clean">
+          <li><b>Team VM:</b> private IP, user name and password. This is the blank Ubuntu machine you build on.</li>
+          <li><b>Central gateway:</b> address <code>http://&lt;central-gateway-ip&gt;:4000/v1</code> and your <b>team key</b>.</li>
+          <li><b>Models you can call upstream:</b> <code>chat-llm</code> and <code>chat-llm-b</code>.</li>
+          <li><b>Prices:</b> on the room screen, USD per 1 million tokens. Put them in <code>config.yaml</code>, divided by 1,000,000.</li>
+        </ul></div>
+      <div class="card"><h3>Stuck? Use this ladder</h3>
+        <ol class="clean">
+          <li><b>0-3 min:</b> read the <b>last 20 lines</b> of the log. The answer is usually there.</li>
+          <li><b>3-6 min:</b> ask your teammate. Say out loud what you expected and what you got.</li>
+          <li><b>6-10 min:</b> open "Common problems" under the step.</li>
+          <li><b>After 10 min:</b> raise a hand. Bring the exact error text.</li>
+        </ol></div>
+    </div>
+
+    <div class="card" style="margin-bottom:1rem"><h3>What you are building</h3>
+      <svg viewBox="0 0 900 190" role="img" aria-label="Three teammate VMs call your team gateway, which calls the central gateway, which calls the models" style="width:100%;height:auto;max-height:220px">
+        <defs><marker id="ar" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L10,5 L0,10 z" fill="var(--muted)"/></marker></defs>
+        <g font-family="inherit" font-size="19" fill="var(--ink)">
+          <rect x="10" y="20" width="190" height="42" rx="9" fill="var(--surface2)" stroke="var(--line)"/><text x="105" y="47" text-anchor="middle">Teammate VM 1</text>
+          <rect x="10" y="74" width="190" height="42" rx="9" fill="var(--surface2)" stroke="var(--line)"/><text x="105" y="101" text-anchor="middle">Teammate VM 2</text>
+          <rect x="10" y="128" width="190" height="42" rx="9" fill="var(--surface2)" stroke="var(--line)"/><text x="105" y="155" text-anchor="middle">Teammate VM 3</text>
+          <rect x="300" y="45" width="210" height="100" rx="12" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="2"/>
+          <text x="405" y="82" text-anchor="middle" font-weight="700">YOUR gateway</text><text x="405" y="110" text-anchor="middle" font-size="16" fill="var(--muted)">team keys · budgets · fallback</text>
+          <rect x="610" y="45" width="140" height="100" rx="12" fill="var(--surface2)" stroke="var(--line)"/>
+          <text x="680" y="82" text-anchor="middle" font-weight="700">Central</text><text x="680" y="110" text-anchor="middle" font-size="16" fill="var(--muted)">gateway</text>
+          <rect x="790" y="20" width="100" height="62" rx="9" fill="var(--surface2)" stroke="var(--line)"/><text x="840" y="57" text-anchor="middle" font-size="16">chat-llm</text>
+          <rect x="790" y="108" width="100" height="62" rx="9" fill="var(--surface2)" stroke="var(--line)"/><text x="840" y="143" text-anchor="middle" font-size="16">chat-llm-b</text>
+        </g>
+        <g stroke="var(--muted)" stroke-width="2" fill="none" marker-end="url(#ar)">
+          <path d="M200 41 L296 82"/><path d="M200 95 L296 95"/><path d="M200 149 L296 108"/>
+          <path d="M510 95 L606 95"/><path d="M750 80 L786 55"/><path d="M750 110 L786 135"/>
+        </g>
+      </svg>
+      <p class="muted">Your teammates call <b>your</b> gateway with <b>their own</b> keys. Your gateway calls the central one with a single team key. Nobody holds a raw cloud key.</p>
+    </div>
+
+    <ol class="steps">
+      <li class="step"><input type="checkbox" id="tb1" aria-labelledby="tb1-h"><div><h3 id="tb1-h">Plan <span class="mins">10 min</span></h3>
+        <div class="body">
+          <ul class="clean">
+            <li>Write the IP address of your team VM and of the central gateway on a sticky note or in <code>NOTES.md</code>.</li>
+            <li>Agree on three things before touching a keyboard: the alias names your team will expose (<code>team-chat</code>, <code>team-chat-b</code>), who gets which key, and what budget and request limit each key gets.</li>
+            <li>Test you can reach the team VM from your own VM: <code>ssh &lt;user&gt;@&lt;team-vm-ip&gt;</code>.</li>
+          </ul>
+        </div></div></li>
+
+      <li class="step"><input type="checkbox" id="tb2" aria-labelledby="tb2-h"><div><h3 id="tb2-h">Install Docker and copy the gateway files <span class="mins">15 min</span></h3>
+        <div class="body">
+          <p>First log in to the team VM from your own VM: <code>ssh &lt;user&gt;@&lt;team-vm-ip&gt;</code> (type <code>yes</code> the first time, then the password from your team card). Then, on the <b>team VM</b>:</p>
+          <div class="codeblock short"><div class="cb-head"><span>team VM</span><button type="button" data-copy>Copy</button></div><pre>curl -fsSL https://get.docker.com | sudo sh
+sudo usermod -aG docker $USER &amp;&amp; newgrp docker
+docker --version &amp;&amp; docker compose version</pre></div>
+          <p>From <b>your own VM</b>, copy the starter folder across:</p>
+          <div class="codeblock short"><div class="cb-head"><span>your VM</span><button type="button" data-copy>Copy</button></div><pre>scp -r ~/day1-labs/team &lt;user&gt;@&lt;team-vm-ip&gt;:~/gateway</pre></div>
+          <details class="more"><summary>Common problems: Docker install and file copy</summary>
+            <ul class="clean">
+              <li><b><code>docker: permission denied</code>:</b> run <code>newgrp docker</code>, or log out and back in.</li>
+              <li><b>The install script hangs or times out:</b> the VM has no internet. Tell the trainer. Test with <code>curl -sI https://get.docker.com | head -1</code>.</li>
+              <li><b><code>scp</code> says "No such file or directory":</b> the <code>team</code> folder is under <code>~/day1-labs/</code> on <b>your</b> VM. Run <code>ls ~/day1-labs/team</code> first.</li>
+              <li><b><code>docker compose</code> not found:</b> the install did not finish. Run the install line again and read the last 10 lines.</li>
+            </ul>
+          </details>
+          <p>Back on the team VM, create the secrets file and fill it in:</p>
+          <div class="codeblock"><div class="cb-head"><span>team VM</span><button type="button" data-copy>Copy</button></div><pre>cd ~/gateway
+cp .env.example .env
+echo &quot;master:  sk-team-$(openssl rand -hex 16)&quot;
+echo &quot;dbpass:  $(openssl rand -hex 12)&quot;
+nano .env</pre></div>
+          <ul class="clean">
+            <li><code>LITELLM_MASTER_KEY</code>: the "master" value printed above. It is the admin key for your gateway. Treat it like a root password.</li>
+            <li><code>DB_PASSWORD</code>: the "dbpass" value.</li>
+            <li><code>UPSTREAM_BASE</code>: <code>http://&lt;central-gateway-ip&gt;:4000/v1</code></li>
+            <li><code>UPSTREAM_KEY</code>: the team key from your team card.</li>
+          </ul>
+          <details class="more"><summary>Read the three files before you start them</summary>
+            <p class="muted" style="margin-bottom:.5rem">Find one line in each file you could explain to a colleague.</p>
+            <div class="stack">
+              <div class="codeblock"><div class="cb-head"><span>docker-compose.yml</span><button type="button" data-copy>Copy</button></div><pre>services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: litellm
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: litellm
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: [&quot;CMD-SHELL&quot;, &quot;pg_isready -U litellm -d litellm&quot;]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  litellm:
+    image: ghcr.io/berriai/litellm:main-stable
+    restart: unless-stopped
+    ports:
+      - &quot;4000:4000&quot;
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://litellm:${DB_PASSWORD}@db:5432/litellm
+    volumes:
+      - ./config.yaml:/app/config.yaml
+    command: [&quot;--config&quot;, &quot;/app/config.yaml&quot;, &quot;--port&quot;, &quot;4000&quot;]
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:</pre></div>
+              <div class="codeblock"><div class="cb-head"><span>config.yaml</span><button type="button" data-copy>Copy</button></div><pre># Team gateway. Your upstream is the central gateway, reached with the team key you were given.
+# Edit this file, then:  docker compose restart litellm
+
+model_list:
+  - model_name: team-chat            # the name your teammates will call
+    litellm_params:
+      model: openai/chat-llm         # &quot;openai/&quot; = speak the OpenAI API to the upstream
+      api_base: os.environ/UPSTREAM_BASE
+      api_key: os.environ/UPSTREAM_KEY
+      input_cost_per_token: 0.0000006     # lets the gateway price calls, so budgets can work
+      output_cost_per_token: 0.0000025
+
+  - model_name: team-chat-b
+    litellm_params:
+      model: openai/chat-llm-b
+      api_base: os.environ/UPSTREAM_BASE
+      api_key: os.environ/UPSTREAM_KEY
+      input_cost_per_token: 0.0000003
+      output_cost_per_token: 0.0000012
+
+router_settings:
+  num_retries: 2          # try the same model again before giving up
+  timeout: 60             # seconds before a call counts as failed
+  allowed_fails: 2        # failures before a model is put on cooldown
+  cooldown_time: 30       # seconds the model rests
+  fallbacks: [{&quot;team-chat&quot;: [&quot;team-chat-b&quot;]}]
+
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY
+  database_url: os.environ/DATABASE_URL
+
+litellm_settings:
+  drop_params: true       # ignore parameters an upstream model does not support</pre></div>
+              <div class="codeblock"><div class="cb-head"><span>.env.example</span><button type="button" data-copy>Copy</button></div><pre># Copy to .env and fill in. Never commit .env to Git.
+LITELLM_MASTER_KEY=sk-team-CHANGE-ME-long-random
+DB_PASSWORD=CHANGE-ME-too
+UPSTREAM_BASE=http://CENTRAL-GATEWAY-IP:4000/v1
+UPSTREAM_KEY=sk-your-team-upstream-key</pre></div>
+            </div>
+          </details>
+        </div></div></li>
+
+      <li class="step"><input type="checkbox" id="tb3" aria-labelledby="tb3-h"><div><h3 id="tb3-h">Start the gateway and send the first request <span class="mins">10 min</span></h3>
+        <div class="body">
+          <div class="codeblock short"><div class="cb-head"><span>team VM</span><button type="button" data-copy>Copy</button></div><pre>docker compose up -d
+docker compose logs -f litellm</pre></div>
+          <p>The first start takes a minute or two while the database is prepared. Press <kbd>Ctrl</kbd>+<kbd>C</kbd> to leave the logs once you see the server running.</p>
+          <div class="codeblock"><div class="cb-head"><span>team VM</span><button type="button" data-copy>Copy</button></div><pre>export GW=http://localhost:4000
+export MK=$(grep LITELLM_MASTER_KEY .env | cut -d= -f2)
+curl -s $GW/health/liveliness
+curl -s $GW/v1/chat/completions -H &quot;Authorization: Bearer $MK&quot; -H &quot;Content-Type: application/json&quot; \
+  -d &#x27;{&quot;model&quot;:&quot;team-chat&quot;,&quot;messages&quot;:[{&quot;role&quot;:&quot;user&quot;,&quot;content&quot;:&quot;Reply with the word ready&quot;}],&quot;max_tokens&quot;:10}&#x27;</pre></div>
+          <p>You should get a JSON answer. If you get an error, read the <b>last 20 lines</b> of the logs before you change anything.</p>
+          <details class="more"><summary>Common first-start problems</summary>
+            <ul class="clean">
+              <li><b>Connection error / 401 from upstream:</b> <code>UPSTREAM_BASE</code> must end in <code>/v1</code>, and the team key must be exactly as on your card.</li>
+              <li><b>"model not found" for the upstream:</b> the name after <code>openai/</code> in <code>config.yaml</code> must match what the central gateway lists: <code>curl &lt;central&gt;/v1/models -H "Authorization: Bearer $UPSTREAM_KEY"</code>.</li>
+              <li><b>After editing <code>config.yaml</code>:</b> <code>docker compose restart litellm</code>.</li>
+              <li><b>Edited <code>.env</code>?</b> Use <code>docker compose up -d --force-recreate litellm</code>.</li>
+              <li><b>Container keeps restarting:</b> run <code>docker compose ps</code>, then <code>docker compose logs --tail 30 litellm</code>. A YAML error is nearly always a wrong indent. Use spaces, never tabs.</li>
+              <li><b>Database not healthy:</b> check <code>DB_PASSWORD</code> in <code>.env</code> has no spaces or quotes. If you changed it after the first start, run <code>docker compose down -v</code> and start again.</li>
+              <li><b>Curl from your own VM times out but it works on the team VM:</b> port 4000 is blocked between the VMs. Tell the trainer.</li>
+              <li><b>Answer works but spend stays $0:</b> the two <code>*_cost_per_token</code> lines are missing or wrong in <code>config.yaml</code>.</li>
+            </ul>
+          </details>
+        </div></div></li>
+
+      <li class="step"><input type="checkbox" id="tb4" aria-labelledby="tb4-h"><div><h3 id="tb4-h">Issue a key per person <span class="mins">10 min</span></h3>
+        <div class="body">
+          <p>A virtual key limits <b>which models</b>, <b>how much money</b> and <b>how many requests per minute</b>. Define a small helper, then make one key for each of the three of you.</p>
+          <div class="codeblock"><div class="cb-head"><span>team VM</span><button type="button" data-copy>Copy</button></div><pre>mk_key () { curl -s $GW/key/generate -H &quot;Authorization: Bearer $MK&quot; -H &quot;Content-Type: application/json&quot; \
+  -d &quot;{\&quot;key_alias\&quot;:\&quot;$1\&quot;,\&quot;models\&quot;:[\&quot;team-chat\&quot;,\&quot;team-chat-b\&quot;],\&quot;rpm_limit\&quot;:${2:-30},\&quot;max_budget\&quot;:${3:-1},\&quot;budget_duration\&quot;:\&quot;1d\&quot;}&quot; \
+  | python3 -c &quot;import sys,json; print(json.load(sys.stdin)[&#x27;key&#x27;])&quot;; }
+
+mk_key member1
+mk_key member2
+mk_key member3</pre></div>
+          <div class="callout warn"><b>Hand keys over privately</b>Send each key to its owner in a direct message. Not in a shared channel, not in Git, not on a screen the room can see.</div>
+          <p>Open the admin page at <code>http://&lt;team-vm-ip&gt;:4000/ui</code>. Username <code>admin</code>, password is your master key. Find your three keys and their limits.</p>
+        </div></div></li>
+
+      <li class="step"><input type="checkbox" id="tb5" aria-labelledby="tb5-h"><div><h3 id="tb5-h">Move everyone onto your gateway <span class="mins">10 min</span></h3>
+        <div class="body">
+          <p>On <b>each teammate's own VM</b>, change <code>.env.lab</code> and rerun the check:</p>
+          <div class="codeblock short"><div class="cb-head"><span>.env.lab (change)</span><button type="button" data-copy>Copy</button></div><pre>GATEWAY=http://&lt;team-vm-ip&gt;:4000
+LLM_KEY=sk-the-key-you-were-given
+MODELS=team-chat,team-chat-b</pre></div>
+          <div class="codeblock short"><div class="cb-head"><span>your VM</span><button type="button" data-copy>Copy</button></div><pre>python lab0_check.py</pre></div>
+          <p>Then update the Copilot custom endpoint: new URL <code>http://&lt;team-vm-ip&gt;:4000/v1</code>, your new key, model IDs <code>team-chat</code> and <code>team-chat-b</code>. Ask Copilot a question and watch the request appear in your gateway's admin page, under your key's name.</p>
+          <p class="muted">Timeout instead of an answer? Port 4000 must be open between the two VMs. Raise a hand.</p>
+          <div class="callout acc"><b>Done check before the Failure Lab</b>Every teammate has their own key. <code>lab0_check.py</code> passes on every teammate VM. Copilot answers through your gateway. Each request shows under the right key name on the admin page.</div>
+        </div></div></li>
+
+      <li class="step"><input type="checkbox" id="tb6" aria-labelledby="tb6-h"><div><h3 id="tb6-h">Failure Lab: break it on purpose <span class="mins">25 min</span></h3>
+        <div class="body">
+          <p>A gateway you have only seen working is a gateway you do not understand. Run all five tests on the <b>team VM</b>. For each: predict what will happen, run it, then set the result and write what you saw.</p>
+
+          <h4>Test 1 · A dead model, and a fallback that saves the user</h4>
+          <p>Add this block to <code>model_list</code> in <code>config.yaml</code>, and extend <code>fallbacks</code> so it reads as shown. Then restart.</p>
+          <div class="codeblock"><div class="cb-head"><span>config.yaml (add under model_list)</span><button type="button" data-copy>Copy</button></div><pre>  - model_name: team-dead
+    litellm_params:
+      model: openai/chat-llm
+      api_base: http://127.0.0.1:9/v1      # nothing listens here
+      api_key: none</pre></div>
+          <div class="codeblock short"><div class="cb-head"><span>config.yaml (change in router_settings)</span><button type="button" data-copy>Copy</button></div><pre>  fallbacks: [{&quot;team-chat&quot;: [&quot;team-chat-b&quot;]}, {&quot;team-dead&quot;: [&quot;team-chat&quot;]}]</pre></div>
+          <div class="codeblock"><div class="cb-head"><span>team VM</span><button type="button" data-copy>Copy</button></div><pre>docker compose restart litellm
+time curl -s $GW/v1/chat/completions -H &quot;Authorization: Bearer $MK&quot; -H &quot;Content-Type: application/json&quot; \
+  -d &#x27;{&quot;model&quot;:&quot;team-dead&quot;,&quot;messages&quot;:[{&quot;role&quot;:&quot;user&quot;,&quot;content&quot;:&quot;Reply with the word ready&quot;}],&quot;max_tokens&quot;:10}&#x27;
+docker compose logs --tail 40 litellm</pre></div>
+          <p>Expected: an answer still arrives. The logs show the failed attempts first, then the fallback. Note the extra seconds the user waited.</p>
+
+          <h4>Test 2 · A leaked key is revoked</h4>
+          <div class="codeblock"><div class="cb-head"><span>team VM</span><button type="button" data-copy>Copy</button></div><pre>K=$(mk_key victim)
+curl -s $GW/v1/models -H &quot;Authorization: Bearer $K&quot; | head -c 200; echo
+curl -s $GW/key/delete -H &quot;Authorization: Bearer $MK&quot; -H &quot;Content-Type: application/json&quot; -d &quot;{\&quot;keys\&quot;:[\&quot;$K\&quot;]}&quot;; echo
+curl -s $GW/v1/models -H &quot;Authorization: Bearer $K&quot; | head -c 300; echo</pre></div>
+          <p>Expected: the key works, then fails with an authentication error. Think: how long would it take to do the same to a raw cloud key that is pasted on six VMs?</p>
+
+          <h4>Test 3 · The rate limit</h4>
+          <div class="codeblock"><div class="cb-head"><span>team VM</span><button type="button" data-copy>Copy</button></div><pre>K=$(mk_key limited 3)
+for i in 1 2 3 4 5 6; do
+  curl -s -o /dev/null -w &quot;call $i -&gt; HTTP %{http_code}\n&quot; $GW/v1/chat/completions \
+    -H &quot;Authorization: Bearer $K&quot; -H &quot;Content-Type: application/json&quot; \
+    -d &#x27;{&quot;model&quot;:&quot;team-chat&quot;,&quot;messages&quot;:[{&quot;role&quot;:&quot;user&quot;,&quot;content&quot;:&quot;hi&quot;}],&quot;max_tokens&quot;:5}&#x27;
+done</pre></div>
+          <p>Expected: the first three succeed, the next ones return <b>429</b>. What would a user see in Copilot when this happens?</p>
+
+          <h4>Test 4 · The budget runs out</h4>
+          <div class="codeblock"><div class="cb-head"><span>team VM</span><button type="button" data-copy>Copy</button></div><pre>K=$(mk_key tiny 60 0.0005)
+for i in $(seq 1 8); do
+  curl -s -o /dev/null -w &quot;call $i -&gt; HTTP %{http_code}\n&quot; $GW/v1/chat/completions \
+    -H &quot;Authorization: Bearer $K&quot; -H &quot;Content-Type: application/json&quot; \
+    -d &#x27;{&quot;model&quot;:&quot;team-chat&quot;,&quot;messages&quot;:[{&quot;role&quot;:&quot;user&quot;,&quot;content&quot;:&quot;Write 150 words about mobile towers.&quot;}],&quot;max_tokens&quot;:200}&#x27;
+  sleep 6
+done</pre></div>
+          <p>Expected: early calls succeed, later calls are refused with a budget error. Spend is written in small batches, so the cut-off arrives a call or two late. Why does the config file need <code>input_cost_per_token</code> for this to work at all?</p>
+
+          <h4>Test 5 · The wrong model name</h4>
+          <div class="codeblock short"><div class="cb-head"><span>team VM</span><button type="button" data-copy>Copy</button></div><pre>K=$(mk_key typo)
+curl -s $GW/v1/chat/completions -H &quot;Authorization: Bearer $K&quot; -H &quot;Content-Type: application/json&quot; \
+  -d &#x27;{&quot;model&quot;:&quot;gpt-4o&quot;,&quot;messages&quot;:[{&quot;role&quot;:&quot;user&quot;,&quot;content&quot;:&quot;hi&quot;}]}&#x27;; echo</pre></div>
+          <p>Expected: a clear refusal. Copy the message word for word into the table. This is the error a developer will paste into chat on a Monday morning.</p>
+
+          <div class="tblwrap"><table class="tbl tt" id="fl">
+            <thead><tr><th>Test</th><th>Result</th><th>What I saw (one line)</th></tr></thead>
+            <tbody>
+              <tr><td>1 · Dead model</td><td><select data-save="fl1s" aria-label="Test 1 result"><option value="">not run</option><option value="pass">as expected</option><option value="part">partly</option><option value="fail">not as expected</option></select></td><td><input type="text" data-save="fl1t" aria-label="Test 1 notes"></td></tr>
+              <tr><td>2 · Revoked key</td><td><select data-save="fl2s" aria-label="Test 2 result"><option value="">not run</option><option value="pass">as expected</option><option value="part">partly</option><option value="fail">not as expected</option></select></td><td><input type="text" data-save="fl2t" aria-label="Test 2 notes"></td></tr>
+              <tr><td>3 · Rate limit</td><td><select data-save="fl3s" aria-label="Test 3 result"><option value="">not run</option><option value="pass">as expected</option><option value="part">partly</option><option value="fail">not as expected</option></select></td><td><input type="text" data-save="fl3t" aria-label="Test 3 notes"></td></tr>
+              <tr><td>4 · Budget</td><td><select data-save="fl4s" aria-label="Test 4 result"><option value="">not run</option><option value="pass">as expected</option><option value="part">partly</option><option value="fail">not as expected</option></select></td><td><input type="text" data-save="fl4t" aria-label="Test 4 notes"></td></tr>
+              <tr><td>5 · Wrong model</td><td><select data-save="fl5s" aria-label="Test 5 result"><option value="">not run</option><option value="pass">as expected</option><option value="part">partly</option><option value="fail">not as expected</option></select></td><td><input type="text" data-save="fl5t" aria-label="Test 5 notes"></td></tr>
+            </tbody></table></div>
+          <p class="muted">Before the next phase, remove the <code>team-dead</code> test block or keep it clearly labelled. Do not leave a broken model in a gateway others rely on.</p>
+        </div></div></li>
+
+      <li class="step"><input type="checkbox" id="tb7" aria-labelledby="tb7-h"><div><h3 id="tb7-h">Swap test with the other team <span class="mins">5 min</span></h3>
+        <div class="body">
+          <ul class="clean">
+            <li>Make one key for the other team: <code>mk_key guest 10</code>. Send it to them privately, with your gateway address.</li>
+            <li>They put it in a fresh <code>.env.lab</code> and run <code>python lab0_check.py</code> against <b>your</b> gateway. You watch your admin page.</li>
+            <li>Then switch roles. The question to answer: can the other team tell, from the outside, what you built?</li>
+          </ul>
+        </div></div></li>
+
+      <li class="step"><input type="checkbox" id="tb8" aria-labelledby="tb8-h"><div><h3 id="tb8-h">Routing decision, Git tag, 3-minute demo <span class="mins">15 min</span></h3>
+        <div class="body">
+          <p>Fill in <code>ROUTING_DECISION.md</code> in the <code>gateway</code> folder. Use your own numbers from Lab 2 and the Failure Lab. Then freeze the work:</p>
+          <div class="codeblock"><div class="cb-head"><span>team VM</span><button type="button" data-copy>Copy</button></div><pre>cd ~/gateway
+printf &quot;.env\n&quot; &gt; .gitignore
+git init -q 2&gt;/dev/null
+git config user.name &quot;Team&quot; &amp;&amp; git config user.email &quot;team@example.com&quot;
+git add -A &amp;&amp; git commit -qm &quot;Day 1 team gateway&quot; &amp;&amp; git tag day1
+git log --oneline --decorate | head -3
+git ls-files | grep -c &quot;^.env$&quot; || true</pre></div>
+          <p>The last line must print <b>0</b>: your secrets file is not in the repository.</p>
+          <div class="say">3-minute demo, in this order: (1) draw the path from Copilot to the model in one sentence, (2) send one live request through your gateway with a teammate's key, (3) show one failure you caused and what the log said, (4) read your routing decision, then name one situation in which it would be wrong.</div>
+        </div></div></li>
+    </ol>
+  </section>
+
+  <!-- ============ STRETCH ============ -->
+  <section class="panel" id="p5" role="tabpanel" aria-labelledby="t5" hidden>
+    <div class="callout acc" style="margin-bottom:1rem"><b>Finished early? Pick one.</b>None of these are required. They are here so nobody waits.</div>
+    <div class="grid g3">
+      <div class="card"><h3>1 · LoRA capacity challenge</h3>
+        <p>Open the <a class="go" href="../content/M4_decision_clinic.html#lora">LoRA sizer</a>. Find a setting that fits QLoRA on a 32B model into a 24 GB GPU. Change rank, targets, sequence length and batch size until the fit chip turns green. Write down what you gave up to make it fit.</p></div>
+      <div class="card"><h3>2 · What does your gateway cost in latency?</h3>
+        <p>Run <code>python bench.py</code> twice: once with <code>chat-llm</code> on the central gateway, once with <code>team-chat</code> on yours. Compare time to first token. Explain the difference in one sentence.</p></div>
+      <div class="card"><h3>3 · Scale it to 500 people</h3>
+        <p>In <code>NOTES.md</code>, list what in your current design breaks first at 500 users. Pick the top three. For each, name the fix and what it costs.</p></div>
+    </div>
+  </section>
+</main>
+
+<script>
+/* shared helpers: safe storage, theme toggle, tabs, copy buttons */
+const store = {
+  get(k, d){ try { const v = localStorage.getItem("kyn1:" + k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v){ try { localStorage.setItem("kyn1:" + k, JSON.stringify(v)); } catch (e) {} }
+};
+
+(function theme(){
+  const saved = store.get("theme", null);
+  if (saved) document.documentElement.setAttribute("data-theme", saved);
+  const btn = document.getElementById("themebtn");
+  if (!btn) return;
+  btn.addEventListener("click", () => {
+    const cur = document.documentElement.getAttribute("data-theme");
+    const isDark = cur ? cur === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+    const next = isDark ? "light" : "dark";
+    document.documentElement.setAttribute("data-theme", next);
+    store.set("theme", next);
+  });
+})();
+
+function initTabs(root, opts){
+  opts = opts || {};
+  const tabs = Array.from(root.querySelectorAll('[role="tab"]'));
+  const panels = tabs.map(t => document.getElementById(t.getAttribute("aria-controls")));
+  function select(i, focus){
+    tabs.forEach((t, j) => {
+      t.setAttribute("aria-selected", j === i ? "true" : "false");
+      t.tabIndex = j === i ? 0 : -1;
+      panels[j].hidden = j !== i;
+    });
+    if (focus) tabs[i].focus();
+    if (opts.hash) { try { history.replaceState(null, "", "#" + tabs[i].dataset.token); } catch (e) {} }
+    if (opts.onSelect) opts.onSelect(i, tabs[i]);
+  }
+  tabs.forEach((t, i) => {
+    t.addEventListener("click", () => select(i));
+    t.addEventListener("keydown", e => {
+      if (e.key === "ArrowRight") { e.preventDefault(); select((i + 1) % tabs.length, true); }
+      if (e.key === "ArrowLeft") { e.preventDefault(); select((i - 1 + tabs.length) % tabs.length, true); }
+    });
+  });
+  let start = 0;
+  if (opts.hash && location.hash) {
+    const idx = tabs.findIndex(t => "#" + t.dataset.token === location.hash);
+    if (idx >= 0) start = idx;
+  }
+  select(start);
+  if (opts.hash) {
+    window.addEventListener("hashchange", () => {
+      const idx = tabs.findIndex(t => "#" + t.dataset.token === location.hash);
+      if (idx >= 0) select(idx);
+    });
+  }
+  return select;
+}
+
+function copyText(text, btn){
+  const done = () => { const o = btn.textContent; btn.textContent = "Copied"; setTimeout(() => { btn.textContent = o; }, 1400); };
+  const fallback = () => {
+    const ta = document.createElement("textarea");
+    ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand("copy"); done(); } catch (e) { btn.textContent = "Select and copy"; }
+    document.body.removeChild(ta);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, fallback);
+  else fallback();
+}
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-copy]");
+  if (!b) return;
+  const pre = b.closest(".codeblock").querySelector("pre");
+  copyText(pre.innerText, b);
+});
+
+function esc(s){ return String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
+
+(function(){
+  const panels = Array.from(document.querySelectorAll('.panel[data-lab]'));
+  const tabsRoot = document.querySelector(".tabs");
+  const tabBtns = Array.from(tabsRoot.querySelectorAll('[role="tab"]'));
+
+  // saved checkboxes
+  const saved = store.get("lab-checks", {});
+  document.querySelectorAll('.step > input[type=checkbox]').forEach(cb => {
+    cb.checked = !!saved[cb.id];
+    cb.closest('.step').classList.toggle('done', cb.checked);
+    cb.addEventListener('change', () => {
+      saved[cb.id] = cb.checked; store.set("lab-checks", saved);
+      cb.closest('.step').classList.toggle('done', cb.checked);
+      refresh();
+    });
+  });
+
+  // saved text fields and selects
+  const fields = store.get("lab-fields", {});
+  function colour(sel){ sel.classList.remove('s-pass','s-fail','s-part'); if (sel.value) sel.classList.add('s-' + sel.value); }
+  document.querySelectorAll('[data-save]').forEach(el => {
+    const k = el.dataset.save;
+    if (fields[k] !== undefined) el.value = fields[k];
+    if (el.tagName === 'SELECT') colour(el);
+    el.addEventListener('input', () => { fields[k] = el.value; store.set("lab-fields", fields); if (el.tagName === 'SELECT') colour(el); });
+  });
+
+  function refresh(){
+    let total = 0, done = 0;
+    panels.forEach(p => {
+      const cbs = p.querySelectorAll('.step > input[type=checkbox]');
+      const d = Array.from(cbs).filter(c => c.checked).length;
+      total += cbs.length; done += d;
+      const idx = panels.indexOf(p);
+      tabBtns[idx].querySelector('.n').textContent = d + "/" + cbs.length;
+    });
+    document.getElementById('allcount').textContent = done + " / " + total + " steps";
+    document.getElementById('allbar').style.width = (total ? 100 * done / total : 0) + "%";
+  }
+  refresh();
+  initTabs(tabsRoot, {hash:true});
+})();
+</script>
+</body></html>

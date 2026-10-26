@@ -1,0 +1,506 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Request Path Explorer</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Day 1 design tokens. Layout: sticky top bar, one wide column (max 1500px) sized for a classroom TV. */
+:root{
+  --bg:#F1F5F4; --surface:#FFFFFF; --surface2:#E6EDEB; --ink:#0D2226; --muted:#475F63; --line:#C5D3D0;
+  --accent:#0A7A72; --accent-ink:#FFFFFF; --accent-soft:#D3EDE9;
+  --warn:#9A5B00; --warn-soft:#FAEBD0; --bad:#B3261E; --bad-soft:#F8DBD8; --good:#1B7A3A; --good-soft:#D7EEDD;
+  --code-bg:#0D2226; --code-ink:#DCEFEA; --code-dim:#8FB0AB;
+  --font:"Aptos Narrow","Barlow Semi Condensed","Arial Narrow",sans-serif;
+  --mono:"JetBrains Mono","Cascadia Mono",Consolas,monospace;
+  --shadow:0 1px 2px rgba(13,34,38,.08);
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0A1517; --surface:#12262A; --surface2:#1A343A; --ink:#E3EFED; --muted:#9DB6B3; --line:#2A4549;
+    --accent:#4FD1C5; --accent-ink:#04201D; --accent-soft:#12383A;
+    --warn:#F0B35A; --warn-soft:#3A2B10; --bad:#FF8E85; --bad-soft:#3F1B18; --good:#7ED99A; --good-soft:#143322;
+    --code-bg:#07100F; --code-ink:#DCEFEA; --code-dim:#7FA09B; --shadow:none; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0A1517; --surface:#12262A; --surface2:#1A343A; --ink:#E3EFED; --muted:#9DB6B3; --line:#2A4549;
+  --accent:#4FD1C5; --accent-ink:#04201D; --accent-soft:#12383A;
+  --warn:#F0B35A; --warn-soft:#3A2B10; --bad:#FF8E85; --bad-soft:#3F1B18; --good:#7ED99A; --good-soft:#143322;
+  --code-bg:#07100F; --code-ink:#DCEFEA; --code-dim:#7FA09B; --shadow:none; color-scheme:dark;
+}
+
+*{box-sizing:border-box}
+html{font-size:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:1.2rem;line-height:1.5;-webkit-text-size-adjust:100%}
+h1,h2,h3,h4{line-height:1.15;margin:0;text-wrap:balance;font-weight:700}
+h1{font-size:2.45rem;letter-spacing:-.01em}
+h2{font-size:1.85rem}
+h3{font-size:1.4rem}
+h4{font-size:1.2rem}
+p{margin:0}
+a{color:var(--accent)}
+code,kbd,pre{font-family:var(--mono)}
+code{font-size:.92em;background:var(--surface2);padding:.05em .35em;border-radius:4px}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+[hidden]{display:none!important}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* top bar */
+.topbar{position:sticky;top:0;z-index:30;background:var(--bg);border-bottom:1px solid var(--line)}
+.topbar-in{max-width:1500px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;gap:.4rem 1.2rem;padding:.55rem max(16px,env(safe-area-inset-right,0px)) .55rem max(16px,env(safe-area-inset-left,0px))}
+.brand{font-weight:700;letter-spacing:.01em;white-space:nowrap}
+.brand small{color:var(--muted);font-weight:500;margin-left:.5rem}
+.nav{display:flex;flex-wrap:wrap;gap:.25rem;margin-left:auto}
+.nav a{padding:.2rem .75rem;border-radius:7px;color:var(--muted);text-decoration:none;font-weight:600;font-size:1.05rem}
+.nav a:hover{background:var(--surface2);color:var(--ink)}
+.nav a[aria-current="page"]{background:var(--accent);color:var(--accent-ink)}
+.themebtn{border:1px solid var(--line);background:var(--surface);border-radius:7px;padding:.2rem .7rem;cursor:pointer;font-size:1.05rem;color:var(--muted)}
+
+/* page */
+.wrap{max-width:1500px;margin:0 auto;padding:1.6rem max(16px,env(safe-area-inset-right,0px)) 4rem max(16px,env(safe-area-inset-left,0px))}
+.kicker{font-size:1.05rem;letter-spacing:.09em;text-transform:uppercase;color:var(--accent);font-weight:700;margin-bottom:.3rem}
+.lede{color:var(--muted);max-width:62rem;margin-top:.6rem}
+.head{display:flex;flex-wrap:wrap;gap:.6rem 2rem;justify-content:space-between;align-items:flex-end;margin-bottom:1.2rem}
+.timebox{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:.4rem .9rem;font-weight:600;color:var(--muted);white-space:nowrap}
+.timebox b{color:var(--ink)}
+
+/* tabs */
+.tabs{display:flex;flex-wrap:wrap;gap:.35rem;border-bottom:2px solid var(--line);margin-bottom:1.4rem}
+.tabs button{border:0;background:transparent;padding:.55rem 1.1rem;font-weight:700;font-size:1.15rem;color:var(--muted);cursor:pointer;border-radius:8px 8px 0 0;margin-bottom:-2px;border-bottom:3px solid transparent}
+.tabs button:hover{color:var(--ink);background:var(--surface2)}
+.tabs button[aria-selected="true"]{color:var(--accent);border-bottom-color:var(--accent);background:var(--surface)}
+.panel[hidden]{display:none!important}
+
+/* blocks */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:1.1rem 1.3rem;box-shadow:var(--shadow);min-width:0}
+.card h3{margin-bottom:.4rem}
+.grid{display:grid;gap:1rem;min-width:0}
+.g2{grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr))}
+.g4{grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr))}
+.split{display:grid;gap:1.2rem;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);align-items:start}
+@media (max-width:980px){.split{grid-template-columns:minmax(0,1fr)}}
+.muted{color:var(--muted)}
+.row{display:flex;flex-wrap:wrap;gap:.6rem;align-items:center}
+.stack{display:flex;flex-direction:column;gap:.8rem}
+
+.pill{display:inline-block;border-radius:999px;padding:.05rem .7rem;font-size:1rem;font-weight:700;border:1px solid var(--line);background:var(--surface2);color:var(--muted);white-space:nowrap}
+.pill.ok{background:var(--good-soft);color:var(--good);border-color:transparent}
+.pill.warn{background:var(--warn-soft);color:var(--warn);border-color:transparent}
+.pill.bad{background:var(--bad-soft);color:var(--bad);border-color:transparent}
+.pill.acc{background:var(--accent-soft);color:var(--accent);border-color:transparent}
+
+.btn{border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:.45rem 1.05rem;border-radius:9px;font-weight:700;cursor:pointer;font-size:1.1rem}
+.btn:hover{background:var(--surface2)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.sm{padding:.2rem .7rem;font-size:1rem}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+
+.callout{border-radius:10px;padding:.8rem 1.1rem;border:1px solid var(--line);background:var(--surface2)}
+.callout.warn{background:var(--warn-soft);border-color:transparent}
+.callout.bad{background:var(--bad-soft);border-color:transparent}
+.callout.good{background:var(--good-soft);border-color:transparent}
+.callout.acc{background:var(--accent-soft);border-color:transparent}
+.callout b:first-child{display:block;margin-bottom:.15rem}
+
+ul.clean{margin:.3rem 0 0;padding-left:1.25rem}
+ul.clean li{margin:.2rem 0}
+.tbl{width:100%;border-collapse:collapse;font-size:1.1rem}
+.tbl th,.tbl td{text-align:left;padding:.5rem .7rem;border-bottom:1px solid var(--line);vertical-align:top}
+.tbl th{font-size:1rem;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.tblwrap{overflow-x:auto;min-width:0}
+.num{font-variant-numeric:tabular-nums}
+
+/* code */
+.codeblock{background:var(--code-bg);border-radius:10px;overflow:hidden;min-width:0}
+.cb-head{display:flex;justify-content:space-between;align-items:center;gap:1rem;padding:.35rem .5rem .35rem .9rem;border-bottom:1px solid rgba(255,255,255,.1);color:var(--code-dim);font-family:var(--mono);font-size:1rem}
+.cb-head button{background:transparent;border:1px solid rgba(255,255,255,.25);color:var(--code-ink);border-radius:6px;padding:.1rem .7rem;cursor:pointer;font-size:1rem;font-family:var(--font);font-weight:600}
+.cb-head button:hover{background:rgba(255,255,255,.12)}
+.codeblock pre{margin:0;padding:.8rem 1rem;overflow-x:auto;color:var(--code-ink);font-size:1.12rem;line-height:1.5;tab-size:4}
+.codeblock.short pre{padding:.6rem 1rem}
+
+/* form bits */
+.field{display:flex;flex-direction:column;gap:.25rem;min-width:0}
+.field label{font-weight:700;font-size:1.05rem;color:var(--muted)}
+.field select,.field input[type=number],.field input[type=text],.field textarea{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:.4rem .6rem;min-width:0;width:100%}
+input[type=range]{width:100%;accent-color:var(--accent)}
+
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+
+/* diagram */
+.diagram{overflow-x:auto;min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:.4rem}
+.diagram svg{display:block;width:100%;min-width:700px;height:auto}
+.node rect{fill:var(--surface2);stroke:var(--line);stroke-width:1.5}
+.node text{fill:var(--ink);font-family:var(--font);font-size:15px}
+.node .t{font-weight:700;font-size:17px}
+.node .s{fill:var(--muted);font-size:14px}
+.node.dash rect{stroke-dasharray:6 5}
+.node.on rect{fill:var(--accent-soft);stroke:var(--accent);stroke-width:3}
+.edge{stroke:var(--line);stroke-width:3;fill:none}
+.edge.dash{stroke-dasharray:6 5}
+.edge.on{stroke:var(--accent);stroke-width:5}
+.edge.bad{stroke:var(--bad)}
+.arrowhead{fill:var(--line)}
+.stepper{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem;margin:.9rem 0}
+.dots{display:flex;gap:.4rem;flex-wrap:wrap}
+.dot{width:2.1rem;height:2.1rem;border-radius:50%;border:2px solid var(--line);background:var(--surface);font-weight:700;cursor:pointer;font-size:1rem;color:var(--muted)}
+.dot[aria-current="step"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.dot.seen{border-color:var(--accent);color:var(--accent)}
+.wire{margin:0;white-space:pre-wrap;word-break:break-word}
+/* what breaks */
+.scen{display:flex;flex-wrap:wrap;gap:.5rem}
+.scen button{border:1px solid var(--line);background:var(--surface);border-radius:9px;padding:.45rem .9rem;font-weight:700;cursor:pointer;font-size:1.1rem}
+.scen button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.strip{display:flex;flex-wrap:wrap;align-items:center;gap:.3rem;margin:.6rem 0 1rem}
+.strip .st{border:2px solid var(--line);border-radius:9px;padding:.25rem .8rem;font-weight:700;background:var(--surface)}
+.strip .st.pass{border-color:var(--good);color:var(--good)}
+.strip .st.fail{border-color:var(--bad);background:var(--bad-soft);color:var(--bad)}
+.strip .st.skip{opacity:.45}
+.strip .ar{color:var(--muted)}
+/* quiz */
+.q{margin-bottom:1.2rem}
+.q .opts{display:flex;flex-direction:column;gap:.4rem;margin-top:.5rem}
+.q .opt{text-align:left;border:2px solid var(--line);background:var(--surface);border-radius:9px;padding:.5rem .9rem;cursor:pointer;font-size:1.12rem}
+.q .opt:hover{background:var(--surface2)}
+.q .opt.right{border-color:var(--good);background:var(--good-soft)}
+.q .opt.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.q .why{margin-top:.5rem}
+.score{font-size:1.6rem;font-weight:700}
+.matrix td:first-child,.matrix th:first-child{white-space:nowrap}
+</style></head>
+<body>
+<header class="topbar"><div class="topbar-in"><div class="brand">Day 1<small>Kyndryl · Enterprise Agentic AI Engineering</small></div><nav class="nav" aria-label="Day 1 pages"><a href="overview.html">Overview</a><a href="index.html">Control Room</a><a href="M1_request_path.html" aria-current="page">M1 Request path</a><a href="M2_model_picker.html">M2 Model picker</a><a href="M3_vram_calculator.html">M3 VRAM calculator</a><a href="M4_decision_clinic.html">M4 Decision clinic</a><a href="../labs/Day1_Lab_Guide.html">Lab guide</a></nav><button class="themebtn" id="themebtn" type="button">Theme</button></div></header>
+<main class="wrap">
+  <div class="head">
+    <div>
+      <div class="kicker">Day 1 · Talk 1</div>
+      <h1>Follow one request, from your VM to the model and back</h1>
+      <p class="lede">Every prompt you type today travels the same path. Know the path and you can debug it, price it and secure it.</p>
+    </div>
+    <div class="timebox"><b>25 min</b> talk, then Lab 1</div>
+  </div>
+
+  <div class="tabs" role="tablist" aria-label="Sections">
+    <button role="tab" id="t0" aria-controls="p0" data-token="check">1 · Check-in quiz</button>
+    <button role="tab" id="t1" aria-controls="p1" data-token="path">2 · The path</button>
+    <button role="tab" id="t2" aria-controls="p2" data-token="breaks">3 · What breaks?</button>
+    <button role="tab" id="t3" aria-controls="p3" data-token="choose">4 · Use it, skip it</button>
+  </div>
+
+  <!-- QUIZ -->
+  <section class="panel" id="p0" role="tabpanel" aria-labelledby="t0">
+    <div class="split">
+      <div id="quiz"></div>
+      <div class="stack">
+        <div class="callout acc"><b>Why this quiz?</b>Six questions, no marks. They surface the words we use all day: tokens, context, temperature, serverless, virtual key.</div>
+        <div class="card"><div class="muted">Your score</div><div class="score" id="score">0 / 6</div><div class="muted" id="scoretxt">Answer all six to finish.</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PATH -->
+  <section class="panel" id="p1" role="tabpanel" aria-labelledby="t1" hidden>
+    <div class="diagram">
+      <svg viewBox="0 0 900 380" role="img" aria-label="Request path: VM, gateway, three model backends and a database">
+        <defs><marker id="ah" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="16" refX="14" refY="8" orient="auto"><path d="M0,1 L15,8 L0,15 z" class="arrowhead"/></marker></defs>
+        <!-- edges -->
+        <path class="edge" id="e-vm-gw" d="M215 170 H335" marker-end="url(#ah)"/>
+        <path class="edge" id="e-gw-a" d="M565 120 C620 120 640 62 695 62" marker-end="url(#ah)"/>
+        <path class="edge" id="e-gw-b" d="M565 170 C620 170 640 160 695 160" marker-end="url(#ah)"/>
+        <path class="edge dash" id="e-gw-v" d="M565 220 C620 220 640 258 695 258" marker-end="url(#ah)"/>
+        <path class="edge" id="e-gw-db" d="M450 305 V330" marker-end="url(#ah)"/>
+        <!-- nodes -->
+        <g class="node" id="n-vm"><rect x="20" y="85" width="195" height="170" rx="12"/>
+          <text class="t" x="36" y="115">Your lab VM</text>
+          <text x="36" y="145">VS Code + Copilot</text><text x="36" y="170">Python lab scripts</text>
+          <text class="s" x="36" y="200">holds one thing:</text><text x="36" y="224" style="font-family:var(--mono);font-size:14px">sk-kyn-p1-…</text></g>
+        <g class="node dash" id="n-ol"><rect x="20" y="290" width="195" height="62" rx="12"/>
+          <text class="t" x="36" y="317">Ollama (local)</text><text class="s" x="36" y="340">skips the gateway</text></g>
+        <g class="node" id="n-gw"><rect x="335" y="40" width="230" height="265" rx="12"/>
+          <text class="t" x="352" y="70">LiteLLM gateway</text>
+          <text x="352" y="104">1 Authenticate key</text><text x="352" y="130">2 Check budget + rate</text>
+          <text x="352" y="156">3 Route alias → model</text><text x="352" y="182">4 Retry + fallback</text>
+          <text x="352" y="208">5 Count tokens + cost</text><text x="352" y="234">6 Log the request</text>
+          <text class="s" x="352" y="272">holds the real cloud keys</text></g>
+        <g class="node" id="n-db"><rect x="335" y="332" width="230" height="40" rx="10"/>
+          <text x="352" y="358">Postgres: keys, spend, logs</text></g>
+        <g class="node" id="n-a"><rect x="695" y="30" width="190" height="64" rx="12"/>
+          <text class="t" x="710" y="58">chat-llm</text><text class="s" x="710" y="80">Foundry serverless A</text></g>
+        <g class="node" id="n-b"><rect x="695" y="128" width="190" height="64" rx="12"/>
+          <text class="t" x="710" y="156">chat-llm-b</text><text class="s" x="710" y="178">Foundry serverless B</text></g>
+        <g class="node dash" id="n-v"><rect x="695" y="226" width="190" height="64" rx="12"/>
+          <text class="t" x="710" y="254">local-vllm</text><text class="s" x="710" y="276">H100, Day 1 demo</text></g>
+      </svg>
+    </div>
+
+    <div class="stepper">
+      <button class="btn" id="prev">← Back</button>
+      <button class="btn primary" id="next">Next →</button>
+      <button class="btn" id="play">Play</button>
+      <div class="dots" id="dots" role="group" aria-label="Steps"></div>
+    </div>
+
+    <div class="split">
+      <div class="card">
+        <div class="kicker" id="s-kick"></div>
+        <h2 id="s-title"></h2>
+        <p style="margin-top:.5rem" id="s-text"></p>
+        <ul class="clean" id="s-list"></ul>
+      </div>
+      <div class="codeblock"><div class="cb-head"><span id="s-wirehead">on the wire</span><button data-copy>Copy</button></div><pre class="wire" id="s-wire"></pre></div>
+    </div>
+  </section>
+
+  <!-- BREAKS -->
+  <section class="panel" id="p2" role="tabpanel" aria-labelledby="t2" hidden>
+    <p class="muted" style="margin-bottom:.8rem">Pick a failure. Predict the HTTP status before you click, then compare.</p>
+    <div class="scen" id="scen"></div>
+    <div class="split" style="margin-top:1.2rem">
+      <div class="card">
+        <div class="row"><h2 id="b-title"></h2><span class="pill" id="b-status"></span></div>
+        <div class="strip" id="b-strip"></div>
+        <h4>How you would notice</h4><p id="b-notice" style="margin-bottom:.7rem"></p>
+        <h4>Fix</h4><p id="b-fix"></p>
+      </div>
+      <div class="stack">
+        <div class="codeblock"><div class="cb-head"><span>what the client sees</span><button data-copy>Copy</button></div><pre class="wire" id="b-wire"></pre></div>
+        <div class="callout warn"><b>Wording varies by version</b>Status codes are stable. Exact error text changes between gateway versions, so match on the code first.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CHOOSE -->
+  <section class="panel" id="p3" role="tabpanel" aria-labelledby="t3" hidden>
+    <div class="callout acc" style="margin-bottom:1rem"><b>The rule for every tool this week</b>Where should we use it, and when should we not?</div>
+    <div class="tblwrap card">
+      <table class="tbl matrix">
+        <thead><tr><th>Where the model runs</th><th>Use it when</th><th>Skip it when</th><th>Cost shape</th></tr></thead>
+        <tbody>
+          <tr><td><b>Proprietary hosted API</b></td><td>You need the highest quality fast and the data policy allows it.</td><td>Data cannot leave your boundary, or the programme excludes proprietary APIs (this one does).</td><td>Pay per token</td></tr>
+          <tr><td><b>Open-weight, serverless</b><br><span class="muted">Foundry today</span></td><td>You want open models without running GPUs. Spiky or modest traffic. Fast start.</td><td>You need hard data residency, guaranteed capacity, or the model you want is not offered.</td><td>Pay per token, shared limits</td></tr>
+          <tr><td><b>Self-hosted vLLM</b><br><span class="muted">H100 demo today</span></td><td>High steady volume, strict data control, custom or fine-tuned weights, predictable latency.</td><td>Low volume (the GPU idles and still bills), or nobody owns the operations.</td><td>Pay per GPU hour</td></tr>
+          <tr><td><b>Small local model</b><br><span class="muted">Ollama on your VM</span></td><td>Simple, high-volume tasks, offline work, last-resort fallback, cheap experiments.</td><td>Multi-step reasoning, tool use, long context. Quality drops fast.</td><td>Free per call, you own the hardware</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="grid g2" style="margin-top:1rem">
+      <div class="card"><h3>Why put a gateway in front?</h3>
+        <ul class="clean"><li>One endpoint and one API shape for every model.</li><li>Per-person keys with budgets and rate limits.</li><li>Real cloud keys stay on one machine.</li><li>Retries and fallbacks live in one place.</li><li>One log of who used what, and what it cost.</li></ul></div>
+      <div class="card"><h3>When a gateway is the wrong tool</h3>
+        <ul class="clean"><li>One app, one model, one developer. It is extra moving parts.</li><li>It becomes a single point of failure unless you run it twice.</li><li>It adds a hop. Fine for chat, relevant for tight latency budgets.</li><li>A badly set fallback can hide a quality drop. Log which model answered.</li></ul></div>
+    </div>
+  </section>
+</main>
+
+<script>
+/* shared helpers: safe storage, theme toggle, tabs, copy buttons */
+const store = {
+  get(k, d){ try { const v = localStorage.getItem("kyn1:" + k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v){ try { localStorage.setItem("kyn1:" + k, JSON.stringify(v)); } catch (e) {} }
+};
+
+(function theme(){
+  const saved = store.get("theme", null);
+  if (saved) document.documentElement.setAttribute("data-theme", saved);
+  const btn = document.getElementById("themebtn");
+  if (!btn) return;
+  btn.addEventListener("click", () => {
+    const cur = document.documentElement.getAttribute("data-theme");
+    const isDark = cur ? cur === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+    const next = isDark ? "light" : "dark";
+    document.documentElement.setAttribute("data-theme", next);
+    store.set("theme", next);
+  });
+})();
+
+function initTabs(root, opts){
+  opts = opts || {};
+  const tabs = Array.from(root.querySelectorAll('[role="tab"]'));
+  const panels = tabs.map(t => document.getElementById(t.getAttribute("aria-controls")));
+  function select(i, focus){
+    tabs.forEach((t, j) => {
+      t.setAttribute("aria-selected", j === i ? "true" : "false");
+      t.tabIndex = j === i ? 0 : -1;
+      panels[j].hidden = j !== i;
+    });
+    if (focus) tabs[i].focus();
+    if (opts.hash) { try { history.replaceState(null, "", "#" + tabs[i].dataset.token); } catch (e) {} }
+    if (opts.onSelect) opts.onSelect(i, tabs[i]);
+  }
+  tabs.forEach((t, i) => {
+    t.addEventListener("click", () => select(i));
+    t.addEventListener("keydown", e => {
+      if (e.key === "ArrowRight") { e.preventDefault(); select((i + 1) % tabs.length, true); }
+      if (e.key === "ArrowLeft") { e.preventDefault(); select((i - 1 + tabs.length) % tabs.length, true); }
+    });
+  });
+  let start = 0;
+  if (opts.hash && location.hash) {
+    const idx = tabs.findIndex(t => "#" + t.dataset.token === location.hash);
+    if (idx >= 0) start = idx;
+  }
+  select(start);
+  if (opts.hash) {
+    window.addEventListener("hashchange", () => {
+      const idx = tabs.findIndex(t => "#" + t.dataset.token === location.hash);
+      if (idx >= 0) select(idx);
+    });
+  }
+  return select;
+}
+
+function copyText(text, btn){
+  const done = () => { const o = btn.textContent; btn.textContent = "Copied"; setTimeout(() => { btn.textContent = o; }, 1400); };
+  const fallback = () => {
+    const ta = document.createElement("textarea");
+    ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand("copy"); done(); } catch (e) { btn.textContent = "Select and copy"; }
+    document.body.removeChild(ta);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, fallback);
+  else fallback();
+}
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-copy]");
+  if (!b) return;
+  const pre = b.closest(".codeblock").querySelector("pre");
+  copyText(pre.innerText, b);
+});
+
+function esc(s){ return String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
+
+
+/* ---------- quiz ---------- */
+const QUIZ = [
+  {q:"About how many tokens is a 750-word English paragraph?", o:["150","About 1,000","7,500","75,000"], a:1, w:"A token is roughly three-quarters of a word in English, so 750 words is about 1,000 tokens. Other languages and code tokenise worse."},
+  {q:"What does the context window limit?", o:["Only the answer length","Only your prompt length","Prompt plus answer together, per request","How many users can connect"], a:2, w:"Input and output share one budget. It also drives KV-cache memory, which we calculate in Talk 3."},
+  {q:"You set temperature to 0. What do you get?", o:["A guaranteed identical answer every time","Nearly deterministic output, still not a guarantee","A random answer","A shorter answer"], a:1, w:"The most likely token is chosen at each step. Batching and floating-point effects on a server can still change results slightly."},
+  {q:"Main difference between a serverless open-weight endpoint and self-hosted vLLM?", o:["Serverless models are smaller","Who runs the GPUs, and how you pay (per token or per hour)","Self-hosted cannot be fine-tuned","Serverless has no API"], a:1, w:"Same family of models, different operations model. The decision is about volume, control and who owns the pager."},
+  {q:"Why do you get a virtual key and not the Azure key?", o:["Azure keys expire daily","So one person can be limited, tracked or revoked without touching anyone else","Virtual keys are faster","Azure forbids sharing"], a:1, w:"A leaked virtual key is a small, cheap incident. A leaked cloud key is a large one."},
+  {q:"“OpenAI-compatible API” means…", o:["You are calling OpenAI's models","The request and response shape matches, so the same client library works","The model is open source","It is free"], a:1, w:"It is a wire format, not a vendor. That is what lets Copilot, Python and curl all talk to the gateway."}
+];
+(function quiz(){
+  const root = document.getElementById("quiz"); let answered = 0, right = 0;
+  QUIZ.forEach((item, qi) => {
+    const d = document.createElement("div"); d.className = "card q";
+    d.innerHTML = `<h4>${qi + 1}. ${esc(item.q)}</h4><div class="opts"></div><div class="why muted" hidden></div>`;
+    const opts = d.querySelector(".opts");
+    item.o.forEach((txt, oi) => {
+      const b = document.createElement("button"); b.className = "opt"; b.textContent = txt;
+      b.addEventListener("click", () => {
+        if (d.dataset.done) return; d.dataset.done = "1"; answered++;
+        const ok = oi === item.a; if (ok) right++;
+        b.classList.add(ok ? "right" : "wrong");
+        if (!ok) opts.children[item.a].classList.add("right");
+        const why = d.querySelector(".why"); why.hidden = false; why.textContent = item.w;
+        document.getElementById("score").textContent = right + " / 6";
+        if (answered === 6) document.getElementById("scoretxt").textContent = right >= 5 ? "Strong start." : "Good. The rest of today fills the gaps.";
+      });
+      opts.appendChild(b);
+    });
+    root.appendChild(d);
+  });
+})();
+
+/* ---------- request path ---------- */
+const STEPS = [
+ {k:"Step 1 of 8", t:"Your tool builds a request", x:"Copilot, a Python script and curl all send the same kind of message. Only the virtual key is yours.",
+  l:["The model name is an alias: chat-llm. Your client does not know which provider is behind it.","The key is in the Authorization header."],
+  n:["n-vm"], e:[], head:"POST from your VM",
+  w:'POST http://<gateway>:4000/v1/chat/completions\nAuthorization: Bearer sk-kyn-p1-…      <- your virtual key\nContent-Type: application/json\n\n{ "model": "chat-llm",\n  "messages": [{"role":"user","content":"Write plan_picker.py"}],\n  "stream": true }'},
+ {k:"Step 2 of 8", t:"The gateway checks who you are", x:"Before any money is spent, four checks run in order. Each one has its own error code.",
+  l:["Unknown or revoked key: 401.","Key not allowed this model: rejected.","Over budget: 400 ExceededBudget.","Too many requests this minute: 429."],
+  n:["n-vm","n-gw","n-db"], e:["e-vm-gw","e-gw-db"], head:"inside the gateway",
+  w:'1  key found in Postgres, not expired?       no -> 401\n2  key allowed to call "chat-llm"?            no -> rejected\n3  spend so far < max_budget?                  no -> 400\n4  requests this minute < rpm_limit?           no -> 429\n\nall four pass -> continue'},
+ {k:"Step 3 of 8", t:"The alias becomes a real deployment", x:"The router looks up chat-llm in config.yaml. This is where the provider, endpoint and the real key are chosen.",
+  l:["You never see the real key. It is read from an environment variable on the gateway VM.","Change this one line and every client moves to a new model."],
+  n:["n-gw"], e:[], head:"config.yaml",
+  w:'alias       chat-llm\n  provider    azure_ai\n  deployment  <deployment-A-name>\n  api_base    https://<foundry-endpoint>\n  api_key     os.environ/FOUNDRY_KEY_A    <- only on the gateway VM'},
+ {k:"Step 4 of 8", t:"The gateway calls the model", x:"A new request leaves the gateway, carrying the real credentials and the real deployment name.",
+  l:["It translates the request if the provider needs a different shape.","The model runs on Azure's GPUs. You pay per token."],
+  n:["n-gw","n-a"], e:["e-gw-a"], head:"gateway -> Foundry",
+  w:'POST https://<foundry-endpoint>/chat/completions\napi-key: <real Azure key>                <- you never see this\n\n{ "model": "<deployment-A-name>",\n  "messages": [ ... same messages ... ],\n  "stream": true }'},
+ {k:"Step 5 of 8", t:"Tokens stream back", x:"The model produces one token at a time. The gateway relays each piece as it arrives and counts them.",
+  l:["Time to first token (TTFT) is what you feel as lag.","Tokens per second is how fast the text then flows.","The final chunk carries the usage numbers."],
+  n:["n-a","n-gw","n-vm"], e:["e-gw-a","e-vm-gw"], head:"server-sent events",
+  w:'data: {"choices":[{"delta":{"content":"def "}}]}\ndata: {"choices":[{"delta":{"content":"pick_plan"}}]}\n...\ndata: {"usage":{"prompt_tokens":212,"completion_tokens":640}}\ndata: [DONE]'},
+ {k:"Step 6 of 8", t:"When the model fails, the gateway has a plan", x:"Timeouts, 429s and 5xx errors are normal at scale. Retries, cooldowns and fallbacks hide most of them from you.",
+  l:["Retry the same model first (num_retries).","After allowed_fails the model rests for cooldown_time.","Then the fallback answers. Your client sees a slower, successful reply."],
+  n:["n-gw","n-a","n-b"], e:["e-gw-a","e-gw-b"], head:"router_settings",
+  w:'attempt 1   chat-llm     timeout / 429 / 5xx\nattempt 2   chat-llm     retry (num_retries: 2)\ncooldown    chat-llm     rests 30 s after 2 failures\nfallback    chat-llm-b   answer returned\n\nLog line to look for: which model actually answered'},
+ {k:"Step 7 of 8", t:"Every call is priced and logged", x:"Cost is tokens times price. It is added to your key's spend. This is what makes budgets and chargeback possible.",
+  l:["No price in config means a cost of zero, and a budget that never triggers.","Check your own spend any time: GET /key/info."],
+  n:["n-gw","n-db"], e:["e-gw-db"], head:"spend log",
+  w:'cost  = 212 x price_in + 640 x price_out\nkey kyn-p1  spend += cost\nrow   model=chat-llm  tokens=852  latency=6.4s  status=200\n\nWhere to see it:  /ui   GET /key/info   GET /spend/logs'},
+ {k:"Step 8 of 8", t:"Your tool gets a normal answer", x:"The reply looks like any other OpenAI-style response. Swap the model behind the alias tomorrow and nothing on your side changes.",
+  l:["That is the point of the gateway: one stable contract.","It is also the risk. Always log which model answered."],
+  n:["n-vm","n-gw"], e:["e-vm-gw"], head:"back in VS Code",
+  w:'{ "model": "<deployment-A-name>",\n  "choices": [{"message":{"role":"assistant","content":"def pick_plan(..."}}],\n  "usage": {"prompt_tokens":212,"completion_tokens":640} }'}
+];
+let cur = 0, timer = null; const seen = new Set([0]);
+const dotsEl = document.getElementById("dots");
+STEPS.forEach((_, i) => { const b = document.createElement("button"); b.className = "dot"; b.textContent = i + 1; b.setAttribute("aria-label", "Step " + (i + 1)); b.onclick = () => go(i); dotsEl.appendChild(b); });
+function go(i){
+  cur = Math.max(0, Math.min(STEPS.length - 1, i)); seen.add(cur); const s = STEPS[cur];
+  document.getElementById("s-kick").textContent = s.k; document.getElementById("s-title").textContent = s.t;
+  document.getElementById("s-text").textContent = s.x;
+  document.getElementById("s-list").innerHTML = s.l.map(t => "<li>" + esc(t) + "</li>").join("");
+  document.getElementById("s-wire").textContent = s.w; document.getElementById("s-wirehead").textContent = s.head;
+  document.querySelectorAll(".node").forEach(n => n.classList.toggle("on", s.n.includes(n.id)));
+  document.querySelectorAll(".edge").forEach(n => n.classList.toggle("on", s.e.includes(n.id)));
+  [...dotsEl.children].forEach((d, j) => { d.classList.toggle("seen", seen.has(j)); if (j === cur) d.setAttribute("aria-current", "step"); else d.removeAttribute("aria-current"); });
+  document.getElementById("prev").disabled = cur === 0; document.getElementById("next").disabled = cur === STEPS.length - 1;
+}
+document.getElementById("prev").onclick = () => go(cur - 1);
+document.getElementById("next").onclick = () => go(cur + 1);
+document.getElementById("play").onclick = function(){
+  if (timer) { clearInterval(timer); timer = null; this.textContent = "Play"; return; }
+  this.textContent = "Pause";
+  if (cur === STEPS.length - 1) go(0);
+  timer = setInterval(() => { if (cur >= STEPS.length - 1) { clearInterval(timer); timer = null; document.getElementById("play").textContent = "Play"; } else go(cur + 1); }, 5000);
+};
+go(0);
+
+/* ---------- what breaks ---------- */
+const STOPS = ["Your VM", "Key check", "Router", "Foundry", "Answer"];
+const BREAKS = [
+ {n:"Revoked or mistyped key", s:"401", c:"bad", f:1, wire:'HTTP 401\n{"error":{"message":"Authentication Error: invalid key","type":"auth_error","code":"401"}}',
+  notice:"Fails instantly, every time, for every model. Nothing appears in the spend log because no model was called.", fix:"Check .env.lab for stray spaces or quotes. If it still fails, the key was revoked: ask for a new one."},
+ {n:"Key not allowed this model", s:"401 / 403", c:"bad", f:1, wire:'HTTP 401\n{"error":{"message":"key not allowed to access model chat-llm-b"}}',
+  notice:"One alias fails while another works with the same key. /v1/models shows what your key may use.", fix:"Ask the key owner to add the model, or call a model you are allowed to use."},
+ {n:"Budget used up", s:"400", c:"bad", f:1, wire:'HTTP 400\n{"error":{"message":"ExceededBudget: spend 10.02 over max_budget 10.0"}}',
+  notice:"Worked yesterday, fails today. GET /key/info shows spend at or above max_budget.", fix:"Raise the budget, or wait for the budget period to reset. Then ask why the spend ran away."},
+ {n:"Burst of requests", s:"429", c:"warn", f:1, wire:'HTTP 429\n{"error":{"message":"Rate limit reached for key (rpm_limit: 30)"}}',
+  notice:"Fine at 1 request, fails at 16. The message names your key (gateway limit) or the provider (upstream limit). They need different fixes.", fix:"Client: back off and retry with jitter. Owner: raise the limit, or add a fallback model with its own quota."},
+ {n:"Primary model is down", s:"200 (slow)", c:"ok", f:3, wire:'HTTP 200   latency 14.8 s   (normally 4 s)\nlog: chat-llm failed x2 -> fallback chat-llm-b answered',
+  notice:"The scariest failure is the one nobody reports. Latency jumps, quality shifts, and every call still succeeds.", fix:"Alert on fallback count. Record which model answered in every response log."},
+ {n:"Typo in model name", s:"400", c:"warn", f:2, wire:'HTTP 400\n{"error":{"message":"Invalid model name passed in model=chat-lm"}}',
+  notice:"Immediate, and the same for everyone who typed it. /v1/models lists the valid names.", fix:"Copy the alias from /v1/models. Keep aliases short and boring."},
+ {n:"Gateway VM is stopped", s:"no reply", c:"bad", f:0, wire:'curl: (28) Connection timed out after 10000 milliseconds',
+  notice:"Nothing reaches the gateway, so there are no logs on the gateway at all. Everything fails together.", fix:"Start the VM. Longer term: health checks, auto-restart, and a second gateway instance."},
+ {n:"Every provider is down", s:"500 / 503", c:"bad", f:3, wire:'HTTP 500\n{"error":{"message":"No deployments available. All fallbacks failed."}}',
+  notice:"After retries and fallbacks the gateway gives up. Error rate spikes in the log.", fix:"Add a last-resort fallback that you control, such as the small local model, and show the user a clear message."}
+];
+const scen = document.getElementById("scen");
+BREAKS.forEach((b, i) => { const btn = document.createElement("button"); btn.textContent = b.n; btn.setAttribute("aria-pressed", "false"); btn.onclick = () => showBreak(i); scen.appendChild(btn); });
+function showBreak(i){
+  const b = BREAKS[i];
+  [...scen.children].forEach((x, j) => x.setAttribute("aria-pressed", j === i ? "true" : "false"));
+  document.getElementById("b-title").textContent = b.n;
+  const st = document.getElementById("b-status"); st.textContent = "HTTP " + b.s; st.className = "pill " + b.c;
+  document.getElementById("b-notice").textContent = b.notice; document.getElementById("b-fix").textContent = b.fix;
+  document.getElementById("b-wire").textContent = b.wire;
+  document.getElementById("b-strip").innerHTML = STOPS.map((s, j) => {
+    const cls = b.c === "ok" ? (j === b.f ? "st fail" : "st pass") : (j < b.f ? "st pass" : (j === b.f ? "st fail" : "st skip"));
+    return (j ? '<span class="ar">→</span>' : "") + '<span class="' + cls + '">' + s + "</span>";
+  }).join("");
+}
+showBreak(0);
+
+initTabs(document.querySelector(".tabs"), {hash:true});
+</script>
+</body></html>

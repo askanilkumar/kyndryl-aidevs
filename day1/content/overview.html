@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Course Overview</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Day 1 design tokens. Layout: sticky top bar, one wide column (max 1500px) sized for a classroom TV. */
+:root{
+  --bg:#F1F5F4; --surface:#FFFFFF; --surface2:#E6EDEB; --ink:#0D2226; --muted:#475F63; --line:#C5D3D0;
+  --accent:#0A7A72; --accent-ink:#FFFFFF; --accent-soft:#D3EDE9;
+  --warn:#9A5B00; --warn-soft:#FAEBD0; --bad:#B3261E; --bad-soft:#F8DBD8; --good:#1B7A3A; --good-soft:#D7EEDD;
+  --code-bg:#0D2226; --code-ink:#DCEFEA; --code-dim:#8FB0AB;
+  --font:"Aptos Narrow","Barlow Semi Condensed","Arial Narrow",sans-serif;
+  --mono:"JetBrains Mono","Cascadia Mono",Consolas,monospace;
+  --shadow:0 1px 2px rgba(13,34,38,.08);
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0A1517; --surface:#12262A; --surface2:#1A343A; --ink:#E3EFED; --muted:#9DB6B3; --line:#2A4549;
+    --accent:#4FD1C5; --accent-ink:#04201D; --accent-soft:#12383A;
+    --warn:#F0B35A; --warn-soft:#3A2B10; --bad:#FF8E85; --bad-soft:#3F1B18; --good:#7ED99A; --good-soft:#143322;
+    --code-bg:#07100F; --code-ink:#DCEFEA; --code-dim:#7FA09B; --shadow:none; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0A1517; --surface:#12262A; --surface2:#1A343A; --ink:#E3EFED; --muted:#9DB6B3; --line:#2A4549;
+  --accent:#4FD1C5; --accent-ink:#04201D; --accent-soft:#12383A;
+  --warn:#F0B35A; --warn-soft:#3A2B10; --bad:#FF8E85; --bad-soft:#3F1B18; --good:#7ED99A; --good-soft:#143322;
+  --code-bg:#07100F; --code-ink:#DCEFEA; --code-dim:#7FA09B; --shadow:none; color-scheme:dark;
+}
+
+*{box-sizing:border-box}
+html{font-size:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:1.2rem;line-height:1.5;-webkit-text-size-adjust:100%}
+h1,h2,h3,h4{line-height:1.15;margin:0;text-wrap:balance;font-weight:700}
+h1{font-size:2.45rem;letter-spacing:-.01em}
+h2{font-size:1.85rem}
+h3{font-size:1.4rem}
+h4{font-size:1.2rem}
+p{margin:0}
+a{color:var(--accent)}
+code,kbd,pre{font-family:var(--mono)}
+code{font-size:.92em;background:var(--surface2);padding:.05em .35em;border-radius:4px}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+[hidden]{display:none!important}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* top bar */
+.topbar{position:sticky;top:0;z-index:30;background:var(--bg);border-bottom:1px solid var(--line)}
+.topbar-in{max-width:1500px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;gap:.4rem 1.2rem;padding:.55rem max(16px,env(safe-area-inset-right,0px)) .55rem max(16px,env(safe-area-inset-left,0px))}
+.brand{font-weight:700;letter-spacing:.01em;white-space:nowrap}
+.brand small{color:var(--muted);font-weight:500;margin-left:.5rem}
+.nav{display:flex;flex-wrap:wrap;gap:.25rem;margin-left:auto}
+.nav a{padding:.2rem .75rem;border-radius:7px;color:var(--muted);text-decoration:none;font-weight:600;font-size:1.05rem}
+.nav a:hover{background:var(--surface2);color:var(--ink)}
+.nav a[aria-current="page"]{background:var(--accent);color:var(--accent-ink)}
+.themebtn{border:1px solid var(--line);background:var(--surface);border-radius:7px;padding:.2rem .7rem;cursor:pointer;font-size:1.05rem;color:var(--muted)}
+
+/* page */
+.wrap{max-width:1500px;margin:0 auto;padding:1.6rem max(16px,env(safe-area-inset-right,0px)) 4rem max(16px,env(safe-area-inset-left,0px))}
+.kicker{font-size:1.05rem;letter-spacing:.09em;text-transform:uppercase;color:var(--accent);font-weight:700;margin-bottom:.3rem}
+.lede{color:var(--muted);max-width:62rem;margin-top:.6rem}
+.head{display:flex;flex-wrap:wrap;gap:.6rem 2rem;justify-content:space-between;align-items:flex-end;margin-bottom:1.2rem}
+.timebox{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:.4rem .9rem;font-weight:600;color:var(--muted);white-space:nowrap}
+.timebox b{color:var(--ink)}
+
+/* tabs */
+.tabs{display:flex;flex-wrap:wrap;gap:.35rem;border-bottom:2px solid var(--line);margin-bottom:1.4rem}
+.tabs button{border:0;background:transparent;padding:.55rem 1.1rem;font-weight:700;font-size:1.15rem;color:var(--muted);cursor:pointer;border-radius:8px 8px 0 0;margin-bottom:-2px;border-bottom:3px solid transparent}
+.tabs button:hover{color:var(--ink);background:var(--surface2)}
+.tabs button[aria-selected="true"]{color:var(--accent);border-bottom-color:var(--accent);background:var(--surface)}
+.panel[hidden]{display:none!important}
+
+/* blocks */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:1.1rem 1.3rem;box-shadow:var(--shadow);min-width:0}
+.card h3{margin-bottom:.4rem}
+.grid{display:grid;gap:1rem;min-width:0}
+.g2{grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr))}
+.g4{grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr))}
+.split{display:grid;gap:1.2rem;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);align-items:start}
+@media (max-width:980px){.split{grid-template-columns:minmax(0,1fr)}}
+.muted{color:var(--muted)}
+.row{display:flex;flex-wrap:wrap;gap:.6rem;align-items:center}
+.stack{display:flex;flex-direction:column;gap:.8rem}
+
+.pill{display:inline-block;border-radius:999px;padding:.05rem .7rem;font-size:1rem;font-weight:700;border:1px solid var(--line);background:var(--surface2);color:var(--muted);white-space:nowrap}
+.pill.ok{background:var(--good-soft);color:var(--good);border-color:transparent}
+.pill.warn{background:var(--warn-soft);color:var(--warn);border-color:transparent}
+.pill.bad{background:var(--bad-soft);color:var(--bad);border-color:transparent}
+.pill.acc{background:var(--accent-soft);color:var(--accent);border-color:transparent}
+
+.btn{border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:.45rem 1.05rem;border-radius:9px;font-weight:700;cursor:pointer;font-size:1.1rem}
+.btn:hover{background:var(--surface2)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.sm{padding:.2rem .7rem;font-size:1rem}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+
+.callout{border-radius:10px;padding:.8rem 1.1rem;border:1px solid var(--line);background:var(--surface2)}
+.callout.warn{background:var(--warn-soft);border-color:transparent}
+.callout.bad{background:var(--bad-soft);border-color:transparent}
+.callout.good{background:var(--good-soft);border-color:transparent}
+.callout.acc{background:var(--accent-soft);border-color:transparent}
+.callout b:first-child{display:block;margin-bottom:.15rem}
+
+ul.clean{margin:.3rem 0 0;padding-left:1.25rem}
+ul.clean li{margin:.2rem 0}
+.tbl{width:100%;border-collapse:collapse;font-size:1.1rem}
+.tbl th,.tbl td{text-align:left;padding:.5rem .7rem;border-bottom:1px solid var(--line);vertical-align:top}
+.tbl th{font-size:1rem;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.tblwrap{overflow-x:auto;min-width:0}
+.num{font-variant-numeric:tabular-nums}
+
+/* code */
+.codeblock{background:var(--code-bg);border-radius:10px;overflow:hidden;min-width:0}
+.cb-head{display:flex;justify-content:space-between;align-items:center;gap:1rem;padding:.35rem .5rem .35rem .9rem;border-bottom:1px solid rgba(255,255,255,.1);color:var(--code-dim);font-family:var(--mono);font-size:1rem}
+.cb-head button{background:transparent;border:1px solid rgba(255,255,255,.25);color:var(--code-ink);border-radius:6px;padding:.1rem .7rem;cursor:pointer;font-size:1rem;font-family:var(--font);font-weight:600}
+.cb-head button:hover{background:rgba(255,255,255,.12)}
+.codeblock pre{margin:0;padding:.8rem 1rem;overflow-x:auto;color:var(--code-ink);font-size:1.12rem;line-height:1.5;tab-size:4}
+.codeblock.short pre{padding:.6rem 1rem}
+
+/* form bits */
+.field{display:flex;flex-direction:column;gap:.25rem;min-width:0}
+.field label{font-weight:700;font-size:1.05rem;color:var(--muted)}
+.field select,.field input[type=number],.field input[type=text],.field textarea{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:.4rem .6rem;min-width:0;width:100%}
+input[type=range]{width:100%;accent-color:var(--accent)}
+
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+
+.agenda{display:flex;flex-direction:column;gap:.55rem;margin:0;padding:0;list-style:none}
+.slot{display:grid;grid-template-columns:6.6rem minmax(0,1fr) auto;gap:.2rem 1rem;align-items:center;background:var(--surface);border:2px solid var(--line);border-radius:12px;padding:.65rem 1rem;cursor:pointer;text-align:left;width:100%;font:inherit;color:inherit}
+.slot:hover{border-color:var(--accent)}
+.slot .t{font-weight:700;font-size:1.3rem;font-variant-numeric:tabular-nums}
+.slot .nowbtn{margin-top:.3rem;white-space:nowrap;font-size:.9rem;padding:.05rem .5rem}
+.slot .t small{display:block;color:var(--muted);font-size:.95rem;font-weight:600}
+.slot h3{font-size:1.3rem}
+.slot p{color:var(--muted);font-size:1.08rem}
+.slot .links{display:flex;flex-wrap:wrap;gap:.4rem;justify-content:flex-end}
+.slot .links a{text-decoration:none;font-weight:700;border:1px solid var(--accent);color:var(--accent);padding:.15rem .7rem;border-radius:8px;font-size:1.02rem;background:var(--surface)}
+.slot .links a:hover{background:var(--accent);color:var(--accent-ink)}
+.slot.now{border-color:var(--accent);background:var(--accent-soft);box-shadow:0 0 0 3px var(--accent-soft)}
+.slot.past{opacity:.55}
+.slot.brk{background:var(--surface2);border-style:dashed}
+.slot.brk h3{font-weight:600;color:var(--muted)}
+@media (max-width:760px){.slot{grid-template-columns:4.4rem minmax(0,1fr)}.slot .links{grid-column:1 / -1;justify-content:flex-start}}
+.clock{font-variant-numeric:tabular-nums;font-weight:700;font-size:1.6rem}
+.rules li{margin:.35rem 0}
+.mode-t{background:var(--surface2)}
+.legend{display:flex;flex-wrap:wrap;gap:.5rem 1.2rem;color:var(--muted);font-size:1.05rem}
+.dayrow{display:grid;grid-template-columns:5.5rem minmax(0,1fr);gap:1rem;align-items:start}
+.dayno{background:var(--accent);color:var(--accent-ink);border-radius:12px;font-weight:700;font-size:1.5rem;text-align:center;padding:.7rem .3rem}
+.dayno small{display:block;font-size:.9rem;font-weight:600;opacity:.9}
+.dayno.todo{background:var(--surface2);color:var(--muted)}
+svg.arch{width:100%;height:auto;display:block}
+svg.arch text{font-family:var(--font);fill:var(--ink)}
+svg.arch .bx{fill:var(--surface);stroke:var(--line);stroke-width:2}
+svg.arch .gw{fill:var(--accent-soft);stroke:var(--accent);stroke-width:3}
+svg.arch .mon{fill:var(--surface2);stroke:var(--line);stroke-width:2;stroke-dasharray:7 5}
+svg.arch .ok{fill:var(--good-soft);stroke:var(--good);stroke-width:2}
+svg.arch .fb{fill:var(--warn-soft);stroke:var(--warn);stroke-width:2}
+svg.arch .live{fill:var(--surface);stroke:var(--muted);stroke-width:2;stroke-dasharray:7 5}
+svg.arch .ln{stroke:var(--ink);stroke-width:2.5;fill:none}
+svg.arch .ld{stroke:var(--muted);stroke-width:2;fill:none;stroke-dasharray:6 5}
+svg.arch .t1{font-size:21px;font-weight:700}svg.arch .t2{font-size:17px;fill:var(--muted)}
+svg.arch .lbl{font-size:16px;fill:var(--muted);font-weight:600}
+.step{display:grid;grid-template-columns:2.6rem minmax(0,1fr);gap:.8rem;align-items:start}
+.step .n{width:2.6rem;height:2.6rem;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font-weight:700;font-size:1.3rem}
+.q{border:1px solid var(--line);border-radius:10px;padding:.7rem 1rem;background:var(--surface)}
+.q button.opt{display:block;width:100%;text-align:left;margin:.3rem 0;padding:.4rem .7rem;border:1px solid var(--line);background:var(--surface);border-radius:8px;cursor:pointer;font-size:1.1rem}
+.q button.opt:hover{background:var(--surface2)}
+.q button.opt.right{background:var(--good-soft);border-color:var(--good)}
+.q button.opt.wrong{background:var(--bad-soft);border-color:var(--bad)}
+.q .why{margin-top:.4rem;color:var(--muted)}
+</style></head>
+<body>
+<header class="topbar"><div class="topbar-in"><div class="brand">Course<small>Kyndryl · Enterprise Agentic AI Engineering</small></div><nav class="nav" aria-label="Day 1 pages"><a href="overview.html" aria-current="page">Overview</a><a href="index.html">Control Room</a><a href="M1_request_path.html">M1 Request path</a><a href="M2_model_picker.html">M2 Model picker</a><a href="M3_vram_calculator.html">M3 VRAM calculator</a><a href="M4_decision_clinic.html">M4 Decision clinic</a><a href="../labs/Day1_Lab_Guide.html">Lab guide</a></nav><button class="themebtn" id="themebtn" type="button">Theme</button></div></header>
+<main class="wrap">
+<div class="head"><div><div class="kicker">Enterprise Agentic AI Engineering</div><h1>Course overview</h1>
+<p class="lede">5 days, 2:00 PM to 8:00 PM. Open-source models, served privately, wired into real agent systems. You build every day; the trainer talks for at most 100 minutes.</p></div>
+<div class="timebox"><b>30 hrs</b> · 5 days · 70%+ hands-on</div></div>
+
+<div class="tabs" role="tablist">
+<button role="tab" aria-selected="true" data-tab="t1">Course at a glance</button>
+<button role="tab" aria-selected="false" data-tab="t2">Day-wise view</button>
+<button role="tab" aria-selected="false" data-tab="t3">Our setup, end to end</button>
+<button role="tab" aria-selected="false" data-tab="t4">LiteLLM in 5 minutes</button>
+</div>
+
+<section class="panel" id="t1">
+<div class="grid g3">
+<div class="card"><h3>What you will be able to do</h3><ul class="clean"><li>Pick, serve and compare open-source LLMs and SLMs</li><li>Run a private gateway with keys, fallback and cost tracking</li><li>Build RAG, memory and agents on top of it</li><li>Add tools (MCP), permissions and human approval</li><li>Guard, test, observe and ship it</li></ul></div>
+<div class="card"><h3>How each day runs</h3><ul class="clean"><li><b>Trainer talk:</b> 100 min max, in blocks of 25</li><li><b>Guided labs:</b> about 2 hrs, we do it together</li><li><b>Independent challenge:</b> 100 to 120 min, you build, trainer coaches</li><li><b>AI Failure Lab:</b> break it on purpose, then fix it</li><li>Ends with demos and a Git tag for the day</li></ul></div>
+<div class="card"><h3>Ground rules</h3><ul class="clean"><li>No raw cloud keys: you get one gateway key per VM</li><li>Stuck for more than 10 minutes? Flag the trainer</li><li>Pair up, swap pairs each day</li><li>For every tool ask: <b>where should we use it, and where should we not?</b></li></ul></div>
+</div>
+<div class="card" style="margin-top:1rem"><h3>The thread through all 5 days</h3>
+<p class="muted">One simulated telecom support application that grows each day:</p>
+<div class="row" style="margin-top:.6rem"><span class="pill acc">LLM + gateway</span><span>→</span><span class="pill acc">RAG</span><span>→</span><span class="pill acc">memory + agent</span><span>→</span><span class="pill acc">tools (MCP) + RBAC + approval</span><span>→</span><span class="pill acc">guardrails + observability + production</span></div></div>
+</section>
+
+<section class="panel" id="t2" hidden>
+<div class="stack">
+<div class="dayrow"><div class="dayno">Day 1<small>today</small></div><div class="card"><h3>On-prem LLM engineering and the gateway</h3>
+<p class="muted">Model landscape, model selection, vLLM serving, quantization, KV cache and batching, RAG vs fine-tuning vs SLM, and the LiteLLM gateway.</p>
+<div class="tblwrap"><table class="tbl"><tr><th>Time</th><th>Block</th></tr>
+<tr><td class="num">2:00</td><td>Quiz and environment check (10)</td></tr>
+<tr><td class="num">2:10</td><td>Talk 1: the platform and request path (25) · Lab 0 and Lab 1: first calls through the gateway (40)</td></tr>
+<tr><td class="num">3:25</td><td>Talk 2: the model stack (25) · Lab 2: model bake-off (30)</td></tr>
+<tr><td class="num">4:30</td><td>Talk 3: serving, KV cache, quantization, live H100 demo (25) · Lab 3: predict, then measure (30)</td></tr>
+<tr><td class="num">5:25</td><td>Talk 4: RAG vs fine-tuning vs SLM (25) · Team build: stand up your own gateway (100)</td></tr>
+<tr><td class="num">7:30</td><td>Demos and wrap-up (30)</td></tr></table></div></div></div>
+<div class="dayrow"><div class="dayno todo">Day 2</div><div class="card"><h3>Enterprise RAG and advanced retrieval</h3><p class="muted">Chunking, embeddings, vector database, hybrid search, reranking, query rewriting, multi-hop, RAG evaluation. Failure Lab: a deliberately poor RAG to diagnose and fix.</p></div></div>
+<div class="dayrow"><div class="dayno todo">Day 3</div><div class="card"><h3>Memory and agentic AI</h3><p class="muted">Working, session and long-term memory, Redis-backed memory, LangChain and LangGraph, checkpoints, retries, human in the loop. Failure Lab: memory bleed, agent loops, retry storms.</p></div></div>
+<div class="dayrow"><div class="dayno todo">Day 4</div><div class="card"><h3>MCP, agent registry, RBAC and human governance</h3><p class="muted">Build MCP tools, register agents, enforce roles and approvals. Failure Lab: over-permissioned tools and bypassed approval.</p></div></div>
+<div class="dayrow"><div class="dayno todo">Day 5</div><div class="card"><h3>Guardrails, evals, observability and production</h3><p class="muted">Guardrails, prompt injection defence, tracing, evaluation, load test. Capstone: productionize the telecom app and present an architecture decision.</p></div></div>
+<div class="callout"><b>Note</b>Days 2 to 5 are the planned outline. Detailed content and labs are released day by day.</div>
+</div></section>
+
+<section class="panel" id="t3" hidden>
+<div class="card"><h3>How a request travels, end to end</h3>
+<svg class="arch" viewBox="0 0 1100 560" role="img" aria-label="Architecture: participant VMs call the LiteLLM gateway, which calls Azure-hosted models. A monitoring VM watches the gateway and the VMs.">
+<defs><marker id="ar" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 z" fill="currentColor" style="color:var(--ink)"/></marker></defs>
+<rect class="bx" x="20" y="40" width="270" height="250" rx="14"/>
+<text class="t1" x="40" y="78">Lab VMs (Windows)</text>
+<text class="t2" x="40" y="108">lab-vm-01 : trainer</text><text class="t2" x="40" y="134">lab-vm-02 to 07 : participants</text>
+<rect class="bx" x="40" y="156" width="230" height="46" rx="8"/><text class="t1" x="56" y="186" style="font-size:19px">VS Code · OpenCode</text>
+<rect class="bx" x="40" y="214" width="230" height="58" rx="8"/><text class="t2" x="56" y="240">your own gateway key</text><text class="t2" x="56" y="262">(LITELLM_API_KEY)</text>
+<rect class="gw" x="400" y="40" width="300" height="250" rx="14"/>
+<text class="t1" x="420" y="78">Gateway VM · LiteLLM</text><text class="t2" x="420" y="106">gatewaylinux · port 4000</text>
+<text class="t2" x="420" y="134">checks your key and model list</text><text class="t2" x="420" y="156">picks the model, retries, falls back</text><text class="t2" x="420" y="178">holds the real provider keys</text><text class="t2" x="420" y="200">logs every call: tokens and cost</text>
+<rect class="bx" x="420" y="214" width="260" height="62" rx="8"/><text class="t1" x="436" y="240" style="font-size:19px">Postgres</text><text class="t2" x="436" y="264">keys, spend, logs</text>
+<rect class="ok" x="810" y="30" width="270" height="76" rx="12"/><text class="t1" x="828" y="62">Kimi K2.7 Code</text><text class="t2" x="828" y="90">MAIN model · Azure Foundry</text>
+<rect class="fb" x="810" y="130" width="270" height="76" rx="12"/><text class="t1" x="828" y="162">DeepSeek V4.1 Flash</text><text class="t2" x="828" y="190">FALLBACK · Azure Foundry</text>
+<rect class="live" x="810" y="230" width="270" height="76" rx="12"/><text class="t1" x="828" y="262">Qwen 3.8 27B</text><text class="t2" x="828" y="290">on 1 H100 · started live in class</text>
+<path class="ln" d="M290 160 H400" marker-end="url(#ar)" style="color:var(--ink)"/><text class="lbl" x="318" y="148">request</text>
+<path class="ln" d="M700 70 H810" marker-end="url(#ar)" style="color:var(--ink)"/>
+<path class="ln" d="M700 168 H810" marker-end="url(#ar)" style="color:var(--ink)"/>
+<path class="ld" d="M700 268 H810" marker-end="url(#ar)" style="color:var(--ink)"/>
+
+<rect class="mon" x="320" y="380" width="460" height="130" rx="14"/>
+<text class="t1" x="340" y="416">Monitor VM · Grafana</text><text class="t2" x="340" y="444">monitorlinux · dashboard on the TV</text><text class="t2" x="340" y="470">watches: gateway, 7 VMs, each model (up or down)</text>
+<path class="ld" d="M550 380 V290" marker-end="url(#ar)" style="color:var(--ink)"/>
+<path class="ld" d="M320 445 H155 V290" marker-end="url(#ar)" style="color:var(--ink)"/>
+<text class="lbl" x="560" y="340">checks</text>
+</svg>
+<p class="muted" style="margin-top:.6rem">Solid line: your request. Dashed line: monitoring. If Kimi fails, the gateway retries and then calls DeepSeek, and you do not have to change anything.</p></div>
+<div class="grid g3" style="margin-top:1rem">
+<div class="card"><h3>Why a gateway?</h3><p class="muted">One address, one key per person, one place to switch models, track cost and survive an outage.</p></div>
+<div class="card"><h3>Why no cloud keys on VMs?</h3><p class="muted">The real provider keys live only on the gateway. A leaked VM key can be switched off in seconds without touching anything else.</p></div>
+<div class="card"><h3>Why Grafana?</h3><p class="muted">You can see the failure while it happens: a model turning red, a VM down, a slow response.</p></div>
+</div></section>
+
+<section class="panel" id="t4" hidden>
+<div class="callout acc"><b>New to this? Start here.</b>LiteLLM is a switchboard for AI models. Your tools talk to <i>one</i> address; the switchboard decides which real model answers.</div>
+<div class="grid g2" style="margin-top:1rem">
+<div class="card"><h3>Four words to know</h3><table class="tbl">
+<tr><td><b>Gateway</b></td><td>The single door every request goes through</td></tr>
+<tr><td><b>Virtual key</b></td><td>Your personal pass (starts with <code>sk-</code>). It works only at the gateway and can have limits</td></tr>
+<tr><td><b>Model name (alias)</b></td><td>A friendly name like <code>kimi-k2.7-code</code>. The gateway maps it to the real model behind it</td></tr>
+<tr><td><b>Fallback</b></td><td>Plan B: if model A fails, try model B automatically</td></tr></table></div>
+<div class="card"><h3>What happens when you press Enter</h3><div class="stack">
+<div class="step"><div class="n">1</div><div>Your tool sends the question and your key to the gateway.</div></div>
+<div class="step"><div class="n">2</div><div>The gateway checks: is this key valid? Allowed to use this model?</div></div>
+<div class="step"><div class="n">3</div><div>It forwards the call to the real model with its own secret key.</div></div>
+<div class="step"><div class="n">4</div><div>The answer comes back. The gateway notes tokens and cost.</div></div></div></div>
+</div>
+<div class="card" style="margin-top:1rem"><h3>Try it (PowerShell on your VM, 3 minutes)</h3>
+<p class="muted" style="margin-bottom:.6rem">Open a <b>new</b> PowerShell window (so it sees your key). Your key is already set on this VM as <code>LITELLM_API_KEY</code>.</p>
+<div class="stack">
+<div><b>1. Which models can I use?</b>
+<div class="codeblock"><div class="cb-head"><span>PowerShell</span><button type="button" data-copy>Copy</button></div><pre>Invoke-RestMethod -Uri http://172.16.0.6:4000/v1/models -Headers @{Authorization=&quot;Bearer $env:LITELLM_API_KEY&quot;} | % { $_.data.id }</pre></div></div>
+<div><b>2. Ask a model a question</b>
+<div class="codeblock"><div class="cb-head"><span>PowerShell</span><button type="button" data-copy>Copy</button></div><pre>$body = @{model=&quot;kimi-k2.7-code&quot;; messages=@(@{role=&quot;user&quot;; content=&quot;Explain an API gateway in one sentence&quot;}); max_tokens=300} | ConvertTo-Json -Depth 5
+Invoke-RestMethod -Uri http://172.16.0.6:4000/v1/chat/completions -Method Post -Headers @{Authorization=&quot;Bearer $env:LITELLM_API_KEY&quot;} -ContentType &quot;application/json&quot; -Body $body | % { $_.choices[0].message.content }</pre></div></div>
+<div><b>3. Switch the model, change nothing else</b>
+<p class="muted">Edit <code>model=</code> in step 2 to <code>deepseek-v4.1-flash</code> and run it again. Same address, same key, different model. That is the whole point of a gateway.</p></div>
+<div><b>4. Break it on purpose</b>
+<p class="muted">Change the model to <code>no-such-model</code>. Read the error. Which part of the system said no: your tool, the gateway, or the model?</p></div>
+</div></div>
+<div class="card" style="margin-top:1rem"><h3>Quick check</h3><div class="stack" id="quiz"></div></div>
+</section>
+</main>
+<script>
+const store={get(k,d){try{const v=localStorage.getItem(k);return v===null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+(function(){const s=store.get("theme",null);if(s)document.documentElement.setAttribute("data-theme",s);
+document.getElementById("themebtn").addEventListener("click",function(){const c=document.documentElement.getAttribute("data-theme")||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");const n=c==="dark"?"light":"dark";document.documentElement.setAttribute("data-theme",n);store.set("theme",n)})})();
+function show(id){document.querySelectorAll(".panel").forEach(p=>p.hidden=p.id!==id);document.querySelectorAll(".tabs button").forEach(b=>b.setAttribute("aria-selected",b.dataset.tab===id))}
+document.querySelectorAll(".tabs button").forEach(b=>b.addEventListener("click",()=>{show(b.dataset.tab);store.set("ovtab",b.dataset.tab)}));
+if(location.hash&&document.getElementById(location.hash.slice(1)))show(location.hash.slice(1));else{const t=store.get("ovtab","t1");if(document.getElementById(t))show(t)}
+document.querySelectorAll("[data-copy]").forEach(b=>b.addEventListener("click",()=>{const t=b.closest(".codeblock").querySelector("pre").innerText;const done=()=>{b.textContent="Copied";setTimeout(()=>b.textContent="Copy",1500)};if(navigator.clipboard)navigator.clipboard.writeText(t).then(done,done);else done()}));
+const QZ=[["Where does the real cloud key for the models live?",["On every VM","Only on the gateway","In OpenCode settings"],1,"Only the gateway holds it. VMs hold a virtual key that can be switched off."],
+["Kimi stops answering. What should happen?",["Your work stops","The gateway retries, then uses the fallback model","You edit your code"],1,"Fallback is configured once, in the gateway."],
+["You want to try DeepSeek instead of Kimi. What changes?",["Address and key","Only the model name","Nothing is possible"],1,"Same address and key; only the model name changes."]];
+const qe=document.getElementById("quiz");QZ.forEach(q=>{const d=document.createElement("div");d.className="q";d.innerHTML="<b></b>";d.firstChild.textContent=q[0];const w=document.createElement("div");w.className="why";q[1].forEach((o,i)=>{const b=document.createElement("button");b.className="opt";b.type="button";b.textContent=o;b.onclick=()=>{d.querySelectorAll(".opt").forEach(x=>x.classList.remove("right","wrong"));b.classList.add(i===q[2]?"right":"wrong");w.textContent=i===q[2]?"Correct. "+q[3]:"Not quite, try again."};d.appendChild(b)});d.appendChild(w);qe.appendChild(d)});
+</script></body></html>

@@ -1,0 +1,475 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>VRAM and Throughput Calculator</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Day 1 design tokens. Layout: sticky top bar, one wide column (max 1500px) sized for a classroom TV. */
+:root{
+  --bg:#F1F5F4; --surface:#FFFFFF; --surface2:#E6EDEB; --ink:#0D2226; --muted:#475F63; --line:#C5D3D0;
+  --accent:#0A7A72; --accent-ink:#FFFFFF; --accent-soft:#D3EDE9;
+  --warn:#9A5B00; --warn-soft:#FAEBD0; --bad:#B3261E; --bad-soft:#F8DBD8; --good:#1B7A3A; --good-soft:#D7EEDD;
+  --code-bg:#0D2226; --code-ink:#DCEFEA; --code-dim:#8FB0AB;
+  --font:"Aptos Narrow","Barlow Semi Condensed","Arial Narrow",sans-serif;
+  --mono:"JetBrains Mono","Cascadia Mono",Consolas,monospace;
+  --shadow:0 1px 2px rgba(13,34,38,.08);
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0A1517; --surface:#12262A; --surface2:#1A343A; --ink:#E3EFED; --muted:#9DB6B3; --line:#2A4549;
+    --accent:#4FD1C5; --accent-ink:#04201D; --accent-soft:#12383A;
+    --warn:#F0B35A; --warn-soft:#3A2B10; --bad:#FF8E85; --bad-soft:#3F1B18; --good:#7ED99A; --good-soft:#143322;
+    --code-bg:#07100F; --code-ink:#DCEFEA; --code-dim:#7FA09B; --shadow:none; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0A1517; --surface:#12262A; --surface2:#1A343A; --ink:#E3EFED; --muted:#9DB6B3; --line:#2A4549;
+  --accent:#4FD1C5; --accent-ink:#04201D; --accent-soft:#12383A;
+  --warn:#F0B35A; --warn-soft:#3A2B10; --bad:#FF8E85; --bad-soft:#3F1B18; --good:#7ED99A; --good-soft:#143322;
+  --code-bg:#07100F; --code-ink:#DCEFEA; --code-dim:#7FA09B; --shadow:none; color-scheme:dark;
+}
+
+*{box-sizing:border-box}
+html{font-size:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:1.2rem;line-height:1.5;-webkit-text-size-adjust:100%}
+h1,h2,h3,h4{line-height:1.15;margin:0;text-wrap:balance;font-weight:700}
+h1{font-size:2.45rem;letter-spacing:-.01em}
+h2{font-size:1.85rem}
+h3{font-size:1.4rem}
+h4{font-size:1.2rem}
+p{margin:0}
+a{color:var(--accent)}
+code,kbd,pre{font-family:var(--mono)}
+code{font-size:.92em;background:var(--surface2);padding:.05em .35em;border-radius:4px}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+[hidden]{display:none!important}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* top bar */
+.topbar{position:sticky;top:0;z-index:30;background:var(--bg);border-bottom:1px solid var(--line)}
+.topbar-in{max-width:1500px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;gap:.4rem 1.2rem;padding:.55rem max(16px,env(safe-area-inset-right,0px)) .55rem max(16px,env(safe-area-inset-left,0px))}
+.brand{font-weight:700;letter-spacing:.01em;white-space:nowrap}
+.brand small{color:var(--muted);font-weight:500;margin-left:.5rem}
+.nav{display:flex;flex-wrap:wrap;gap:.25rem;margin-left:auto}
+.nav a{padding:.2rem .75rem;border-radius:7px;color:var(--muted);text-decoration:none;font-weight:600;font-size:1.05rem}
+.nav a:hover{background:var(--surface2);color:var(--ink)}
+.nav a[aria-current="page"]{background:var(--accent);color:var(--accent-ink)}
+.themebtn{border:1px solid var(--line);background:var(--surface);border-radius:7px;padding:.2rem .7rem;cursor:pointer;font-size:1.05rem;color:var(--muted)}
+
+/* page */
+.wrap{max-width:1500px;margin:0 auto;padding:1.6rem max(16px,env(safe-area-inset-right,0px)) 4rem max(16px,env(safe-area-inset-left,0px))}
+.kicker{font-size:1.05rem;letter-spacing:.09em;text-transform:uppercase;color:var(--accent);font-weight:700;margin-bottom:.3rem}
+.lede{color:var(--muted);max-width:62rem;margin-top:.6rem}
+.head{display:flex;flex-wrap:wrap;gap:.6rem 2rem;justify-content:space-between;align-items:flex-end;margin-bottom:1.2rem}
+.timebox{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:.4rem .9rem;font-weight:600;color:var(--muted);white-space:nowrap}
+.timebox b{color:var(--ink)}
+
+/* tabs */
+.tabs{display:flex;flex-wrap:wrap;gap:.35rem;border-bottom:2px solid var(--line);margin-bottom:1.4rem}
+.tabs button{border:0;background:transparent;padding:.55rem 1.1rem;font-weight:700;font-size:1.15rem;color:var(--muted);cursor:pointer;border-radius:8px 8px 0 0;margin-bottom:-2px;border-bottom:3px solid transparent}
+.tabs button:hover{color:var(--ink);background:var(--surface2)}
+.tabs button[aria-selected="true"]{color:var(--accent);border-bottom-color:var(--accent);background:var(--surface)}
+.panel[hidden]{display:none!important}
+
+/* blocks */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:1.1rem 1.3rem;box-shadow:var(--shadow);min-width:0}
+.card h3{margin-bottom:.4rem}
+.grid{display:grid;gap:1rem;min-width:0}
+.g2{grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr))}
+.g4{grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr))}
+.split{display:grid;gap:1.2rem;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);align-items:start}
+@media (max-width:980px){.split{grid-template-columns:minmax(0,1fr)}}
+.muted{color:var(--muted)}
+.row{display:flex;flex-wrap:wrap;gap:.6rem;align-items:center}
+.stack{display:flex;flex-direction:column;gap:.8rem}
+
+.pill{display:inline-block;border-radius:999px;padding:.05rem .7rem;font-size:1rem;font-weight:700;border:1px solid var(--line);background:var(--surface2);color:var(--muted);white-space:nowrap}
+.pill.ok{background:var(--good-soft);color:var(--good);border-color:transparent}
+.pill.warn{background:var(--warn-soft);color:var(--warn);border-color:transparent}
+.pill.bad{background:var(--bad-soft);color:var(--bad);border-color:transparent}
+.pill.acc{background:var(--accent-soft);color:var(--accent);border-color:transparent}
+
+.btn{border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:.45rem 1.05rem;border-radius:9px;font-weight:700;cursor:pointer;font-size:1.1rem}
+.btn:hover{background:var(--surface2)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.sm{padding:.2rem .7rem;font-size:1rem}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+
+.callout{border-radius:10px;padding:.8rem 1.1rem;border:1px solid var(--line);background:var(--surface2)}
+.callout.warn{background:var(--warn-soft);border-color:transparent}
+.callout.bad{background:var(--bad-soft);border-color:transparent}
+.callout.good{background:var(--good-soft);border-color:transparent}
+.callout.acc{background:var(--accent-soft);border-color:transparent}
+.callout b:first-child{display:block;margin-bottom:.15rem}
+
+ul.clean{margin:.3rem 0 0;padding-left:1.25rem}
+ul.clean li{margin:.2rem 0}
+.tbl{width:100%;border-collapse:collapse;font-size:1.1rem}
+.tbl th,.tbl td{text-align:left;padding:.5rem .7rem;border-bottom:1px solid var(--line);vertical-align:top}
+.tbl th{font-size:1rem;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.tblwrap{overflow-x:auto;min-width:0}
+.num{font-variant-numeric:tabular-nums}
+
+/* code */
+.codeblock{background:var(--code-bg);border-radius:10px;overflow:hidden;min-width:0}
+.cb-head{display:flex;justify-content:space-between;align-items:center;gap:1rem;padding:.35rem .5rem .35rem .9rem;border-bottom:1px solid rgba(255,255,255,.1);color:var(--code-dim);font-family:var(--mono);font-size:1rem}
+.cb-head button{background:transparent;border:1px solid rgba(255,255,255,.25);color:var(--code-ink);border-radius:6px;padding:.1rem .7rem;cursor:pointer;font-size:1rem;font-family:var(--font);font-weight:600}
+.cb-head button:hover{background:rgba(255,255,255,.12)}
+.codeblock pre{margin:0;padding:.8rem 1rem;overflow-x:auto;color:var(--code-ink);font-size:1.12rem;line-height:1.5;tab-size:4}
+.codeblock.short pre{padding:.6rem 1rem}
+
+/* form bits */
+.field{display:flex;flex-direction:column;gap:.25rem;min-width:0}
+.field label{font-weight:700;font-size:1.05rem;color:var(--muted)}
+.field select,.field input[type=number],.field input[type=text],.field textarea{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:.4rem .6rem;min-width:0;width:100%}
+input[type=range]{width:100%;accent-color:var(--accent)}
+
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+
+.mem{position:relative;display:flex;height:3.2rem;border-radius:10px;overflow:hidden;background:var(--surface2);border:1px solid var(--line);margin:1.9rem 0 .7rem}
+.mem i{display:block;height:100%}
+.mem .w{background:var(--accent)} .mem .o{background:#7B8FA0} .mem .k{background:var(--warn)} .mem .f{background:transparent} .mem .x{background:var(--bad)}
+.limit{position:absolute;top:-1.5rem;bottom:-.3rem;border-left:3px dashed var(--ink);pointer-events:none}
+.limit span{position:absolute;top:0;left:.35rem;font-size:.95rem;font-weight:700;white-space:nowrap;color:var(--ink)}
+.legend{display:flex;flex-wrap:wrap;gap:.4rem 1.2rem;font-size:1.05rem}
+.legend b{display:inline-block;width:.9rem;height:.9rem;border-radius:3px;margin-right:.35rem;vertical-align:-.1rem}
+.big{font-size:2rem;font-weight:700;line-height:1.1}
+.kpi{display:grid;gap:.9rem;grid-template-columns:repeat(auto-fit,minmax(min(100%,210px),1fr))}
+.kpi .card{padding:.8rem 1rem}
+.kpi .lab{color:var(--muted);font-size:1.02rem}
+.inputs{display:grid;gap:.8rem 1.2rem;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr))}
+.chartbox{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:.6rem;min-width:0;overflow-x:auto}
+.chartbox svg{display:block;width:100%;min-width:520px;height:auto}
+.chartbox text{fill:var(--muted);font-family:var(--font);font-size:13px}
+.chartbox .ttl{fill:var(--ink);font-size:15px;font-weight:700}
+.q{display:grid;gap:.6rem}
+.q .ans{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center}
+.q input{width:9rem;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:.4rem .6rem}
+.reveal{margin-top:.4rem}
+.cc h3{margin-bottom:.3rem}
+.cc .ul{margin-top:.5rem}
+.cc .ul div{margin:.15rem 0}
+</style></head>
+<body>
+<header class="topbar"><div class="topbar-in"><div class="brand">Day 1<small>Kyndryl · Enterprise Agentic AI Engineering</small></div><nav class="nav" aria-label="Day 1 pages"><a href="overview.html">Overview</a><a href="index.html">Control Room</a><a href="M1_request_path.html">M1 Request path</a><a href="M2_model_picker.html">M2 Model picker</a><a href="M3_vram_calculator.html" aria-current="page">M3 VRAM calculator</a><a href="M4_decision_clinic.html">M4 Decision clinic</a><a href="../labs/Day1_Lab_Guide.html">Lab guide</a></nav><button class="themebtn" id="themebtn" type="button">Theme</button></div></header>
+<main class="wrap">
+  <div class="head">
+    <div>
+      <div class="kicker">Day 1 · Talk 3</div>
+      <h1>Will it fit, and how fast will it run?</h1>
+      <p class="lede">Weights, KV cache and memory bandwidth decide almost everything about serving a model. Predict first, then measure in Lab 3.</p>
+    </div>
+    <div class="timebox"><b>25 min</b> talk + vLLM demo, then Lab 3</div>
+  </div>
+
+  <div class="tabs" role="tablist" aria-label="Sections">
+    <button role="tab" id="t0" aria-controls="p0" data-token="predict">1 · Predict first</button>
+    <button role="tab" id="t1" aria-controls="p1" data-token="calc">2 · Calculator</button>
+    <button role="tab" id="t2" aria-controls="p2" data-token="concepts">3 · Concepts</button>
+  </div>
+
+  <!-- PREDICT -->
+  <section class="panel" id="p0" role="tabpanel" aria-labelledby="t0">
+    <div class="callout acc" style="margin-bottom:1rem"><b>Write your guess before you reveal</b>Four questions. The answers come from the same formulas as the calculator. Being wrong by 3× is useful, because you learn which part you were missing.</div>
+    <div class="grid" id="pq" style="grid-template-columns:repeat(auto-fit,minmax(min(100%,600px),1fr))"></div>
+  </section>
+
+  <!-- CALC -->
+  <section class="panel" id="p1" role="tabpanel" aria-labelledby="t1" hidden>
+    <div class="card" style="margin-bottom:1rem">
+      <div class="inputs">
+        <div class="field"><label for="i-model">Model</label><select id="i-model"></select></div>
+        <div class="field"><label for="i-quant">Weight precision</label><select id="i-quant"></select></div>
+        <div class="field"><label for="i-kvq">KV-cache precision</label><select id="i-kvq"><option value="2">FP16 (2 bytes)</option><option value="1">FP8 (1 byte)</option></select></div>
+        <div class="field"><label for="i-gpu">Hardware</label><select id="i-gpu"></select></div>
+        <div class="field"><label for="i-ctx">Context per request: <b id="o-ctx"></b> tokens</label><input id="i-ctx" type="range" min="0" max="6" step="1" value="3"></div>
+        <div class="field"><label for="i-conc">Users at the same time: <b id="o-conc"></b></label><input id="i-conc" type="range" min="1" max="64" step="1" value="4"></div>
+        <div class="field"><label for="i-prompt">Typical prompt (tokens)</label><input id="i-prompt" type="number" min="1" value="1500"></div>
+        <div class="field"><label for="i-eff">Bandwidth efficiency: <b id="o-eff"></b></label><input id="i-eff" type="range" min="40" max="90" step="5" value="60"></div>
+      </div>
+      <div class="inputs" id="custom" style="margin-top:.8rem" hidden>
+        <div class="field"><label for="c-p">Parameters (billions)</label><input id="c-p" type="number" min="0.1" step="0.1" value="27"></div>
+        <div class="field"><label for="c-l">Layers (num_hidden_layers)</label><input id="c-l" type="number" min="1" value="64"></div>
+        <div class="field"><label for="c-k">KV heads (num_key_value_heads)</label><input id="c-k" type="number" min="1" value="8"></div>
+        <div class="field"><label for="c-h">Head dim (head_dim)</label><input id="c-h" type="number" min="16" value="128"></div>
+      </div>
+      <p class="muted" id="custom-note" hidden style="margin-top:.5rem">Open the model's page, then <code>config.json</code>. Starter values above are placeholders, replace them. If there is no <code>head_dim</code>, use hidden_size ÷ num_attention_heads.</p>
+    </div>
+
+    <div class="card" style="margin-bottom:1rem">
+      <div class="row" style="justify-content:space-between"><h2 id="verdict"></h2><span class="muted" id="verdict2"></span></div>
+      <div class="mem" id="mem" role="img" aria-label="Memory use"></div>
+      <div class="legend">
+        <span><b style="background:var(--accent)"></b>Weights <span class="num" id="l-w"></span></span>
+        <span><b style="background:#7B8FA0"></b>Runtime overhead <span class="num" id="l-o"></span></span>
+        <span><b style="background:var(--warn)"></b>KV cache <span class="num" id="l-k"></span></span>
+        <span><b style="background:var(--bad)"></b>Over the limit <span class="num" id="l-x"></span></span>
+      </div>
+    </div>
+
+    <div class="kpi" style="margin-bottom:1rem" id="kpi"></div>
+
+    <div class="grid g2">
+      <div class="chartbox"><svg id="chart" viewBox="0 0 640 330" role="img" aria-label="Aggregate tokens per second against concurrent users"></svg></div>
+      <div class="card"><h3>Read it like this</h3><ul class="clean" id="reading"></ul>
+        <div class="callout warn" style="margin-top:.8rem"><b>Dense-model estimate</b>Mixture-of-experts models must store every expert but read only the active ones per token. Memory is the same as shown. Decode is faster than this estimate. Always measure.</div></div>
+    </div>
+  </section>
+
+  <!-- CONCEPTS -->
+  <section class="panel" id="p2" role="tabpanel" aria-labelledby="t2" hidden>
+    <div class="grid g3 cc" id="cc"></div>
+  </section>
+</main>
+
+<script>
+/* shared helpers: safe storage, theme toggle, tabs, copy buttons */
+const store = {
+  get(k, d){ try { const v = localStorage.getItem("kyn1:" + k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v){ try { localStorage.setItem("kyn1:" + k, JSON.stringify(v)); } catch (e) {} }
+};
+
+(function theme(){
+  const saved = store.get("theme", null);
+  if (saved) document.documentElement.setAttribute("data-theme", saved);
+  const btn = document.getElementById("themebtn");
+  if (!btn) return;
+  btn.addEventListener("click", () => {
+    const cur = document.documentElement.getAttribute("data-theme");
+    const isDark = cur ? cur === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+    const next = isDark ? "light" : "dark";
+    document.documentElement.setAttribute("data-theme", next);
+    store.set("theme", next);
+  });
+})();
+
+function initTabs(root, opts){
+  opts = opts || {};
+  const tabs = Array.from(root.querySelectorAll('[role="tab"]'));
+  const panels = tabs.map(t => document.getElementById(t.getAttribute("aria-controls")));
+  function select(i, focus){
+    tabs.forEach((t, j) => {
+      t.setAttribute("aria-selected", j === i ? "true" : "false");
+      t.tabIndex = j === i ? 0 : -1;
+      panels[j].hidden = j !== i;
+    });
+    if (focus) tabs[i].focus();
+    if (opts.hash) { try { history.replaceState(null, "", "#" + tabs[i].dataset.token); } catch (e) {} }
+    if (opts.onSelect) opts.onSelect(i, tabs[i]);
+  }
+  tabs.forEach((t, i) => {
+    t.addEventListener("click", () => select(i));
+    t.addEventListener("keydown", e => {
+      if (e.key === "ArrowRight") { e.preventDefault(); select((i + 1) % tabs.length, true); }
+      if (e.key === "ArrowLeft") { e.preventDefault(); select((i - 1 + tabs.length) % tabs.length, true); }
+    });
+  });
+  let start = 0;
+  if (opts.hash && location.hash) {
+    const idx = tabs.findIndex(t => "#" + t.dataset.token === location.hash);
+    if (idx >= 0) start = idx;
+  }
+  select(start);
+  if (opts.hash) {
+    window.addEventListener("hashchange", () => {
+      const idx = tabs.findIndex(t => "#" + t.dataset.token === location.hash);
+      if (idx >= 0) select(idx);
+    });
+  }
+  return select;
+}
+
+function copyText(text, btn){
+  const done = () => { const o = btn.textContent; btn.textContent = "Copied"; setTimeout(() => { btn.textContent = o; }, 1400); };
+  const fallback = () => {
+    const ta = document.createElement("textarea");
+    ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand("copy"); done(); } catch (e) { btn.textContent = "Select and copy"; }
+    document.body.removeChild(ta);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, fallback);
+  else fallback();
+}
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-copy]");
+  if (!b) return;
+  const pre = b.closest(".codeblock").querySelector("pre");
+  copyText(pre.innerText, b);
+});
+
+function esc(s){ return String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
+
+
+/*CALC_START*/
+const GPUS = [
+ {n:"H100 NVL 94 GB (Azure NC40ads H100 v5)", mem:94, bw:3900, tf:835},
+ {n:"H100 SXM 80 GB", mem:80, bw:3350, tf:989},
+ {n:"A100 80 GB", mem:80, bw:2000, tf:312},
+ {n:"A100 40 GB", mem:40, bw:1555, tf:312},
+ {n:"L4 24 GB", mem:24, bw:300, tf:121},
+ {n:"RTX 4090 24 GB", mem:24, bw:1008, tf:165},
+ {n:"T4 16 GB", mem:16, bw:320, tf:65},
+ {n:"Lab VM CPU (D4as_v5, 16 GB RAM)", mem:12, bw:40, tf:0.3}
+];
+const MODELS = [
+ {n:"Llama 3.2 3B", p:3.2, L:28, kv:8, hd:128},
+ {n:"Qwen2.5 7B", p:7.6, L:28, kv:4, hd:128},
+ {n:"Llama 3.1 8B", p:8.0, L:32, kv:8, hd:128},
+ {n:"Qwen3 8B", p:8.2, L:36, kv:8, hd:128},
+ {n:"Qwen3 32B", p:32.8, L:64, kv:8, hd:128},
+ {n:"Llama 3.1 70B", p:70.6, L:80, kv:8, hd:128},
+ {n:"Custom (type from config.json)", p:27, L:64, kv:8, hd:128, custom:true}
+];
+const QUANTS = [
+ {n:"BF16 / FP16", bits:16}, {n:"FP8", bits:8}, {n:"Q8_0 (GGUF)", bits:8.5}, {n:"Q6_K (GGUF)", bits:6.56},
+ {n:"Q5_K_M (GGUF)", bits:5.69}, {n:"AWQ / GPTQ INT4", bits:4.3}, {n:"Q4_K_M (GGUF)", bits:4.89}, {n:"Q3_K_M (GGUF)", bits:3.91}, {n:"Q2_K (GGUF)", bits:3.35}
+];
+const CTXS = [2048, 4096, 8192, 16384, 32768, 65536, 131072];
+
+function calcMem(m, bits, kvBytes, gpu, ctx, conc, util){
+  const weights = m.p * bits / 8;                          // GB (1 GB = 1e9 bytes)
+  const kvPerTok = 2 * m.L * m.kv * m.hd * kvBytes / 1e9;  // GB per token
+  const kvSeq = kvPerTok * ctx;
+  const overhead = 1.5 + 0.05 * weights;
+  const usable = gpu.mem * util;
+  const kvTotal = kvSeq * conc;
+  const total = weights + overhead + kvTotal;
+  const free = usable - weights - overhead;
+  return {
+    weights, kvPerTok, kvSeq, overhead, usable, kvTotal, total, free,
+    fits: total <= usable,
+    maxConc: free > 0 ? Math.floor(free / kvSeq) : 0,
+    maxCtx1: free > 0 ? Math.floor(free / kvPerTok) : 0
+  };
+}
+function decodeSpeed(r, gpu, eff, b, avgCtx){
+  const stepGB = r.weights + b * r.kvPerTok * avgCtx;      // bytes read per decode step
+  const perUser = (gpu.bw * eff) / stepGB;                 // tokens per second per user
+  return {perUser, agg: perUser * b};
+}
+function ttft(m, gpu, promptTokens){
+  return (2 * m.p * 1e9 * promptTokens) / (gpu.tf * 1e12 * 0.4);   // seconds, 40% compute efficiency
+}
+/*CALC_END*/
+
+/* ---------- predict ---------- */
+const PQ = [
+ {q:"Qwen3 8B in Q4_K_M. How many GB do the weights take?", unit:"GB", f:() => calcMem(MODELS[3], 4.89, 2, GPUS[0], 8192, 1, .9).weights,
+  w:"8.2 billion weights × 4.89 bits ÷ 8 = about 5 GB. Half-precision would be 16 GB. Four-bit is roughly a quarter."},
+ {q:"Llama 3.1 8B, FP16 KV cache. How much memory does ONE request with 32,768 tokens of context hold, in GB?", unit:"GB", f:() => calcMem(MODELS[2], 16, 2, GPUS[0], 32768, 1, .9).kvSeq,
+  w:"2 × 32 layers × 8 KV heads × 128 dims × 2 bytes = 131,072 bytes per token (128 KiB). × 32,768 tokens = about 4.3 GB. For one person."},
+ {q:"Llama 3.1 70B at FP8 on one H100 NVL 94 GB, 8,192 tokens each. How many users can it hold at once?", unit:"users", f:() => calcMem(MODELS[5], 8, 2, GPUS[0], 8192, 1, .9).maxConc,
+  w:"The weights take 70 GB, overhead about 5 GB, leaving roughly 9 GB for KV cache. Each 8k request needs about 2.7 GB. So only 3 users, even though the weights 'fit'."},
+ {q:"Qwen3 8B in Q4_K_M on the lab VM CPU (about 40 GB/s memory bandwidth, 60% efficiency). Tokens per second for one user?", unit:"tok/s", f:() => { const r = calcMem(MODELS[3], 4.89, 2, GPUS[7], 4096, 1, .9); return decodeSpeed(r, GPUS[7], .6, 1, 1700).perUser; },
+  w:"Each new token must read all 5 GB of weights. 40 GB/s × 0.6 ÷ 5 GB ≈ 5 tok/s. The ceiling is memory bandwidth, not clever code. That is why a GPU at 3,900 GB/s feels so different."}
+];
+document.getElementById("pq").innerHTML = PQ.map((p, i) => `<div class="card q"><h4>${i + 1}. ${esc(p.q)}</h4>
+  <div class="ans"><input id="pa${i}" type="number" step="any" aria-label="Your guess for question ${i + 1}"> <span class="muted">${esc(p.unit)}</span> <button class="btn primary" data-r="${i}">Reveal</button></div>
+  <div class="reveal" id="pr${i}" hidden></div></div>`).join("");
+document.getElementById("pq").addEventListener("click", e => {
+  const b = e.target.closest("[data-r]"); if (!b) return; const i = +b.dataset.r, p = PQ[i], val = p.f();
+  const guess = parseFloat(document.getElementById("pa" + i).value);
+  const shown = val >= 10 ? val.toFixed(0) : val.toFixed(1);
+  let verdict = "";
+  if (!isNaN(guess) && guess > 0 && val > 0) { const ratio = guess / val; verdict = `<span class="pill ${ratio > .67 && ratio < 1.5 ? "ok" : "warn"}">You were off by ${ratio >= 1 ? ratio.toFixed(1) + "× too high" : (1 / ratio).toFixed(1) + "× too low"}</span> `; }
+  const r = document.getElementById("pr" + i); r.hidden = false;
+  r.innerHTML = verdict + `<b>Answer: about ${shown} ${esc(p.unit)}.</b><p class="muted" style="margin-top:.3rem">${esc(p.w)}</p>`;
+});
+
+/* ---------- calculator ---------- */
+const $ = id => document.getElementById(id);
+MODELS.forEach((m, i) => $("i-model").add(new Option(m.n, i)));
+QUANTS.forEach((q, i) => $("i-quant").add(new Option(q.n + " (~" + q.bits + " bits)", i)));
+GPUS.forEach((g, i) => $("i-gpu").add(new Option(g.n, i)));
+$("i-model").value = 4; $("i-quant").value = 1; $("i-gpu").value = 0;
+
+function currentModel(){
+  const m = MODELS[+$("i-model").value];
+  if (!m.custom) return m;
+  return {n:m.n, p:+$("c-p").value || 1, L:+$("c-l").value || 1, kv:+$("c-k").value || 1, hd:+$("c-h").value || 16};
+}
+function fmt(v){ return v >= 100 ? v.toFixed(0) : v >= 10 ? v.toFixed(1) : v.toFixed(2); }
+function render(){
+  const raw = MODELS[+$("i-model").value]; $("custom").hidden = !raw.custom; $("custom-note").hidden = !raw.custom;
+  const m = currentModel(), bits = QUANTS[+$("i-quant").value].bits, kvB = +$("i-kvq").value, gpu = GPUS[+$("i-gpu").value];
+  const ctx = CTXS[+$("i-ctx").value], conc = +$("i-conc").value, eff = +$("i-eff").value / 100, prompt = +$("i-prompt").value || 1;
+  $("o-ctx").textContent = ctx.toLocaleString(); $("o-conc").textContent = conc; $("o-eff").textContent = Math.round(eff * 100) + "%";
+  const r = calcMem(m, bits, kvB, gpu, ctx, conc, .9);
+  const avgCtx = Math.min(ctx, prompt + 200);
+
+  const v = $("verdict");
+  if (r.fits) { v.textContent = "Fits"; v.style.color = "var(--good)"; $("verdict2").textContent = fmt(r.usable - r.total) + " GB spare of " + fmt(r.usable) + " GB usable"; }
+  else if (r.weights + r.overhead > r.usable) { v.textContent = "Does not fit: the weights alone are too big"; v.style.color = "var(--bad)"; $("verdict2").textContent = "Try a smaller model or lower precision"; }
+  else { v.textContent = "Does not fit with this many users"; v.style.color = "var(--bad)"; $("verdict2").textContent = "Maximum is " + r.maxConc + " user" + (r.maxConc === 1 ? "" : "s") + " at this context. Cut context or users, or use FP8 KV cache."; }
+
+  const kvShown = Math.max(0, Math.min(r.kvTotal, Math.max(0, r.usable - r.weights - r.overhead)));
+  const over = Math.max(0, r.total - r.usable);
+  const scale = Math.max(gpu.mem, r.weights + r.overhead + kvShown + over);
+  const pct = x => (100 * x / scale).toFixed(2) + "%";
+  $("mem").innerHTML = `<i class="w" style="width:${pct(Math.min(r.weights, scale))}"></i><i class="o" style="width:${pct(r.overhead)}"></i><i class="k" style="width:${pct(kvShown)}"></i><i class="x" style="width:${pct(over)}"></i>` +
+    `<div class="limit" style="left:${pct(r.usable)}"><span>${fmt(r.usable)} GB usable</span></div>`;
+  $("l-w").textContent = fmt(r.weights) + " GB"; $("l-o").textContent = fmt(r.overhead) + " GB"; $("l-k").textContent = fmt(r.kvTotal) + " GB"; $("l-x").textContent = fmt(over) + " GB";
+
+  const sp = decodeSpeed(r, gpu, eff, conc, avgCtx), sp1 = decodeSpeed(r, gpu, eff, 1, avgCtx), tt = ttft(m, gpu, prompt);
+  const k = [
+    ["KV cache per token", (r.kvPerTok * 1e6).toFixed(0) + " KB", "per request, all layers"],
+    ["KV cache per request", fmt(r.kvSeq) + " GB", "at " + ctx.toLocaleString() + " tokens"],
+    ["Most users at once", r.maxConc.toString(), "at this context, this hardware"],
+    ["Longest single request", r.maxCtx1.toLocaleString(), "tokens, if you are the only user"],
+    ["Speed per user", sp.perUser.toFixed(1) + " tok/s", conc + " user" + (conc === 1 ? "" : "s") + " sharing"],
+    ["Total throughput", sp.agg.toFixed(0) + " tok/s", "alone: " + sp1.perUser.toFixed(1) + " tok/s"],
+    ["Time to first token", tt < 10 ? tt.toFixed(2) + " s" : tt.toFixed(0) + " s", prompt.toLocaleString() + "-token prompt, rough"]
+  ];
+  $("kpi").innerHTML = k.map(x => `<div class="card"><div class="lab">${esc(x[0])}</div><div class="big num">${esc(x[1])}</div><div class="muted" style="font-size:1rem">${esc(x[2])}</div></div>`).join("");
+
+  // chart: aggregate tok/s vs users
+  const Bs = [1, 2, 4, 8, 16, 32, 64], pts = Bs.map(b => ({b, a:decodeSpeed(r, gpu, eff, b, avgCtx).agg, ok:b <= r.maxConc}));
+  const ymax = Math.max(...pts.map(p => p.a)) * 1.12 || 1, X0 = 70, X1 = 610, Y0 = 280, Y1 = 40;
+  const px = i => X0 + (X1 - X0) * i / (Bs.length - 1), py = a => Y0 - (Y0 - Y1) * a / ymax;
+  let svg = `<text class="ttl" x="${X0}" y="22">Total tokens per second as users are added</text>`;
+  for (let t = 0; t <= 4; t++) { const a = ymax * t / 4, y = py(a); svg += `<line x1="${X0}" x2="${X1}" y1="${y}" y2="${y}" stroke="var(--line)"/><text x="${X0 - 8}" y="${y + 4}" text-anchor="end">${a >= 100 ? a.toFixed(0) : a.toFixed(1)}</text>`; }
+  Bs.forEach((b, i) => svg += `<text x="${px(i)}" y="${Y0 + 22}" text-anchor="middle">${b}</text>`);
+  svg += `<text x="${(X0 + X1) / 2}" y="${Y0 + 46}" text-anchor="middle">users at the same time</text>`;
+  const okPts = pts.filter(p => p.ok), badOnly = pts.filter(p => !p.ok);
+  const path = arr => arr.map((p, j) => (j ? "L" : "M") + px(Bs.indexOf(p.b)) + " " + py(p.a)).join(" ");
+  if (okPts.length > 1) svg += `<path d="${path(okPts)}" fill="none" stroke="var(--accent)" stroke-width="4"/>`;
+  const lastOk = okPts[okPts.length - 1], firstBad = badOnly[0];
+  if (firstBad) svg += `<path d="${path(lastOk ? [lastOk].concat(badOnly) : badOnly)}" stroke="var(--bad)" stroke-width="3" stroke-dasharray="6 5" fill="none"/>`;
+  if (!lastOk) svg += `<text x="${(X0 + X1) / 2}" y="${(Y0 + Y1) / 2}" text-anchor="middle" style="fill:var(--bad);font-weight:700">No user fits at this context</text>`;
+  pts.forEach((p, i) => svg += `<circle cx="${px(i)}" cy="${py(p.a)}" r="${p.b === conc ? 8 : 4.5}" fill="${p.ok ? "var(--accent)" : "var(--bad)"}"/>`);
+  svg += `<text x="${X1}" y="${Y1 - 8}" text-anchor="end" style="fill:var(--bad)">${firstBad ? "dashed red = KV cache no longer fits" : ""}</text>`;
+  $("chart").innerHTML = svg;
+
+  const gain = sp.agg / sp1.perUser;
+  $("reading").innerHTML = [
+    `Weights are read once per step, however many users share it. That is why throughput rises with users: ${conc} users give about ${gain.toFixed(1)}× one user's speed.`,
+    `Each user adds KV cache. At ${ctx.toLocaleString()} tokens that is ${fmt(r.kvSeq)} GB each, so this setup stops at ${r.maxConc} user${r.maxConc === 1 ? "" : "s"}.`,
+    `One user sees ${sp.perUser.toFixed(1)} tok/s when ${conc} share the GPU. Throughput and speed per user pull in opposite directions.`,
+    bits > 8 ? "Try a 4-bit format. Weights shrink, KV cache does not." : "Try FP8 for the KV cache. It halves per-user memory with small quality impact.",
+    gpu.tf < 1 ? "CPU prefill is slow. A long prompt can take tens of seconds before the first token." : "Prefill is compute-bound, decode is memory-bound. Long prompts hurt first-token time, not speed afterwards."
+  ].map(t => "<li>" + esc(t) + "</li>").join("");
+}
+["i-model", "i-quant", "i-kvq", "i-gpu", "i-ctx", "i-conc", "i-prompt", "i-eff", "c-p", "c-l", "c-k", "c-h"].forEach(id => $(id).addEventListener("input", render));
+render();
+
+/* ---------- concepts ---------- */
+const CC = [
+ ["KV cache","Stores the attention keys and values of every earlier token so each new token does not recompute them. Cost per token: 2 × layers × KV heads × head size × bytes.","Always on. Shrink it with shorter context limits, FP8 KV, or models with fewer KV heads.","Do not set a 128k limit when requests are 2k. You reserve memory you never use."],
+ ["Continuous batching","The server mixes many requests into every step. New requests join and finished ones leave without waiting for the slowest.","Several people share one GPU. vLLM does it by default.","One user on a laptop. Batching adds nothing."],
+ ["PagedAttention","Stores KV cache in small pages, like virtual memory, instead of one big block per request. Wastes far less memory.","It is the reason vLLM can hold more users than a naive server.","Nothing to switch on. It is a reason to prefer vLLM over a hand-rolled server."],
+ ["Context length","Costs memory (KV), first-token time (prefill grows with prompt) and attention quality on very long inputs.","Whole documents that must be reasoned over together.","When retrieval can fetch the right 2,000 tokens. RAG is cheaper and often more accurate."],
+ ["Quantization","Stores weights in fewer bits. 8-bit is about half of 16-bit, 4-bit about a quarter. Decode gets faster because less data is read.","Fit a model on a smaller GPU or a CPU. Cut serving cost.","Tasks where your own eval drops at lower precision. Measure on your data, not a leaderboard."],
+ ["Prefill and decode","Prefill reads the whole prompt in parallel and is compute-bound. Decode produces one token at a time and is memory-bound.","Explains why long prompts delay the first token while generation speed stays steady.","—"],
+ ["Prefix caching","Reuses the KV cache of a prompt prefix that repeats, such as a long system prompt or shared documents.","Many requests start with the same instructions or context.","Every prompt is unique. There is nothing to reuse."],
+ ["Mixture of experts","Stores many expert blocks but activates only a few per token. Big knowledge, lower compute per token.","Large serverless models like the ones behind chat-llm.","Self-hosting on small hardware. All experts must still sit in memory."]
+];
+$("cc").innerHTML = CC.map(c => `<div class="card"><h3>${esc(c[0])}</h3><p>${esc(c[1])}</p><div class="ul"><div><span class="pill ok">Use</span> ${esc(c[2])}</div><div><span class="pill warn">Skip</span> ${esc(c[3])}</div></div></div>`).join("");
+
+initTabs(document.querySelector(".tabs"), {hash:true});
+</script>
+</body></html>

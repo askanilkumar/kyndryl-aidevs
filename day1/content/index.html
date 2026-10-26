@@ -1,0 +1,321 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Day 1 Control Room</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Day 1 design tokens. Layout: sticky top bar, one wide column (max 1500px) sized for a classroom TV. */
+:root{
+  --bg:#F1F5F4; --surface:#FFFFFF; --surface2:#E6EDEB; --ink:#0D2226; --muted:#475F63; --line:#C5D3D0;
+  --accent:#0A7A72; --accent-ink:#FFFFFF; --accent-soft:#D3EDE9;
+  --warn:#9A5B00; --warn-soft:#FAEBD0; --bad:#B3261E; --bad-soft:#F8DBD8; --good:#1B7A3A; --good-soft:#D7EEDD;
+  --code-bg:#0D2226; --code-ink:#DCEFEA; --code-dim:#8FB0AB;
+  --font:"Aptos Narrow","Barlow Semi Condensed","Arial Narrow",sans-serif;
+  --mono:"JetBrains Mono","Cascadia Mono",Consolas,monospace;
+  --shadow:0 1px 2px rgba(13,34,38,.08);
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0A1517; --surface:#12262A; --surface2:#1A343A; --ink:#E3EFED; --muted:#9DB6B3; --line:#2A4549;
+    --accent:#4FD1C5; --accent-ink:#04201D; --accent-soft:#12383A;
+    --warn:#F0B35A; --warn-soft:#3A2B10; --bad:#FF8E85; --bad-soft:#3F1B18; --good:#7ED99A; --good-soft:#143322;
+    --code-bg:#07100F; --code-ink:#DCEFEA; --code-dim:#7FA09B; --shadow:none; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0A1517; --surface:#12262A; --surface2:#1A343A; --ink:#E3EFED; --muted:#9DB6B3; --line:#2A4549;
+  --accent:#4FD1C5; --accent-ink:#04201D; --accent-soft:#12383A;
+  --warn:#F0B35A; --warn-soft:#3A2B10; --bad:#FF8E85; --bad-soft:#3F1B18; --good:#7ED99A; --good-soft:#143322;
+  --code-bg:#07100F; --code-ink:#DCEFEA; --code-dim:#7FA09B; --shadow:none; color-scheme:dark;
+}
+
+*{box-sizing:border-box}
+html{font-size:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:1.2rem;line-height:1.5;-webkit-text-size-adjust:100%}
+h1,h2,h3,h4{line-height:1.15;margin:0;text-wrap:balance;font-weight:700}
+h1{font-size:2.45rem;letter-spacing:-.01em}
+h2{font-size:1.85rem}
+h3{font-size:1.4rem}
+h4{font-size:1.2rem}
+p{margin:0}
+a{color:var(--accent)}
+code,kbd,pre{font-family:var(--mono)}
+code{font-size:.92em;background:var(--surface2);padding:.05em .35em;border-radius:4px}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+[hidden]{display:none!important}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* top bar */
+.topbar{position:sticky;top:0;z-index:30;background:var(--bg);border-bottom:1px solid var(--line)}
+.topbar-in{max-width:1500px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;gap:.4rem 1.2rem;padding:.55rem max(16px,env(safe-area-inset-right,0px)) .55rem max(16px,env(safe-area-inset-left,0px))}
+.brand{font-weight:700;letter-spacing:.01em;white-space:nowrap}
+.brand small{color:var(--muted);font-weight:500;margin-left:.5rem}
+.nav{display:flex;flex-wrap:wrap;gap:.25rem;margin-left:auto}
+.nav a{padding:.2rem .75rem;border-radius:7px;color:var(--muted);text-decoration:none;font-weight:600;font-size:1.05rem}
+.nav a:hover{background:var(--surface2);color:var(--ink)}
+.nav a[aria-current="page"]{background:var(--accent);color:var(--accent-ink)}
+.themebtn{border:1px solid var(--line);background:var(--surface);border-radius:7px;padding:.2rem .7rem;cursor:pointer;font-size:1.05rem;color:var(--muted)}
+
+/* page */
+.wrap{max-width:1500px;margin:0 auto;padding:1.6rem max(16px,env(safe-area-inset-right,0px)) 4rem max(16px,env(safe-area-inset-left,0px))}
+.kicker{font-size:1.05rem;letter-spacing:.09em;text-transform:uppercase;color:var(--accent);font-weight:700;margin-bottom:.3rem}
+.lede{color:var(--muted);max-width:62rem;margin-top:.6rem}
+.head{display:flex;flex-wrap:wrap;gap:.6rem 2rem;justify-content:space-between;align-items:flex-end;margin-bottom:1.2rem}
+.timebox{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:.4rem .9rem;font-weight:600;color:var(--muted);white-space:nowrap}
+.timebox b{color:var(--ink)}
+
+/* tabs */
+.tabs{display:flex;flex-wrap:wrap;gap:.35rem;border-bottom:2px solid var(--line);margin-bottom:1.4rem}
+.tabs button{border:0;background:transparent;padding:.55rem 1.1rem;font-weight:700;font-size:1.15rem;color:var(--muted);cursor:pointer;border-radius:8px 8px 0 0;margin-bottom:-2px;border-bottom:3px solid transparent}
+.tabs button:hover{color:var(--ink);background:var(--surface2)}
+.tabs button[aria-selected="true"]{color:var(--accent);border-bottom-color:var(--accent);background:var(--surface)}
+.panel[hidden]{display:none!important}
+
+/* blocks */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:1.1rem 1.3rem;box-shadow:var(--shadow);min-width:0}
+.card h3{margin-bottom:.4rem}
+.grid{display:grid;gap:1rem;min-width:0}
+.g2{grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr))}
+.g4{grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr))}
+.split{display:grid;gap:1.2rem;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);align-items:start}
+@media (max-width:980px){.split{grid-template-columns:minmax(0,1fr)}}
+.muted{color:var(--muted)}
+.row{display:flex;flex-wrap:wrap;gap:.6rem;align-items:center}
+.stack{display:flex;flex-direction:column;gap:.8rem}
+
+.pill{display:inline-block;border-radius:999px;padding:.05rem .7rem;font-size:1rem;font-weight:700;border:1px solid var(--line);background:var(--surface2);color:var(--muted);white-space:nowrap}
+.pill.ok{background:var(--good-soft);color:var(--good);border-color:transparent}
+.pill.warn{background:var(--warn-soft);color:var(--warn);border-color:transparent}
+.pill.bad{background:var(--bad-soft);color:var(--bad);border-color:transparent}
+.pill.acc{background:var(--accent-soft);color:var(--accent);border-color:transparent}
+
+.btn{border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:.45rem 1.05rem;border-radius:9px;font-weight:700;cursor:pointer;font-size:1.1rem}
+.btn:hover{background:var(--surface2)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.sm{padding:.2rem .7rem;font-size:1rem}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+
+.callout{border-radius:10px;padding:.8rem 1.1rem;border:1px solid var(--line);background:var(--surface2)}
+.callout.warn{background:var(--warn-soft);border-color:transparent}
+.callout.bad{background:var(--bad-soft);border-color:transparent}
+.callout.good{background:var(--good-soft);border-color:transparent}
+.callout.acc{background:var(--accent-soft);border-color:transparent}
+.callout b:first-child{display:block;margin-bottom:.15rem}
+
+ul.clean{margin:.3rem 0 0;padding-left:1.25rem}
+ul.clean li{margin:.2rem 0}
+.tbl{width:100%;border-collapse:collapse;font-size:1.1rem}
+.tbl th,.tbl td{text-align:left;padding:.5rem .7rem;border-bottom:1px solid var(--line);vertical-align:top}
+.tbl th{font-size:1rem;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.tblwrap{overflow-x:auto;min-width:0}
+.num{font-variant-numeric:tabular-nums}
+
+/* code */
+.codeblock{background:var(--code-bg);border-radius:10px;overflow:hidden;min-width:0}
+.cb-head{display:flex;justify-content:space-between;align-items:center;gap:1rem;padding:.35rem .5rem .35rem .9rem;border-bottom:1px solid rgba(255,255,255,.1);color:var(--code-dim);font-family:var(--mono);font-size:1rem}
+.cb-head button{background:transparent;border:1px solid rgba(255,255,255,.25);color:var(--code-ink);border-radius:6px;padding:.1rem .7rem;cursor:pointer;font-size:1rem;font-family:var(--font);font-weight:600}
+.cb-head button:hover{background:rgba(255,255,255,.12)}
+.codeblock pre{margin:0;padding:.8rem 1rem;overflow-x:auto;color:var(--code-ink);font-size:1.12rem;line-height:1.5;tab-size:4}
+.codeblock.short pre{padding:.6rem 1rem}
+
+/* form bits */
+.field{display:flex;flex-direction:column;gap:.25rem;min-width:0}
+.field label{font-weight:700;font-size:1.05rem;color:var(--muted)}
+.field select,.field input[type=number],.field input[type=text],.field textarea{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:.4rem .6rem;min-width:0;width:100%}
+input[type=range]{width:100%;accent-color:var(--accent)}
+
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+
+.agenda{display:flex;flex-direction:column;gap:.55rem;margin:0;padding:0;list-style:none}
+.slot{display:grid;grid-template-columns:6.6rem minmax(0,1fr) auto;gap:.2rem 1rem;align-items:center;background:var(--surface);border:2px solid var(--line);border-radius:12px;padding:.65rem 1rem;cursor:pointer;text-align:left;width:100%;font:inherit;color:inherit}
+.slot:hover{border-color:var(--accent)}
+.slot .t{font-weight:700;font-size:1.3rem;font-variant-numeric:tabular-nums}
+.slot .nowbtn{margin-top:.3rem;white-space:nowrap;font-size:.9rem;padding:.05rem .5rem}
+.slot .t small{display:block;color:var(--muted);font-size:.95rem;font-weight:600}
+.slot h3{font-size:1.3rem}
+.slot p{color:var(--muted);font-size:1.08rem}
+.slot .links{display:flex;flex-wrap:wrap;gap:.4rem;justify-content:flex-end}
+.slot .links a{text-decoration:none;font-weight:700;border:1px solid var(--accent);color:var(--accent);padding:.15rem .7rem;border-radius:8px;font-size:1.02rem;background:var(--surface)}
+.slot .links a:hover{background:var(--accent);color:var(--accent-ink)}
+.slot.now{border-color:var(--accent);background:var(--accent-soft);box-shadow:0 0 0 3px var(--accent-soft)}
+.slot.past{opacity:.55}
+.slot.brk{background:var(--surface2);border-style:dashed}
+.slot.brk h3{font-weight:600;color:var(--muted)}
+@media (max-width:760px){.slot{grid-template-columns:4.4rem minmax(0,1fr)}.slot .links{grid-column:1 / -1;justify-content:flex-start}}
+.clock{font-variant-numeric:tabular-nums;font-weight:700;font-size:1.6rem}
+.rules li{margin:.35rem 0}
+.mode-t{background:var(--surface2)}
+.legend{display:flex;flex-wrap:wrap;gap:.5rem 1.2rem;color:var(--muted);font-size:1.05rem}
+</style></head>
+<body>
+<header class="topbar"><div class="topbar-in"><div class="brand">Day 1<small>Kyndryl · Enterprise Agentic AI Engineering</small></div><nav class="nav" aria-label="Day 1 pages"><a href="overview.html">Overview</a><a href="index.html" aria-current="page">Control Room</a><a href="M1_request_path.html">M1 Request path</a><a href="M2_model_picker.html">M2 Model picker</a><a href="M3_vram_calculator.html">M3 VRAM calculator</a><a href="M4_decision_clinic.html">M4 Decision clinic</a><a href="../labs/Day1_Lab_Guide.html">Lab guide</a></nav><button class="themebtn" id="themebtn" type="button">Theme</button></div></header>
+<main class="wrap">
+  <div class="head">
+    <div>
+      <div class="kicker">Kyndryl · Enterprise Agentic AI Engineering</div>
+      <h1>Day 1 · Open models, your own gateway</h1>
+      <p class="lede">By 8 PM you will have built and defended an AI gateway of your own, chosen a model with numbers instead of opinions, and sized what it takes to serve and tune one.</p>
+    </div>
+    <div class="timebox" aria-live="off"><span class="clock" id="clock">--:--</span><br><span id="nowname" class="muted">Tap a block to mark it as now</span></div>
+  </div>
+
+  <div class="legend" style="margin-bottom:.8rem" aria-label="Legend">
+    <span><span class="pill acc">Talk</span> short, then you act</span>
+    <span><span class="pill ok">Hands-on</span> you build and measure</span>
+    <span><span class="pill warn">Team</span> two teams of three</span>
+    <span>Tap a row to mark it as the current block.</span>
+  </div>
+
+  <ol class="agenda" id="agenda">
+    <li><div class="slot" data-i="0"><div class="t">2:00<small>10 min</small></div><div><h3>Check-in and warm-up quiz</h3><p>Six questions, answer before the discussion. Nobody is graded.</p></div><div class="links"><span class="pill ok">Hands-on</span><a href="M1_request_path.html#check">Quiz</a></div></div></li>
+    <li><div class="slot" data-i="1"><div class="t">2:10<small>25 min</small></div><div><h3>Talk 1 · The platform, and the path of one request</h3><p>Your VM, Copilot, the gateway, the models. What breaks, and when a gateway is worth it.</p></div><div class="links"><span class="pill acc">Talk</span><a href="M1_request_path.html#path">Request path</a><a href="M1_request_path.html#breaks">What breaks?</a></div></div></li>
+    <li><div class="slot" data-i="2"><div class="t">2:35<small>40 min</small></div><div><h3>Lab 0 + Lab 1 · Check your setup, then vibe-code a tool</h3><p>Connect your VM and Copilot to the gateway with your own key. Build a plan picker. Compare two models.</p></div><div class="links"><span class="pill ok">Hands-on</span><a href="../labs/Day1_Lab_Guide.html#lab0">Lab 0</a><a href="../labs/Day1_Lab_Guide.html#lab1">Lab 1</a></div></div></li>
+    <li><div class="slot brk" data-i="3"><div class="t">3:15<small>10 min</small></div><div><h3>Break</h3></div><div class="links"></div></div></li>
+    <li><div class="slot" data-i="4"><div class="t">3:25<small>25 min</small></div><div><h3>Talk 2 · The approved open-model stack, and how to choose</h3><p>The gate a model must pass. Weighted scorecard. Card sort in pairs.</p></div><div class="links"><span class="pill acc">Talk</span><a href="M2_model_picker.html#stack">Stack</a><a href="M2_model_picker.html#score">Scorecard</a><a href="M2_model_picker.html#sort">Card sort</a></div></div></li>
+    <li><div class="slot" data-i="5"><div class="t">3:50<small>30 min</small></div><div><h3>Lab 2 · Bake-off</h3><p>Three telecom tasks, two models. Speed, cost and quality, measured.</p></div><div class="links"><span class="pill ok">Hands-on</span><a href="../labs/Day1_Lab_Guide.html#lab2">Lab 2</a></div></div></li>
+    <li><div class="slot brk" data-i="6"><div class="t">4:20<small>10 min</small></div><div><h3>Break</h3></div><div class="links"></div></div></li>
+    <li><div class="slot" data-i="7"><div class="t">4:30<small>25 min</small></div><div><h3>Talk 3 · Under the hood: weights, KV cache, batching, quantization</h3><p>Predict the memory first. Then a live 27B model on an H100.</p></div><div class="links"><span class="pill acc">Talk</span><a href="M3_vram_calculator.html#predict">Predict</a><a href="M3_vram_calculator.html#calc">Calculator</a><a href="M3_vram_calculator.html#concepts">Concepts</a></div></div></li>
+    <li><div class="slot" data-i="8"><div class="t">4:55<small>30 min</small></div><div><h3>Lab 3 · Predict, then measure</h3><p>Q4 vs Q8 vs FP16 on your VM. What a bigger context costs. What 16 users at once do.</p></div><div class="links"><span class="pill ok">Hands-on</span><a href="../labs/Day1_Lab_Guide.html#lab3">Lab 3</a></div></div></li>
+    <li><div class="slot" data-i="9"><div class="t">5:25<small>25 min</small></div><div><h3>Talk 4 · RAG, fine-tuning or a small model?</h3><p>Six telecom scenarios, decide in pairs. Size a LoRA run.</p></div><div class="links"><span class="pill acc">Talk</span><a href="M4_decision_clinic.html#frame">Framework</a><a href="M4_decision_clinic.html#clinic">Clinic</a><a href="M4_decision_clinic.html#lora">LoRA sizer</a></div></div></li>
+    <li><div class="slot" data-i="10"><div class="t">5:50<small>100 min</small></div><div><h3>Team Build · Your own gateway, then break it</h3><p>Blank Ubuntu VM per team. Install, connect, issue keys, repoint teammates, run the Failure Lab, swap with the other team.</p></div><div class="links"><span class="pill warn">Team</span><a href="../labs/Day1_Lab_Guide.html#team">Team Build</a><a href="../labs/Day1_Lab_Guide.html#stretch">Stretch</a></div></div></li>
+    <li><div class="slot" data-i="11"><div class="t">7:30<small>30 min</small></div><div><h3>Demos, routing-decision defence, Day 2 preview</h3><p>Three minutes each. Tag your work <code>day1</code>.</p></div><div class="links"><span class="pill warn">Team</span></div></div></li>
+  </ol>
+
+  <div class="grid g2" style="margin-top:1.4rem">
+    <div class="card"><h3>Rules of the room</h3>
+      <ul class="clean rules">
+        <li><b>Predict, then measure.</b> Write your guess before you run anything.</li>
+        <li><b>Stuck for 10 minutes?</b> Raise a hand with the exact error and what you tried.</li>
+        <li><b>Your key is yours.</b> Never paste it into chat, Git or a screenshot.</li>
+        <li><b>No raw cloud keys</b> on any VM. Everything goes through a gateway.</li>
+        <li><b>Keep <code>NOTES.md</code>.</b> One line per lab is enough.</li>
+      </ul></div>
+    <div class="card"><h3>Before you start</h3>
+      <ul class="clean rules" id="pre">
+        <li><label><input type="checkbox" data-k="pre-vm"> I can log in to my VM</label></li>
+        <li><label><input type="checkbox" data-k="pre-code"> VS Code opens with GitHub Copilot signed in</label></li>
+        <li><label><input type="checkbox" data-k="pre-key"> I have my key card and the gateway address</label></li>
+        <li><label><input type="checkbox" data-k="pre-folder"> <code>~/day1-labs</code> exists on my VM</label></li>
+      </ul>
+      <p class="muted" style="margin-top:.6rem">Missing one? Tell the room now, before the first lab.</p>
+    </div>
+  </div>
+</main>
+<script>
+/* shared helpers: safe storage, theme toggle, tabs, copy buttons */
+const store = {
+  get(k, d){ try { const v = localStorage.getItem("kyn1:" + k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v){ try { localStorage.setItem("kyn1:" + k, JSON.stringify(v)); } catch (e) {} }
+};
+
+(function theme(){
+  const saved = store.get("theme", null);
+  if (saved) document.documentElement.setAttribute("data-theme", saved);
+  const btn = document.getElementById("themebtn");
+  if (!btn) return;
+  btn.addEventListener("click", () => {
+    const cur = document.documentElement.getAttribute("data-theme");
+    const isDark = cur ? cur === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+    const next = isDark ? "light" : "dark";
+    document.documentElement.setAttribute("data-theme", next);
+    store.set("theme", next);
+  });
+})();
+
+function initTabs(root, opts){
+  opts = opts || {};
+  const tabs = Array.from(root.querySelectorAll('[role="tab"]'));
+  const panels = tabs.map(t => document.getElementById(t.getAttribute("aria-controls")));
+  function select(i, focus){
+    tabs.forEach((t, j) => {
+      t.setAttribute("aria-selected", j === i ? "true" : "false");
+      t.tabIndex = j === i ? 0 : -1;
+      panels[j].hidden = j !== i;
+    });
+    if (focus) tabs[i].focus();
+    if (opts.hash) { try { history.replaceState(null, "", "#" + tabs[i].dataset.token); } catch (e) {} }
+    if (opts.onSelect) opts.onSelect(i, tabs[i]);
+  }
+  tabs.forEach((t, i) => {
+    t.addEventListener("click", () => select(i));
+    t.addEventListener("keydown", e => {
+      if (e.key === "ArrowRight") { e.preventDefault(); select((i + 1) % tabs.length, true); }
+      if (e.key === "ArrowLeft") { e.preventDefault(); select((i - 1 + tabs.length) % tabs.length, true); }
+    });
+  });
+  let start = 0;
+  if (opts.hash && location.hash) {
+    const idx = tabs.findIndex(t => "#" + t.dataset.token === location.hash);
+    if (idx >= 0) start = idx;
+  }
+  select(start);
+  if (opts.hash) {
+    window.addEventListener("hashchange", () => {
+      const idx = tabs.findIndex(t => "#" + t.dataset.token === location.hash);
+      if (idx >= 0) select(idx);
+    });
+  }
+  return select;
+}
+
+function copyText(text, btn){
+  const done = () => { const o = btn.textContent; btn.textContent = "Copied"; setTimeout(() => { btn.textContent = o; }, 1400); };
+  const fallback = () => {
+    const ta = document.createElement("textarea");
+    ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand("copy"); done(); } catch (e) { btn.textContent = "Select and copy"; }
+    document.body.removeChild(ta);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, fallback);
+  else fallback();
+}
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-copy]");
+  if (!b) return;
+  const pre = b.closest(".codeblock").querySelector("pre");
+  copyText(pre.innerText, b);
+});
+
+function esc(s){ return String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
+
+(function(){
+  const slots = Array.from(document.querySelectorAll('.slot'));
+  let now = store.get("now", -1);
+  function paint(){
+    slots.forEach((s, i) => {
+      s.classList.toggle('now', i === now);
+      s.classList.toggle('past', now >= 0 && i < now);
+      s.setAttribute('aria-current', i === now ? 'step' : 'false');
+      const nb = s.querySelector('.nowbtn'); nb.textContent = i === now ? 'Clear' : 'Mark now'; nb.setAttribute('aria-pressed', i === now);
+    });
+    const nm = document.getElementById('nowname');
+    nm.textContent = now >= 0 ? "Now: " + slots[now].querySelector('h3').textContent.split(' · ')[0] : "Tap a block to mark it as now";
+  }
+  function setNow(i){ now = (now === i) ? -1 : i; store.set("now", now); paint(); }
+  slots.forEach((s, i) => {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'btn sm nowbtn'; b.textContent = 'Mark now';
+    b.addEventListener('click', e => { e.stopPropagation(); setNow(i); });
+    s.querySelector('.t').appendChild(b);
+    s.addEventListener('click', e => { if (e.target.closest('a,button')) return; setNow(i); });
+  });
+  paint();
+
+  const saved = store.get("pre", {});
+  document.querySelectorAll('#pre input').forEach(cb => {
+    cb.checked = !!saved[cb.dataset.k];
+    cb.addEventListener('change', () => { saved[cb.dataset.k] = cb.checked; store.set("pre", saved); });
+  });
+
+  function tick(){ const d = new Date(); document.getElementById('clock').textContent = String(d.getHours()).padStart(2,'0') + ":" + String(d.getMinutes()).padStart(2,'0'); }
+  tick(); setInterval(tick, 20000);
+})();
+</script>
+</body></html>
+
+</body></html>
