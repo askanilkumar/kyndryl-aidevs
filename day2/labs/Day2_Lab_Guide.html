@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Day 2 · Lab guide</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>/* Day 1 design tokens. Layout: sticky top bar, one wide column (max 1500px) sized for a classroom TV. */
+:root{
+  --bg:#F1F5F4; --surface:#FFFFFF; --surface2:#E6EDEB; --ink:#0D2226; --muted:#475F63; --line:#C5D3D0;
+  --accent:#0A7A72; --accent-ink:#FFFFFF; --accent-soft:#D3EDE9;
+  --warn:#9A5B00; --warn-soft:#FAEBD0; --bad:#B3261E; --bad-soft:#F8DBD8; --good:#1B7A3A; --good-soft:#D7EEDD;
+  --code-bg:#0D2226; --code-ink:#DCEFEA; --code-dim:#8FB0AB;
+  --font:"Aptos Narrow","Barlow Semi Condensed","Arial Narrow",sans-serif;
+  --mono:"JetBrains Mono","Cascadia Mono",Consolas,monospace;
+  --shadow:0 1px 2px rgba(13,34,38,.08);
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0A1517; --surface:#12262A; --surface2:#1A343A; --ink:#E3EFED; --muted:#9DB6B3; --line:#2A4549;
+    --accent:#4FD1C5; --accent-ink:#04201D; --accent-soft:#12383A;
+    --warn:#F0B35A; --warn-soft:#3A2B10; --bad:#FF8E85; --bad-soft:#3F1B18; --good:#7ED99A; --good-soft:#143322;
+    --code-bg:#07100F; --code-ink:#DCEFEA; --code-dim:#7FA09B; --shadow:none; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0A1517; --surface:#12262A; --surface2:#1A343A; --ink:#E3EFED; --muted:#9DB6B3; --line:#2A4549;
+  --accent:#4FD1C5; --accent-ink:#04201D; --accent-soft:#12383A;
+  --warn:#F0B35A; --warn-soft:#3A2B10; --bad:#FF8E85; --bad-soft:#3F1B18; --good:#7ED99A; --good-soft:#143322;
+  --code-bg:#07100F; --code-ink:#DCEFEA; --code-dim:#7FA09B; --shadow:none; color-scheme:dark;
+}
+
+*{box-sizing:border-box}
+html{font-size:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:1.2rem;line-height:1.5;-webkit-text-size-adjust:100%}
+h1,h2,h3,h4{line-height:1.15;margin:0;text-wrap:balance;font-weight:700}
+h1{font-size:2.45rem;letter-spacing:-.01em}
+h2{font-size:1.85rem}
+h3{font-size:1.4rem}
+h4{font-size:1.2rem}
+p{margin:0}
+a{color:var(--accent)}
+code,kbd,pre{font-family:var(--mono)}
+code{font-size:.92em;background:var(--surface2);padding:.05em .35em;border-radius:4px}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+[hidden]{display:none!important}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* top bar */
+.topbar{position:sticky;top:0;z-index:30;background:var(--bg);border-bottom:1px solid var(--line)}
+.topbar-in{max-width:1500px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;gap:.4rem 1.2rem;padding:.55rem max(16px,env(safe-area-inset-right,0px)) .55rem max(16px,env(safe-area-inset-left,0px))}
+.brand{font-weight:700;letter-spacing:.01em;white-space:nowrap}
+.brand small{color:var(--muted);font-weight:500;margin-left:.5rem}
+.nav{display:flex;flex-wrap:wrap;gap:.25rem;margin-left:auto}
+.nav a{padding:.2rem .75rem;border-radius:7px;color:var(--muted);text-decoration:none;font-weight:600;font-size:1.05rem}
+.nav a:hover{background:var(--surface2);color:var(--ink)}
+.nav a[aria-current="page"]{background:var(--accent);color:var(--accent-ink)}
+.themebtn{border:1px solid var(--line);background:var(--surface);border-radius:7px;padding:.2rem .7rem;cursor:pointer;font-size:1.05rem;color:var(--muted)}
+
+/* page */
+.wrap{max-width:1500px;margin:0 auto;padding:1.6rem max(16px,env(safe-area-inset-right,0px)) 4rem max(16px,env(safe-area-inset-left,0px))}
+.kicker{font-size:1.05rem;letter-spacing:.09em;text-transform:uppercase;color:var(--accent);font-weight:700;margin-bottom:.3rem}
+.lede{color:var(--muted);max-width:62rem;margin-top:.6rem}
+.head{display:flex;flex-wrap:wrap;gap:.6rem 2rem;justify-content:space-between;align-items:flex-end;margin-bottom:1.2rem}
+.timebox{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:.4rem .9rem;font-weight:600;color:var(--muted);white-space:nowrap}
+.timebox b{color:var(--ink)}
+
+/* tabs */
+.tabs{display:flex;flex-wrap:wrap;gap:.35rem;border-bottom:2px solid var(--line);margin-bottom:1.4rem}
+.tabs button{border:0;background:transparent;padding:.55rem 1.1rem;font-weight:700;font-size:1.15rem;color:var(--muted);cursor:pointer;border-radius:8px 8px 0 0;margin-bottom:-2px;border-bottom:3px solid transparent}
+.tabs button:hover{color:var(--ink);background:var(--surface2)}
+.tabs button[aria-selected="true"]{color:var(--accent);border-bottom-color:var(--accent);background:var(--surface)}
+.panel[hidden]{display:none!important}
+
+/* blocks */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:1.1rem 1.3rem;box-shadow:var(--shadow);min-width:0}
+.card h3{margin-bottom:.4rem}
+.grid{display:grid;gap:1rem;min-width:0}
+.g2{grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr))}
+.g4{grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr))}
+.split{display:grid;gap:1.2rem;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);align-items:start}
+@media (max-width:980px){.split{grid-template-columns:minmax(0,1fr)}}
+.muted{color:var(--muted)}
+.row{display:flex;flex-wrap:wrap;gap:.6rem;align-items:center}
+.stack{display:flex;flex-direction:column;gap:.8rem}
+
+.pill{display:inline-block;border-radius:999px;padding:.05rem .7rem;font-size:1rem;font-weight:700;border:1px solid var(--line);background:var(--surface2);color:var(--muted);white-space:nowrap}
+.pill.ok{background:var(--good-soft);color:var(--good);border-color:transparent}
+.pill.warn{background:var(--warn-soft);color:var(--warn);border-color:transparent}
+.pill.bad{background:var(--bad-soft);color:var(--bad);border-color:transparent}
+.pill.acc{background:var(--accent-soft);color:var(--accent);border-color:transparent}
+
+.btn{border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:.45rem 1.05rem;border-radius:9px;font-weight:700;cursor:pointer;font-size:1.1rem}
+.btn:hover{background:var(--surface2)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.sm{padding:.2rem .7rem;font-size:1rem}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+
+.callout{border-radius:10px;padding:.8rem 1.1rem;border:1px solid var(--line);background:var(--surface2)}
+.callout.warn{background:var(--warn-soft);border-color:transparent}
+.callout.bad{background:var(--bad-soft);border-color:transparent}
+.callout.good{background:var(--good-soft);border-color:transparent}
+.callout.acc{background:var(--accent-soft);border-color:transparent}
+.callout b:first-child{display:block;margin-bottom:.15rem}
+
+ul.clean{margin:.3rem 0 0;padding-left:1.25rem}
+ul.clean li{margin:.2rem 0}
+.tbl{width:100%;border-collapse:collapse;font-size:1.1rem}
+.tbl th,.tbl td{text-align:left;padding:.5rem .7rem;border-bottom:1px solid var(--line);vertical-align:top}
+.tbl th{font-size:1rem;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.tblwrap{overflow-x:auto;min-width:0}
+.num{font-variant-numeric:tabular-nums}
+
+/* code */
+.codeblock{background:var(--code-bg);border-radius:10px;overflow:hidden;min-width:0}
+.cb-head{display:flex;justify-content:space-between;align-items:center;gap:1rem;padding:.35rem .5rem .35rem .9rem;border-bottom:1px solid rgba(255,255,255,.1);color:var(--code-dim);font-family:var(--mono);font-size:1rem}
+.cb-head button{background:transparent;border:1px solid rgba(255,255,255,.25);color:var(--code-ink);border-radius:6px;padding:.1rem .7rem;cursor:pointer;font-size:1rem;font-family:var(--font);font-weight:600}
+.cb-head button:hover{background:rgba(255,255,255,.12)}
+.codeblock pre{margin:0;padding:.8rem 1rem;overflow-x:auto;color:var(--code-ink);font-size:1.12rem;line-height:1.5;tab-size:4}
+.codeblock.short pre{padding:.6rem 1rem}
+
+/* form bits */
+.field{display:flex;flex-direction:column;gap:.25rem;min-width:0}
+.field label{font-weight:700;font-size:1.05rem;color:var(--muted)}
+.field select,.field input[type=number],.field input[type=text],.field textarea{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:.4rem .6rem;min-width:0;width:100%}
+input[type=range]{width:100%;accent-color:var(--accent)}
+
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+
+.agenda{display:flex;flex-direction:column;gap:.55rem;margin:0;padding:0;list-style:none}
+.slot{display:grid;grid-template-columns:6.6rem minmax(0,1fr) auto;gap:.2rem 1rem;align-items:center;background:var(--surface);border:2px solid var(--line);border-radius:12px;padding:.65rem 1rem;cursor:pointer;text-align:left;width:100%;font:inherit;color:inherit}
+.slot:hover{border-color:var(--accent)}
+.slot .t{font-weight:700;font-size:1.3rem;font-variant-numeric:tabular-nums}
+.slot .nowbtn{margin-top:.3rem;white-space:nowrap;font-size:.9rem;padding:.05rem .5rem}
+.slot .t small{display:block;color:var(--muted);font-size:.95rem;font-weight:600}
+.slot h3{font-size:1.3rem}
+.slot p{color:var(--muted);font-size:1.08rem}
+.slot .links{display:flex;flex-wrap:wrap;gap:.4rem;justify-content:flex-end}
+.slot .links a{text-decoration:none;font-weight:700;border:1px solid var(--accent);color:var(--accent);padding:.15rem .7rem;border-radius:8px;font-size:1.02rem;background:var(--surface)}
+.slot .links a:hover{background:var(--accent);color:var(--accent-ink)}
+.slot.now{border-color:var(--accent);background:var(--accent-soft);box-shadow:0 0 0 3px var(--accent-soft)}
+.slot.past{opacity:.55}
+.slot.brk{background:var(--surface2);border-style:dashed}
+.slot.brk h3{font-weight:600;color:var(--muted)}
+@media (max-width:760px){.slot{grid-template-columns:4.4rem minmax(0,1fr)}.slot .links{grid-column:1 / -1;justify-content:flex-start}}
+.clock{font-variant-numeric:tabular-nums;font-weight:700;font-size:1.6rem}
+.rules li{margin:.35rem 0}
+.mode-t{background:var(--surface2)}
+.legend{display:flex;flex-wrap:wrap;gap:.5rem 1.2rem;color:var(--muted);font-size:1.05rem}
+
+.fl{display:flex;flex-wrap:wrap;gap:.5rem}
+.steps{display:flex;flex-wrap:wrap;gap:.4rem;margin:.6rem 0}
+.steps button{border:2px solid var(--line);background:var(--surface);border-radius:999px;padding:.25rem .9rem;font-weight:700;cursor:pointer;font-size:1.05rem}
+.steps button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.chunk{display:inline;padding:.1rem .15rem;border-radius:5px;border-bottom:3px solid var(--line);line-height:2.1}
+.chunk.c0{background:#D3EDE9}.chunk.c1{background:#FAEBD0}.chunk.c2{background:#E3DDF5}.chunk.c3{background:#F8DBD8}.chunk.c4{background:#D7EEDD}.chunk.c5{background:#DDE8F8}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .chunk{color:#0D2226}}
+:root[data-theme="dark"] .chunk{color:#0D2226}
+.chunk.hit{border-bottom-color:var(--good);box-shadow:0 0 0 2px var(--good)}
+.bar{height:1.1rem;border-radius:6px;background:var(--accent);min-width:2px}
+.barrow{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr) 3.2rem;gap:.7rem;align-items:center;padding:.3rem 0;border-bottom:1px solid var(--line)}
+.barrow.out{opacity:.4}
+.barrow small{color:var(--muted)}
+.qz .opt{display:block;width:100%;text-align:left;margin:.35rem 0;border:2px solid var(--line);background:var(--surface);border-radius:10px;padding:.5rem .9rem;cursor:pointer;font-size:1.1rem}
+.qz .opt:hover{border-color:var(--accent)}
+.qz .opt.right{border-color:var(--good);background:var(--good-soft)}
+.qz .opt.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.qz .why{margin-top:.4rem}
+.flow{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.6rem;align-items:stretch}
+.flow .node{background:var(--surface);border:2px solid var(--line);border-radius:12px;padding:.6rem .8rem;text-align:center;font-weight:700}
+.flow .node small{display:block;font-weight:500;color:var(--muted);font-size:.95rem}
+.flow .node.bad{border-color:var(--bad)}.flow .node.good{border-color:var(--good)}
+.mark{background:var(--warn-soft);color:var(--warn);padding:0 .25rem;border-radius:4px;font-weight:700}
+.doc{font-family:var(--mono);font-size:1.02rem;background:var(--surface2);border-radius:10px;padding:.8rem 1rem;white-space:pre-wrap}
+.sec{margin-top:2.6rem}
+.sec>h2{margin-bottom:.5rem}
+.toc{display:flex;flex-wrap:wrap;gap:.4rem;margin:.8rem 0 0}
+.toc a{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:.15rem .8rem;text-decoration:none;font-weight:700;font-size:1.05rem}
+.step{display:grid;grid-template-columns:2.2rem minmax(0,1fr);gap:.7rem;margin:.9rem 0}
+.step>.n{width:2.2rem;height:2.2rem;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font-weight:700}
+.step label.chk{display:flex;gap:.6rem;align-items:flex-start;cursor:pointer}
+.step input[type=checkbox]{width:1.3rem;height:1.3rem;margin-top:.25rem;accent-color:var(--accent)}
+.pcard{border:2px solid var(--accent);border-radius:12px;background:var(--surface);padding:.9rem 1.1rem;margin:1rem 0}
+.pcard h3{display:flex;flex-wrap:wrap;gap:.6rem;align-items:center}
+.legend{display:flex;flex-wrap:wrap;gap:.6rem 1.4rem;color:var(--muted)}
+.panel>p.muted{margin:.4rem 0 .9rem}.panel .codeblock{margin:.6rem 0}.panel h3{margin:.2rem 0 .3rem}.panel .callout{margin:.8rem 0}.pcard p{margin:.4rem 0}
+</style></head>
+<body>
+<header class="topbar"><div class="topbar-in"><div class="brand">Day 2<small>Kyndryl · Enterprise Agentic AI Engineering</small></div><nav class="nav" aria-label="Day 2 pages"><a href="../content/index.html">Control Room</a><a href="../content/M1_rag_walkthrough.html">M1 RAG from zero</a><a href="../content/M2_chunk_embed.html">M2 Chunks and vectors</a><a href="../content/M3_advanced_retrieval.html">M3 Advanced retrieval</a><a href="Day2_Lab_Guide.html" aria-current="page">Lab guide</a></nav><button class="themebtn" id="themebtn" type="button">Theme</button></div></header>
+<main class="wrap">
+<div class="head"><div><div class="kicker">Day 2 · Lab guide</div><h1>Enterprise RAG, from first principles to trustworthy</h1><p class="lede">Four labs. Each one builds on the last. Tick the boxes as you go; your ticks are saved in this browser.</p></div><div class="timebox"><b id="progress">0 of 0 steps done</b></div></div>
+<div class="tabs" role="tablist" data-tabs="g"><button role="tab" data-tab="lab0" aria-selected="false">Lab 0 Setup</button><button role="tab" data-tab="lab1" aria-selected="false">Lab 1</button><button role="tab" data-tab="lab2" aria-selected="false">Lab 2</button><button role="tab" data-tab="lab3" aria-selected="false">Lab 3 Vibe-code</button><button role="tab" data-tab="lab4" aria-selected="false">Lab 4 AskTelco</button><button role="tab" data-tab="stuck" aria-selected="false">Stuck?</button></div><section class="panel" data-panel-group="g" data-panel="lab0" hidden>
+<h2>Lab 0 · Set up (10 min)</h2>
+<p class="muted">Do this once. Open the <code>day2\labs</code> folder in VS Code, then open a terminal inside it (Terminal menu, New Terminal).</p>
+<div class="step"><div class="n">1</div><div><label class="chk"><input type="checkbox" data-k="s1"><span><b>Install the packages</b></span></label><div class="codeblock"><div class="cb-head"><span>PowerShell</span><button type="button">Copy</button></div><pre>python -m pip install -r requirements.txt</pre></div></div></div>
+<div class="step"><div class="n">2</div><div><label class="chk"><input type="checkbox" data-k="s2"><span><b>Create your .env file and paste the OpenAI key from the trainer</b></span></label><div class="codeblock"><div class="cb-head"><span>PowerShell</span><button type="button">Copy</button></div><pre>copy .env.example .env
+notepad .env</pre></div><p class="muted">Put the key after <code>OPENAI_API_KEY=</code> with no spaces or quotes. Save and close.</p></div></div>
+<div class="step"><div class="n">3</div><div><label class="chk"><input type="checkbox" data-k="s3"><span><b>Run the check</b></span></label><div class="codeblock"><div class="cb-head"><span>PowerShell</span><button type="button">Copy</button></div><pre>python check_setup.py</pre></div><p>Every line should say <b>OK</b> and the mode should say <b>OpenAI</b>. Mode <b>OFFLINE</b> means the key was not read: ask for help.</p></div></div>
+<div class="step"><div class="n">4</div><div><label class="chk"><input type="checkbox" data-k="s4"><span><b>Look around</b></span></label><ul class="clean"><li><code>kb\</code> the NetNova Telecom knowledge base: 25 articles</li><li><code>rag\</code> the toolkit. You read it, you do not rewrite it</li><li><code>lab1a...lab2c</code> small scripts for Labs 1 and 2</li><li><code>checkpoints\</code> working versions of the Lab 3 app</li><li><code>lab4_app.py</code> the advanced app for Lab 4</li></ul></div></div>
+<div class="callout acc"><b>The story</b>NetNova Telecom is an Indian mobile operator. Customers ask about plans, roaming, bills and SIMs. Engineers in the network operations centre (NOC) ask about runbooks and incidents. Your job today: build an assistant that answers from the knowledge base, and make it trustworthy.</div>
+</section><section class="panel" data-panel-group="g" data-panel="lab1" hidden>
+<h2>Lab 1 · Feel the problem, then build the simplest search (40 min)</h2>
+<p class="muted">Three small scripts. Run each, read the output, then do the <b>TRY</b> line at the bottom of the file.</p>
+<div class="card"><h3>1A · The model alone</h3><div class="codeblock"><div class="cb-head"><span>PowerShell</span><button type="button">Copy</button></div><pre>python lab1a_no_rag.py</pre></div>
+<p>The model has never seen NetNova's plans. What does it say? Write down one thing it got wrong or could not know.</p><p class="muted"><b>TRY:</b> open the file and ask about the prepaid Smart 299 plan.</p></div>
+<div class="card" style="margin-top:1rem"><h3>1B · Paste the whole knowledge base into the prompt</h3><div class="codeblock"><div class="cb-head"><span>PowerShell</span><button type="button">Copy</button></div><pre>python lab1b_stuff_prompt.py</pre></div>
+<p>It works, so why not stop here? Read the line that says how many tokens you sent and what it cost. The KB has two versions of Postpaid Max (100 GB and 75 GB). Which did the model pick?</p><p class="muted"><b>THINK:</b> 5,000 documents instead of 25.</p></div>
+<div class="card" style="margin-top:1rem"><h3>1C · Your first retriever: count matching words</h3><div class="codeblock"><div class="cb-head"><span>PowerShell</span><button type="button">Copy</button></div><pre>python lab1c_keyword_search.py</pre></div>
+<p>Ask these two, in this order:</p><ol class="clean"><li><code>How much data in the Postpaid Max plan?</code></li><li><code>How many gigabytes do I get on my top monthly plan?</code></li></ol>
+<p>Same meaning. One works, one fails. Why? That gap is what embeddings fix in Lab 2.</p></div>
+<div class="callout good" style="margin-top:1rem"><b>Checkpoint</b>You can explain, in one sentence each: why not the model alone, why not paste everything, and what keyword search cannot do.</div>
+</section><section class="panel" data-panel-group="g" data-panel="lab2" hidden>
+<h2>Lab 2 · Chunk, embed, store, search (40 min)</h2>
+<div class="card"><h3>2A · Chunking</h3><div class="codeblock"><div class="cb-head"><span>PowerShell</span><button type="button">Copy</button></div><pre>python lab2a_chunking.py</pre></div>
+<p>Compare fixed chunks with section chunks for PLAN-101. In the fixed output, find the chunk that holds <b>100 GB</b>. Does it mention the plan name?</p><p class="muted"><b>TRY:</b> change <code>SIZE</code> at the top to 10, then 60. Run again each time.</p></div>
+<div class="card" style="margin-top:1rem"><h3>2B · Meaning as numbers</h3><div class="codeblock"><div class="cb-head"><span>PowerShell</span><button type="button">Copy</button></div><pre>python lab2b_embeddings.py</pre></div>
+<p>Five sentences become five lists of numbers. Read the similarity table. Which two sentences are closest? Does "money back" match "refund"?</p><p class="muted"><b>TRY:</b> add two sentences of your own to the list.</p></div>
+<div class="card" style="margin-top:1rem"><h3>2C · Store in Qdrant and search</h3><div class="codeblock"><div class="cb-head"><span>PowerShell</span><button type="button">Copy</button></div><pre>python lab2c_qdrant.py</pre></div>
+<p>Ask these, one at a time, and read the similarity numbers:</p><ol class="clean"><li><code>I want my money back for a wrong bill</code></li><li><code>my internet is crawling</code></li><li><code>Which cafeteria serves vegan food on Fridays?</code></li></ol>
+<p>The last one still returns three results. What does that tell you about needing an "I don't know" rule?</p><p class="muted"><b>TRY:</b> set <code>ROLE = "prepaid"</code> at the top and ask about roaming prices.</p></div>
+<div class="callout good" style="margin-top:1rem"><b>Checkpoint</b>You know what a chunk, an embedding, a vector database and a similarity score are, and you have seen search return an answer when it should not.</div>
+</section><section class="panel" data-panel-group="g" data-panel="lab3" hidden>
+<h2>Lab 3 · Vibe-code a RAG app (60 min)</h2>
+<p class="muted">You will not type the code. You will direct OpenCode with five prompts, run the app after each one, and check it. The helpers in <code>rag\</code> do the hard parts; the prompts tell the AI exactly how to use them.</p>
+<div class="callout warn"><b>How to work</b>One prompt at a time. After each: run the app, test it, tick the box. If the app errors, paste the red error text back into OpenCode and say "fix this". If you are stuck more than 10 minutes, copy the checkpoint file and move on.</div>
+<div class="codeblock"><div class="cb-head"><span>Run the app (opens in your browser; stop with Ctrl+C)</span><button type="button">Copy</button></div><pre>python -m streamlit run app_basic.py</pre></div>
+<div class="pcard"><h3><span class="pill acc">Prompt 1</span>The empty app<span class="pill">5 min</span></h3><p class="muted">Paste into OpenCode in your lab folder. Then run the app and test it.</p><div class="codeblock"><div class="cb-head"><span>Prompt for OpenCode</span><button type="button">Copy</button></div><pre>Create a file named app_basic.py. It is a Streamlit app.
+- Page title: NetNova Help, with a phone emoji.
+- A text box labelled "Your question" and a button "Ask".
+- When the button is clicked and the question is not empty, show: You asked: &lt;the question&gt;.
+Keep it under 20 lines. No other features.</pre></div><p style="margin-top:.5rem">Behind? Copy the finished version and carry on: <div class="codeblock"><div class="cb-head"><span>PowerShell</span><button type="button">Copy</button></div><pre>copy checkpoints\cp1_ui_shell.py app_basic.py</pre></div></p></div>
+<div class="step"><div class="n">1</div><div><label class="chk"><input type="checkbox" data-k="l3a"><span><b>Ask something. You see 'You asked: ...'.</b></span></label></div></div>
+<div class="pcard"><h3><span class="pill acc">Prompt 2</span>Load the knowledge base<span class="pill">8 min</span></h3><p class="muted">Paste into OpenCode in your lab folder. Then run the app and test it.</p><div class="codeblock"><div class="cb-head"><span>Prompt for OpenCode</span><button type="button">Copy</button></div><pre>Update app_basic.py. Do not change anything that already works.
+- Add: from rag.kb import load_kb
+- Load the documents once, using st.cache_resource: docs = load_kb()
+- In the sidebar show a header "Knowledge base", the number of documents, and each document as a small caption: id - title.
+(Each doc object has the fields .id and .title.)</pre></div><p style="margin-top:.5rem">Behind? Copy the finished version and carry on: <div class="codeblock"><div class="cb-head"><span>PowerShell</span><button type="button">Copy</button></div><pre>copy checkpoints\cp2_load_kb.py app_basic.py</pre></div></p></div>
+<div class="step"><div class="n">2</div><div><label class="chk"><input type="checkbox" data-k="l3b"><span><b>The sidebar lists 25 documents.</b></span></label></div></div>
+<div class="pcard"><h3><span class="pill acc">Prompt 3</span>Search with Qdrant<span class="pill">15 min</span></h3><p class="muted">Paste into OpenCode in your lab folder. Then run the app and test it.</p><div class="codeblock"><div class="cb-head"><span>Prompt for OpenCode</span><button type="button">Copy</button></div><pre>Update app_basic.py. Use these ready-made helpers. Do NOT rewrite them.
+  from rag.kb import load_kb, chunk_docs
+  from rag.index import Index
+  from rag import llm
+Build the search index once with st.cache_resource:
+  docs = [d for d in load_kb() if d.status == "current"]
+  index = Index(chunk_docs(docs, "section"))
+When Ask is clicked:
+  qvec = llm.embed([question])[0]
+  hits = index.vector(qvec, k=3)      # a list of (chunk, similarity)
+Show a subheader "Top matches". For each hit show: chunk.doc_id in bold, the similarity with 2 decimals, and chunk.text.
+Show "Mode: " plus llm.mode_name() as a caption under the title.</pre></div><p style="margin-top:.5rem">Behind? Copy the finished version and carry on: <div class="codeblock"><div class="cb-head"><span>PowerShell</span><button type="button">Copy</button></div><pre>copy checkpoints\cp3_search.py app_basic.py</pre></div></p></div>
+<div class="step"><div class="n">3</div><div><label class="chk"><input type="checkbox" data-k="l3c"><span><b>Ask 'How many gigabytes on the Postpaid Max plan?' and see PLAN-101 at the top with a similarity number.</b></span></label></div></div>
+<div class="pcard"><h3><span class="pill acc">Prompt 4</span>Real answers with sources<span class="pill">12 min</span></h3><p class="muted">Paste into OpenCode in your lab folder. Then run the app and test it.</p><div class="codeblock"><div class="cb-head"><span>Prompt for OpenCode</span><button type="button">Copy</button></div><pre>Update app_basic.py. Keep the search from the previous step.
+After getting hits, build the evidence:
+  chunks = [{"text": c.text, "doc_id": c.doc_id} for c, _ in hits]
+  reply = llm.answer(question, chunks, grounded=True)
+Show a subheader "Answer" and the reply. Wrap the call in st.spinner("Thinking...").
+Move the list of hits into an expander called "Sources used".</pre></div><p style="margin-top:.5rem">Behind? Copy the finished version and carry on: <div class="codeblock"><div class="cb-head"><span>PowerShell</span><button type="button">Copy</button></div><pre>copy checkpoints\cp4_answer.py app_basic.py</pre></div></p></div>
+<div class="step"><div class="n">4</div><div><label class="chk"><input type="checkbox" data-k="l3d"><span><b>The answer appears, and the sources are in the expander.</b></span></label></div></div>
+<div class="pcard"><h3><span class="pill acc">Prompt 5</span>Roles, guard and examples<span class="pill">15 min</span></h3><p class="muted">Paste into OpenCode in your lab folder. Then run the app and test it.</p><div class="codeblock"><div class="cb-head"><span>Prompt for OpenCode</span><button type="button">Copy</button></div><pre>Update app_basic.py with five improvements:
+1. Sidebar select "Who is asking?" with options Postpaid customer, Prepaid customer, NOC engineer, mapped to the values postpaid, prepaid, noc.
+2. Build the index from ALL documents (remove the status filter). Search with:
+   index.vector(qvec, k=top_k, role=&lt;role value&gt;, only_current=True)
+3. Sidebar slider "top-k" from 1 to 8, default 3.
+4. Sidebar slider "Say I don't know below this similarity" from 0.0 to 0.6, default 0.28 (step 0.01). If the best hit's similarity (hits[0][1]) is below it, or there are no hits, show st.warning("I don't know based on the knowledge base.") and do NOT call the model.
+5. Four example-question buttons in a row. Clicking one fills the text box.
+Keep the Sources expander, now showing similarity for each hit.</pre></div><p style="margin-top:.5rem">Behind? Copy the finished version and carry on: <div class="codeblock"><div class="cb-head"><span>PowerShell</span><button type="button">Copy</button></div><pre>copy checkpoints\cp5_final.py app_basic.py</pre></div></p></div>
+<div class="step"><div class="n">5</div><div><label class="chk"><input type="checkbox" data-k="l3e"><span><b>Test the four questions below.</b></span></label></div></div>
+<div class="card"><h3>Your test sheet</h3><div class="tblwrap"><table class="tbl"><thead><tr><th>Ask</th><th>As</th><th>You should see</th></tr></thead><tbody>
+<tr><td>How much data does Postpaid Max include?</td><td>Postpaid</td><td>100 GB, cites PLAN-101</td></tr>
+<tr><td>How much is the 10-day international roaming pack?</td><td>Prepaid</td><td>Rs 3,499 (ROAM-202)</td></tr>
+<tr><td>How much is the 10-day international roaming pack?</td><td>Postpaid</td><td>Rs 2,999 (ROAM-201)</td></tr>
+<tr><td>Which cafeteria serves vegan food on Fridays?</td><td>Any</td><td>I don't know</td></tr></tbody></table></div></div>
+<div class="callout good" style="margin-top:1rem"><b>Checkpoint</b>A working RAG app that you directed but did not type. Pick one thing you would change in the prompts to get a better app, and write it down for the demo.</div>
+<p class="muted" style="margin-top:.8rem">⭐ Stretch: ask OpenCode to add a "Show the exact prompt sent to the model" expander. Then add a thumbs-up and thumbs-down button that counts answers.</p>
+</section><section class="panel" data-panel-group="g" data-panel="lab4" hidden>
+<h2>Lab 4 · AskTelco: make it trustworthy (100 min, work on your own)</h2>
+<p class="muted">Your Lab 3 app works for easy questions. Real users bring old articles, wrong audiences, exact codes, questions with no answer and hostile documents. This app lets you switch fixes on one at a time and measure each.</p>
+<div class="codeblock"><div class="cb-head"><span>Run the app</span><button type="button">Copy</button></div><pre>python -m streamlit run lab4_app.py</pre></div>
+<div class="grid g3" style="margin:1rem 0"><div class="card"><span class="pill ok">Part A · 15 min</span><h3>See the problems</h3></div><div class="card"><span class="pill ok">Part B · 35 min</span><h3>Prove it with numbers</h3></div><div class="card"><span class="pill ok">Part C · 20 min</span><h3>The poisoned article</h3></div></div>
+<h3>Part A · Compare (15 min)</h3>
+<p class="muted">On the Ask tab keep <b>Compare with baseline</b> on. The left side is basic RAG, the right side is your selected preset. Start with the <b>Full pipeline</b> preset.</p>
+<div class="tblwrap card"><table class="tbl"><thead><tr><th>#</th><th>Ask</th><th>Who</th><th>Look for</th></tr></thead><tbody>
+<tr><td>A1</td><td>How much data does Postpaid Max include?</td><td>Postpaid</td><td>Which version did each side use? Red box?</td></tr>
+<tr><td>A2</td><td>What is the extension of the Level 2 Transport on-call?</td><td>Postpaid, then NOC</td><td>Who is allowed to see it?</td></tr>
+<tr><td>A3</td><td>How much is the 10-day international roaming pack?</td><td>Prepaid, then Postpaid</td><td>Same question, different correct answer</td></tr>
+<tr><td>A4</td><td>What does error code E-4107 mean?</td><td>Prepaid</td><td>Switch Search between vector, keyword, hybrid</td></tr>
+<tr><td>A5</td><td>Who owns the fibre link that caused the Chennai North outage INC-4471?</td><td>NOC</td><td>Open "What the pipeline did". Turn Multi-hop off and on.</td></tr>
+<tr><td>A6</td><td>Which cafeteria serves vegan food on Fridays?</td><td>Any</td><td>Baseline vs guard</td></tr></tbody></table></div>
+<div class="step"><div class="n">1</div><div><label class="chk"><input type="checkbox" data-k="l4a"><span><b>Write down the one problem that surprised you most.</b></span></label></div></div>
+<h3 style="margin-top:1.4rem">Part B · Evals (35 min)</h3>
+<div class="tblwrap card"><table class="tbl"><thead><tr><th>#</th><th>Do</th><th>Auto-check</th></tr></thead><tbody>
+<tr><td><b>Challenge 1</b></td><td>Open <code>rag\evals.py</code>. In <code>MY_QUESTIONS</code> (marked TODO-1) add 2 questions of your own. Find the answer in <code>kb\</code>. Fields: <code>q</code>, <code>role</code>, <code>doc</code> (the article id), <code>key</code> (a phrase that is inside that article). Stop the app (Ctrl+C) and start it again.</td><td><code>test_challenge_1</code></td></tr>
+<tr><td><b>Challenge 2</b></td><td>Evals tab: click <b>Run</b> for all 4 presets, in order. Fill section 1 of <code>submission\lab4_report.md</code>.</td><td><code>test_challenge_2</code></td></tr>
+<tr><td>⭐ Stretch</td><td>Tick the LLM-as-judge box and run Full pipeline again. Which questions score below 5, and why?</td><td></td></tr></tbody></table></div>
+<div class="codeblock"><div class="cb-head"><span>Python</span><button type="button">Copy</button></div><pre># example for MY_QUESTIONS
+dict(q="How long is the UPC code valid?", role="prepaid", doc="PORT-601", key="4 days"),</pre></div>
+<div class="step"><div class="n">2</div><div><label class="chk"><input type="checkbox" data-k="l4b"><span><b>Challenge 1 done.</b></span></label></div></div><div class="step"><div class="n">3</div><div><label class="chk"><input type="checkbox" data-k="l4c"><span><b>Challenge 2 done.</b></span></label></div></div>
+<h3 style="margin-top:1.4rem">Part C · The poisoned article (20 min)</h3>
+<ol class="clean"><li>Ingestion tab, <b>Add new documents</b>. Upload <code>sample_uploads\KB-098_student_plan.md</code> and click Ingest. Ask <i>How much is the Student Plan?</i> as a prepaid customer.</li>
+<li>Upload <code>sample_uploads\KB-099_roaming_weekend_offer_POISONED.md</code>. Read the warning.</li>
+<li>Ask <i>What is the Global Roaming Weekend Offer?</i> with <b>Compare with baseline</b> on. Then switch the individual dials (scan, strict prompt) on and off.</li></ol>
+<div class="tblwrap card"><table class="tbl"><tbody><tr><td><b>Challenge 3</b></td><td>Fill section 2 of <code>submission\lab4_report.md</code>: did each side follow the hidden instruction? Which dial stopped it? One more defence you would add.</td><td><code>test_challenge_3</code></td></tr>
+<tr><td>⭐ Stretch</td><td>In <code>rag\llm.py</code> remove rule 6 from <code>GROUNDED_SYSTEM</code>, turn off the scan, ask again, then put it back. What changed?</td><td></td></tr></tbody></table></div>
+<div class="step"><div class="n">4</div><div><label class="chk"><input type="checkbox" data-k="l4d"><span><b>Challenge 3 done.</b></span></label></div></div>
+<div class="card" style="border-color:var(--warn);margin-top:1.4rem"><span class="pill warn">Failure Lab · last 30 min</span><h3>Break it, find it, fix it</h3>
+<p>Prove each fix with the Evals numbers or with a before and after answer. Keep a note for your demo.</p>
+<ol class="clean"><li><b>Bad chunks.</b> Set Chunking to <b>fixed</b> and the chunk size slider to 10 words. Ask about Postpaid Max data. What breaks? Find the size where it works again, then compare with section chunks.</li>
+<li><b>Stale index.</b> Open <code>kb\PLAN-101.md</code> and change Rs 599 to Rs 649. Save. Ask the price in the app. Is the answer new? Click <b>Re-index from kb/ folder</b> in the sidebar and ask again. Change the file back afterwards.</li>
+<li><b>Leaky assistant.</b> Pick the Baseline preset and a customer role. Ask three questions that should be blocked. Which single switch closes the leak?</li></ol></div>
+<div class="step"><div class="n">5</div><div><label class="chk"><input type="checkbox" data-k="l4e"><span><b>Failure Lab: all three found and fixed.</b></span></label></div></div>
+<h3 style="margin-top:1.4rem">Check yourself</h3>
+<div class="codeblock"><div class="cb-head"><span>PowerShell</span><button type="button">Copy</button></div><pre>python -m pytest tests -v</pre></div>
+<p>Aim for <b>3 passed</b>. Then get ready to show the class: your best before-and-after, in two minutes.</p>
+</section><section class="panel" data-panel-group="g" data-panel="stuck" hidden>
+<h2>Stuck?</h2>
+<div class="tblwrap card"><table class="tbl"><thead><tr><th>Symptom</th><th>Fix</th></tr></thead><tbody>
+<tr><td><code>No module named ...</code> or <code>streamlit</code> not recognised</td><td>Run <code>python -m pip install -r requirements.txt</code> again. Start the app with <code>python -m streamlit run ...</code></td></tr>
+<tr><td>Mode says OFFLINE</td><td>The key is not read. Open <code>.env</code>: the line must be <code>OPENAI_API_KEY=sk-...</code> with no spaces or quotes. Restart the app.</td></tr>
+<tr><td><code>AuthenticationError</code> / 401</td><td>The key is wrong or has a hidden space. Paste it again.</td></tr>
+<tr><td><code>RateLimitError</code> / 429</td><td>The whole class is calling at once. Wait 30 seconds and click again.</td></tr>
+<tr><td>The page is blank or shows a red Python error</td><td>Read the last line of the error. Copy the whole error into OpenCode and say "fix this".</td></tr>
+<tr><td>The browser tab did not open</td><td>Open <code>http://localhost:8501</code> yourself.</td></tr>
+<tr><td>I edited a file and nothing changed</td><td>Stop the app with Ctrl+C and start it again. For the knowledge base use <b>Re-index</b>.</td></tr>
+<tr><td>Test 1 fails</td><td>Each question needs <code>q</code>, <code>role</code>, <code>doc</code> and <code>key</code>. The <code>doc</code> must be an id in <code>kb\</code>, the <code>key</code> a phrase inside that article, and the role must be allowed to see it.</td></tr>
+<tr><td>Test 2 fails</td><td>Run all 4 presets once, and replace every TODO in section 1 of the report.</td></tr>
+<tr><td>Test 3 fails</td><td>Replace every TODO in section 2 of the report.</td></tr>
+<tr><td>More than 10 minutes stuck</td><td>Raise your hand. Do not wait.</td></tr></tbody></table></div>
+</section>
+</main>
+<script>
+(function(){
+  var root=document.documentElement;
+  function get(k){try{return localStorage.getItem(k)}catch(e){return null}}
+  function set(k,v){try{localStorage.setItem(k,v)}catch(e){}}
+  var t=get('kyn-theme'); if(t) root.setAttribute('data-theme',t);
+  var b=document.getElementById('themebtn');
+  if(b) b.addEventListener('click',function(){var cur=root.getAttribute('data-theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');var n=cur==='dark'?'light':'dark';root.setAttribute('data-theme',n);set('kyn-theme',n)});
+  document.querySelectorAll('.codeblock').forEach(function(cb){var btn=cb.querySelector('button');if(!btn)return;btn.addEventListener('click',function(){var txt=cb.querySelector('pre').innerText;var done=function(){btn.textContent='Copied';setTimeout(function(){btn.textContent='Copy'},1400)};if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(done,function(){fallback(txt);done()})}else{fallback(txt);done()}})});
+  function fallback(txt){var ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();try{document.execCommand('copy')}catch(e){}ta.remove()}
+  document.querySelectorAll('[data-tabs]').forEach(function(box){
+    var btns=box.querySelectorAll('[role=tab]');var id0=box.getAttribute('data-tabs');
+    function show(name){btns.forEach(function(x){x.setAttribute('aria-selected',x.dataset.tab===name?'true':'false')});document.querySelectorAll('[data-panel-group="'+id0+'"]').forEach(function(p){p.hidden=p.dataset.panel!==name});set('kyn-tab-'+id0,name)}
+    btns.forEach(function(x){x.addEventListener('click',function(){show(x.dataset.tab);history.replaceState(null,'','#'+x.dataset.tab)})});
+    var h=location.hash.replace('#','');var names=[].map.call(btns,function(x){return x.dataset.tab});
+    show(names.indexOf(h)>=0?h:(names.indexOf(get('kyn-tab-'+id0))>=0?get('kyn-tab-'+id0):names[0]));
+  });
+  document.querySelectorAll('input[type=checkbox][data-k]').forEach(function(c){var k='kyn-d2-'+c.dataset.k;c.checked=get(k)==='1';c.addEventListener('change',function(){set(k,c.checked?'1':'0');count()})});
+  function count(){var all=document.querySelectorAll('input[type=checkbox][data-k]');var d=0;all.forEach(function(c){if(c.checked)d++});var el=document.getElementById('progress');if(el&&all.length)el.textContent=d+' of '+all.length+' steps done'}
+  count();
+  document.querySelectorAll('.qz').forEach(function(q){var ans=q.dataset.answer;q.querySelectorAll('.opt').forEach(function(o){o.addEventListener('click',function(){if(q.dataset.done)return;q.dataset.done=1;q.querySelectorAll('.opt').forEach(function(x){if(x.dataset.o===ans)x.classList.add('right');else if(x===o)x.classList.add('wrong')});q.querySelector('.why').hidden=false})})});
+})();
+</script>
+<script></script>
+</body></html>

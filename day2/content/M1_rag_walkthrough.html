@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Day 2 · M1 RAG from zero</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>/* Day 1 design tokens. Layout: sticky top bar, one wide column (max 1500px) sized for a classroom TV. */
+:root{
+  --bg:#F1F5F4; --surface:#FFFFFF; --surface2:#E6EDEB; --ink:#0D2226; --muted:#475F63; --line:#C5D3D0;
+  --accent:#0A7A72; --accent-ink:#FFFFFF; --accent-soft:#D3EDE9;
+  --warn:#9A5B00; --warn-soft:#FAEBD0; --bad:#B3261E; --bad-soft:#F8DBD8; --good:#1B7A3A; --good-soft:#D7EEDD;
+  --code-bg:#0D2226; --code-ink:#DCEFEA; --code-dim:#8FB0AB;
+  --font:"Aptos Narrow","Barlow Semi Condensed","Arial Narrow",sans-serif;
+  --mono:"JetBrains Mono","Cascadia Mono",Consolas,monospace;
+  --shadow:0 1px 2px rgba(13,34,38,.08);
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0A1517; --surface:#12262A; --surface2:#1A343A; --ink:#E3EFED; --muted:#9DB6B3; --line:#2A4549;
+    --accent:#4FD1C5; --accent-ink:#04201D; --accent-soft:#12383A;
+    --warn:#F0B35A; --warn-soft:#3A2B10; --bad:#FF8E85; --bad-soft:#3F1B18; --good:#7ED99A; --good-soft:#143322;
+    --code-bg:#07100F; --code-ink:#DCEFEA; --code-dim:#7FA09B; --shadow:none; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0A1517; --surface:#12262A; --surface2:#1A343A; --ink:#E3EFED; --muted:#9DB6B3; --line:#2A4549;
+  --accent:#4FD1C5; --accent-ink:#04201D; --accent-soft:#12383A;
+  --warn:#F0B35A; --warn-soft:#3A2B10; --bad:#FF8E85; --bad-soft:#3F1B18; --good:#7ED99A; --good-soft:#143322;
+  --code-bg:#07100F; --code-ink:#DCEFEA; --code-dim:#7FA09B; --shadow:none; color-scheme:dark;
+}
+
+*{box-sizing:border-box}
+html{font-size:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:1.2rem;line-height:1.5;-webkit-text-size-adjust:100%}
+h1,h2,h3,h4{line-height:1.15;margin:0;text-wrap:balance;font-weight:700}
+h1{font-size:2.45rem;letter-spacing:-.01em}
+h2{font-size:1.85rem}
+h3{font-size:1.4rem}
+h4{font-size:1.2rem}
+p{margin:0}
+a{color:var(--accent)}
+code,kbd,pre{font-family:var(--mono)}
+code{font-size:.92em;background:var(--surface2);padding:.05em .35em;border-radius:4px}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+[hidden]{display:none!important}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* top bar */
+.topbar{position:sticky;top:0;z-index:30;background:var(--bg);border-bottom:1px solid var(--line)}
+.topbar-in{max-width:1500px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;gap:.4rem 1.2rem;padding:.55rem max(16px,env(safe-area-inset-right,0px)) .55rem max(16px,env(safe-area-inset-left,0px))}
+.brand{font-weight:700;letter-spacing:.01em;white-space:nowrap}
+.brand small{color:var(--muted);font-weight:500;margin-left:.5rem}
+.nav{display:flex;flex-wrap:wrap;gap:.25rem;margin-left:auto}
+.nav a{padding:.2rem .75rem;border-radius:7px;color:var(--muted);text-decoration:none;font-weight:600;font-size:1.05rem}
+.nav a:hover{background:var(--surface2);color:var(--ink)}
+.nav a[aria-current="page"]{background:var(--accent);color:var(--accent-ink)}
+.themebtn{border:1px solid var(--line);background:var(--surface);border-radius:7px;padding:.2rem .7rem;cursor:pointer;font-size:1.05rem;color:var(--muted)}
+
+/* page */
+.wrap{max-width:1500px;margin:0 auto;padding:1.6rem max(16px,env(safe-area-inset-right,0px)) 4rem max(16px,env(safe-area-inset-left,0px))}
+.kicker{font-size:1.05rem;letter-spacing:.09em;text-transform:uppercase;color:var(--accent);font-weight:700;margin-bottom:.3rem}
+.lede{color:var(--muted);max-width:62rem;margin-top:.6rem}
+.head{display:flex;flex-wrap:wrap;gap:.6rem 2rem;justify-content:space-between;align-items:flex-end;margin-bottom:1.2rem}
+.timebox{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:.4rem .9rem;font-weight:600;color:var(--muted);white-space:nowrap}
+.timebox b{color:var(--ink)}
+
+/* tabs */
+.tabs{display:flex;flex-wrap:wrap;gap:.35rem;border-bottom:2px solid var(--line);margin-bottom:1.4rem}
+.tabs button{border:0;background:transparent;padding:.55rem 1.1rem;font-weight:700;font-size:1.15rem;color:var(--muted);cursor:pointer;border-radius:8px 8px 0 0;margin-bottom:-2px;border-bottom:3px solid transparent}
+.tabs button:hover{color:var(--ink);background:var(--surface2)}
+.tabs button[aria-selected="true"]{color:var(--accent);border-bottom-color:var(--accent);background:var(--surface)}
+.panel[hidden]{display:none!important}
+
+/* blocks */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:1.1rem 1.3rem;box-shadow:var(--shadow);min-width:0}
+.card h3{margin-bottom:.4rem}
+.grid{display:grid;gap:1rem;min-width:0}
+.g2{grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr))}
+.g4{grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr))}
+.split{display:grid;gap:1.2rem;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);align-items:start}
+@media (max-width:980px){.split{grid-template-columns:minmax(0,1fr)}}
+.muted{color:var(--muted)}
+.row{display:flex;flex-wrap:wrap;gap:.6rem;align-items:center}
+.stack{display:flex;flex-direction:column;gap:.8rem}
+
+.pill{display:inline-block;border-radius:999px;padding:.05rem .7rem;font-size:1rem;font-weight:700;border:1px solid var(--line);background:var(--surface2);color:var(--muted);white-space:nowrap}
+.pill.ok{background:var(--good-soft);color:var(--good);border-color:transparent}
+.pill.warn{background:var(--warn-soft);color:var(--warn);border-color:transparent}
+.pill.bad{background:var(--bad-soft);color:var(--bad);border-color:transparent}
+.pill.acc{background:var(--accent-soft);color:var(--accent);border-color:transparent}
+
+.btn{border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:.45rem 1.05rem;border-radius:9px;font-weight:700;cursor:pointer;font-size:1.1rem}
+.btn:hover{background:var(--surface2)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.sm{padding:.2rem .7rem;font-size:1rem}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+
+.callout{border-radius:10px;padding:.8rem 1.1rem;border:1px solid var(--line);background:var(--surface2)}
+.callout.warn{background:var(--warn-soft);border-color:transparent}
+.callout.bad{background:var(--bad-soft);border-color:transparent}
+.callout.good{background:var(--good-soft);border-color:transparent}
+.callout.acc{background:var(--accent-soft);border-color:transparent}
+.callout b:first-child{display:block;margin-bottom:.15rem}
+
+ul.clean{margin:.3rem 0 0;padding-left:1.25rem}
+ul.clean li{margin:.2rem 0}
+.tbl{width:100%;border-collapse:collapse;font-size:1.1rem}
+.tbl th,.tbl td{text-align:left;padding:.5rem .7rem;border-bottom:1px solid var(--line);vertical-align:top}
+.tbl th{font-size:1rem;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.tblwrap{overflow-x:auto;min-width:0}
+.num{font-variant-numeric:tabular-nums}
+
+/* code */
+.codeblock{background:var(--code-bg);border-radius:10px;overflow:hidden;min-width:0}
+.cb-head{display:flex;justify-content:space-between;align-items:center;gap:1rem;padding:.35rem .5rem .35rem .9rem;border-bottom:1px solid rgba(255,255,255,.1);color:var(--code-dim);font-family:var(--mono);font-size:1rem}
+.cb-head button{background:transparent;border:1px solid rgba(255,255,255,.25);color:var(--code-ink);border-radius:6px;padding:.1rem .7rem;cursor:pointer;font-size:1rem;font-family:var(--font);font-weight:600}
+.cb-head button:hover{background:rgba(255,255,255,.12)}
+.codeblock pre{margin:0;padding:.8rem 1rem;overflow-x:auto;color:var(--code-ink);font-size:1.12rem;line-height:1.5;tab-size:4}
+.codeblock.short pre{padding:.6rem 1rem}
+
+/* form bits */
+.field{display:flex;flex-direction:column;gap:.25rem;min-width:0}
+.field label{font-weight:700;font-size:1.05rem;color:var(--muted)}
+.field select,.field input[type=number],.field input[type=text],.field textarea{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:.4rem .6rem;min-width:0;width:100%}
+input[type=range]{width:100%;accent-color:var(--accent)}
+
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+
+.agenda{display:flex;flex-direction:column;gap:.55rem;margin:0;padding:0;list-style:none}
+.slot{display:grid;grid-template-columns:6.6rem minmax(0,1fr) auto;gap:.2rem 1rem;align-items:center;background:var(--surface);border:2px solid var(--line);border-radius:12px;padding:.65rem 1rem;cursor:pointer;text-align:left;width:100%;font:inherit;color:inherit}
+.slot:hover{border-color:var(--accent)}
+.slot .t{font-weight:700;font-size:1.3rem;font-variant-numeric:tabular-nums}
+.slot .nowbtn{margin-top:.3rem;white-space:nowrap;font-size:.9rem;padding:.05rem .5rem}
+.slot .t small{display:block;color:var(--muted);font-size:.95rem;font-weight:600}
+.slot h3{font-size:1.3rem}
+.slot p{color:var(--muted);font-size:1.08rem}
+.slot .links{display:flex;flex-wrap:wrap;gap:.4rem;justify-content:flex-end}
+.slot .links a{text-decoration:none;font-weight:700;border:1px solid var(--accent);color:var(--accent);padding:.15rem .7rem;border-radius:8px;font-size:1.02rem;background:var(--surface)}
+.slot .links a:hover{background:var(--accent);color:var(--accent-ink)}
+.slot.now{border-color:var(--accent);background:var(--accent-soft);box-shadow:0 0 0 3px var(--accent-soft)}
+.slot.past{opacity:.55}
+.slot.brk{background:var(--surface2);border-style:dashed}
+.slot.brk h3{font-weight:600;color:var(--muted)}
+@media (max-width:760px){.slot{grid-template-columns:4.4rem minmax(0,1fr)}.slot .links{grid-column:1 / -1;justify-content:flex-start}}
+.clock{font-variant-numeric:tabular-nums;font-weight:700;font-size:1.6rem}
+.rules li{margin:.35rem 0}
+.mode-t{background:var(--surface2)}
+.legend{display:flex;flex-wrap:wrap;gap:.5rem 1.2rem;color:var(--muted);font-size:1.05rem}
+
+.fl{display:flex;flex-wrap:wrap;gap:.5rem}
+.steps{display:flex;flex-wrap:wrap;gap:.4rem;margin:.6rem 0}
+.steps button{border:2px solid var(--line);background:var(--surface);border-radius:999px;padding:.25rem .9rem;font-weight:700;cursor:pointer;font-size:1.05rem}
+.steps button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.chunk{display:inline;padding:.1rem .15rem;border-radius:5px;border-bottom:3px solid var(--line);line-height:2.1}
+.chunk.c0{background:#D3EDE9}.chunk.c1{background:#FAEBD0}.chunk.c2{background:#E3DDF5}.chunk.c3{background:#F8DBD8}.chunk.c4{background:#D7EEDD}.chunk.c5{background:#DDE8F8}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .chunk{color:#0D2226}}
+:root[data-theme="dark"] .chunk{color:#0D2226}
+.chunk.hit{border-bottom-color:var(--good);box-shadow:0 0 0 2px var(--good)}
+.bar{height:1.1rem;border-radius:6px;background:var(--accent);min-width:2px}
+.barrow{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr) 3.2rem;gap:.7rem;align-items:center;padding:.3rem 0;border-bottom:1px solid var(--line)}
+.barrow.out{opacity:.4}
+.barrow small{color:var(--muted)}
+.qz .opt{display:block;width:100%;text-align:left;margin:.35rem 0;border:2px solid var(--line);background:var(--surface);border-radius:10px;padding:.5rem .9rem;cursor:pointer;font-size:1.1rem}
+.qz .opt:hover{border-color:var(--accent)}
+.qz .opt.right{border-color:var(--good);background:var(--good-soft)}
+.qz .opt.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.qz .why{margin-top:.4rem}
+.flow{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.6rem;align-items:stretch}
+.flow .node{background:var(--surface);border:2px solid var(--line);border-radius:12px;padding:.6rem .8rem;text-align:center;font-weight:700}
+.flow .node small{display:block;font-weight:500;color:var(--muted);font-size:.95rem}
+.flow .node.bad{border-color:var(--bad)}.flow .node.good{border-color:var(--good)}
+.mark{background:var(--warn-soft);color:var(--warn);padding:0 .25rem;border-radius:4px;font-weight:700}
+.doc{font-family:var(--mono);font-size:1.02rem;background:var(--surface2);border-radius:10px;padding:.8rem 1rem;white-space:pre-wrap}
+.sec{margin-top:2.6rem}
+.sec>h2{margin-bottom:.5rem}
+.toc{display:flex;flex-wrap:wrap;gap:.4rem;margin:.8rem 0 0}
+.toc a{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:.15rem .8rem;text-decoration:none;font-weight:700;font-size:1.05rem}
+.step{display:grid;grid-template-columns:2.2rem minmax(0,1fr);gap:.7rem;margin:.9rem 0}
+.step>.n{width:2.2rem;height:2.2rem;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font-weight:700}
+.step label.chk{display:flex;gap:.6rem;align-items:flex-start;cursor:pointer}
+.step input[type=checkbox]{width:1.3rem;height:1.3rem;margin-top:.25rem;accent-color:var(--accent)}
+.pcard{border:2px solid var(--accent);border-radius:12px;background:var(--surface);padding:.9rem 1.1rem;margin:1rem 0}
+.pcard h3{display:flex;flex-wrap:wrap;gap:.6rem;align-items:center}
+.legend{display:flex;flex-wrap:wrap;gap:.6rem 1.4rem;color:var(--muted)}
+.panel>p.muted{margin:.4rem 0 .9rem}.panel .codeblock{margin:.6rem 0}.panel h3{margin:.2rem 0 .3rem}.panel .callout{margin:.8rem 0}.pcard p{margin:.4rem 0}
+</style></head>
+<body>
+<header class="topbar"><div class="topbar-in"><div class="brand">Day 2<small>Kyndryl · Enterprise Agentic AI Engineering</small></div><nav class="nav" aria-label="Day 2 pages"><a href="index.html">Control Room</a><a href="M1_rag_walkthrough.html" aria-current="page">M1 RAG from zero</a><a href="M2_chunk_embed.html">M2 Chunks and vectors</a><a href="M3_advanced_retrieval.html">M3 Advanced retrieval</a><a href="../labs/Day2_Lab_Guide.html">Lab guide</a></nav><button class="themebtn" id="themebtn" type="button">Theme</button></div></header>
+<main class="wrap">
+
+<div class="head"><div><div class="kicker">Module 1 · RAG from zero</div><h1>Why RAG, and what happens to one question</h1>
+<p class="lede">A language model knows the internet, not your company. RAG hands it the right pages at question time. Here is the whole idea, then the five parts you will build today.</p></div></div>
+<div class="toc"><a href="#why">1 · Why</a><a href="#path">2 · One question, step by step</a><a href="#parts">3 · Five parts</a><a href="#when">4 · When to use it</a><a href="#check">5 · Day 1 recap quiz</a></div>
+
+<section class="sec" id="why"><h2>1 · The model alone vs the model with your document</h2>
+<p class="muted">Same model, same question. Tap to switch.</p>
+<div class="steps" role="group" aria-label="mode"><button type="button" aria-pressed="true" id="w0">Model alone</button><button type="button" aria-pressed="false" id="w1">Model + our document</button></div>
+<div class="split"><div class="card"><div class="muted">Question from a NetNova customer</div><h3>How much data does Postpaid Max include?</h3><div id="wans" class="callout bad" style="margin-top:.8rem"></div></div>
+<div class="card"><h3>Three reasons the model alone fails</h3><ul class="clean"><li><b>Private:</b> it never saw NetNova's price list.</li><li><b>Old:</b> it was trained months ago. Plans change.</li><li><b>No proof:</b> it cannot show where the answer came from.</li></ul><p class="muted" style="margin-top:.6rem">RAG fixes all three: fetch the current page, give it to the model, ask for a cited answer.</p></div></div></section>
+
+<section class="sec" id="path"><h2>2 · One question, five stages</h2>
+<p class="muted">Pick a question, then walk through the stages. The similarity numbers are rounded examples.</p>
+<div class="row"><div class="field" style="min-width:min(100%,420px)"><label for="qsel">Question</label><select id="qsel"></select></div></div>
+<div class="steps" id="stg" role="group" aria-label="stages"></div>
+<div class="card" id="stbody" style="min-height:14rem"></div></section>
+
+<section class="sec" id="parts"><h2>3 · The five parts you will build</h2>
+<div class="grid g3">
+<div class="card"><span class="pill acc">1 Ingest</span><h3>Load documents</h3><p>Read files and keep their metadata: who may see it, which version, current or old.</p><p class="muted"><b>Goes wrong:</b> old versions sit next to new ones.</p></div>
+<div class="card"><span class="pill acc">2 Chunk</span><h3>Cut into pieces</h3><p>Pieces small enough to be precise, big enough to make sense on their own.</p><p class="muted"><b>Goes wrong:</b> a cut in the middle of the answer.</p></div>
+<div class="card"><span class="pill acc">3 Embed + store</span><h3>Numbers in a vector database</h3><p>Each chunk becomes a list of numbers that captures its meaning. Qdrant stores them.</p><p class="muted"><b>Goes wrong:</b> you change a document and forget to re-index.</p></div>
+<div class="card"><span class="pill acc">4 Retrieve</span><h3>Find the best chunks</h3><p>Turn the question into numbers, find the nearest chunks, apply filters.</p><p class="muted"><b>Goes wrong:</b> right idea, wrong words; or the wrong audience.</p></div>
+<div class="card"><span class="pill acc">5 Generate</span><h3>Answer from the evidence</h3><p>Send the chunks and the question to the model. Ask for citations. Allow "I don't know".</p><p class="muted"><b>Goes wrong:</b> the model invents, or obeys text hidden in a document.</p></div>
+<div class="card"><span class="pill ok">Today</span><h3>Where you build each one</h3><ul class="clean"><li>Lab 1: the problem, then 1 and 4 in the simplest form</li><li>Lab 2: parts 2, 3 and 4 properly</li><li>Lab 3: all five parts as an app</li><li>Lab 4: make it trustworthy</li></ul></div></div></section>
+
+<section class="sec" id="when"><h2>4 · Where to use RAG, and when not to</h2>
+<div class="tblwrap card"><table class="tbl"><thead><tr><th>Situation</th><th>Best tool</th><th>Why</th></tr></thead><tbody>
+<tr><td>Thousands of pages that change often</td><td><span class="pill ok">RAG</span></td><td>Update the index, not the model</td></tr>
+<tr><td>Answers must show their source</td><td><span class="pill ok">RAG</span></td><td>Chunks carry document ids</td></tr>
+<tr><td>Different users may see different documents</td><td><span class="pill ok">RAG + metadata filter</span></td><td>Filter before the model sees anything</td></tr>
+<tr><td>Only 10 short pages</td><td><span class="pill warn">Paste into prompt</span></td><td>Simpler, no index to maintain</td></tr>
+<tr><td>You need a new style or behaviour, not new facts</td><td><span class="pill warn">Fine-tune</span></td><td>RAG adds facts, not habits</td></tr>
+<tr><td>Exact numbers from a live system (balance, usage)</td><td><span class="pill bad">Not RAG: call an API or SQL</span></td><td>Documents go stale; tools do not</td></tr></tbody></table></div></section>
+
+<section class="sec" id="check"><h2>5 · Day 1 recap quiz</h2><p class="muted">Five questions. Answer before we discuss. Nobody is graded.</p>
+<div class="stack">
+<div class="card qz" data-answer="B"><h3>Why do we put a LiteLLM gateway in front of the models?</h3><button type="button" class="opt" data-o="A">A. It makes the models faster</button><button type="button" class="opt" data-o="B">B. One endpoint, per-person keys, budgets and fallbacks</button><button type="button" class="opt" data-o="C">C. It trains the models</button><button type="button" class="opt" data-o="D">D. It removes the need for GPUs</button><div class="why callout acc" hidden><b>Why</b>A gateway gives one stable address and keys per person, and can switch to a fallback model when one fails.</div></div>
+<div class="card qz" data-answer="A"><h3>A model weight stored in 16 bits is quantized to 4 bits. What is the main effect?</h3><button type="button" class="opt" data-o="A">A. About 4x less memory for the weights, small quality loss</button><button type="button" class="opt" data-o="B">B. 4x more accuracy</button><button type="button" class="opt" data-o="C">C. The model forgets its training</button><button type="button" class="opt" data-o="D">D. Nothing changes</button><div class="why callout acc" hidden><b>Why</b>Fewer bits per weight means less memory, so a bigger model fits on the same GPU, with a small quality cost.</div></div>
+<div class="card qz" data-answer="B"><h3>What grows with every token of a long conversation and eats GPU memory?</h3><button type="button" class="opt" data-o="A">A. The model weights</button><button type="button" class="opt" data-o="B">B. The KV cache</button><button type="button" class="opt" data-o="C">C. The tokenizer</button><button type="button" class="opt" data-o="D">D. The API key</button><div class="why callout acc" hidden><b>Why</b>The KV cache stores attention keys and values for every token so far.</div></div>
+<div class="card qz" data-answer="B"><h3>Your model must answer from a policy that changes weekly. Best fit?</h3><button type="button" class="opt" data-o="A">A. Fine-tune every week</button><button type="button" class="opt" data-o="B">B. RAG</button><button type="button" class="opt" data-o="C">C. Bigger GPU</button><button type="button" class="opt" data-o="D">D. Lower temperature</button><div class="why callout acc" hidden><b>Why</b>Facts that change belong in a retrieval index you can update, not in the weights.</div></div>
+<div class="card qz" data-answer="B"><h3>Why give each participant a virtual key instead of the real cloud key?</h3><button type="button" class="opt" data-o="A">A. Real keys are slower</button><button type="button" class="opt" data-o="B">B. You can set budget, rate limit and revoke one person without touching others</button><button type="button" class="opt" data-o="C">C. Virtual keys are free</button><button type="button" class="opt" data-o="D">D. It is required by Python</button><div class="why callout acc" hidden><b>Why</b>Per-person keys give control and safety: limit, track and revoke individually.</div></div>
+</div></section>
+
+</main>
+<script>
+(function(){
+  var root=document.documentElement;
+  function get(k){try{return localStorage.getItem(k)}catch(e){return null}}
+  function set(k,v){try{localStorage.setItem(k,v)}catch(e){}}
+  var t=get('kyn-theme'); if(t) root.setAttribute('data-theme',t);
+  var b=document.getElementById('themebtn');
+  if(b) b.addEventListener('click',function(){var cur=root.getAttribute('data-theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');var n=cur==='dark'?'light':'dark';root.setAttribute('data-theme',n);set('kyn-theme',n)});
+  document.querySelectorAll('.codeblock').forEach(function(cb){var btn=cb.querySelector('button');if(!btn)return;btn.addEventListener('click',function(){var txt=cb.querySelector('pre').innerText;var done=function(){btn.textContent='Copied';setTimeout(function(){btn.textContent='Copy'},1400)};if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(done,function(){fallback(txt);done()})}else{fallback(txt);done()}})});
+  function fallback(txt){var ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();try{document.execCommand('copy')}catch(e){}ta.remove()}
+  document.querySelectorAll('[data-tabs]').forEach(function(box){
+    var btns=box.querySelectorAll('[role=tab]');var id0=box.getAttribute('data-tabs');
+    function show(name){btns.forEach(function(x){x.setAttribute('aria-selected',x.dataset.tab===name?'true':'false')});document.querySelectorAll('[data-panel-group="'+id0+'"]').forEach(function(p){p.hidden=p.dataset.panel!==name});set('kyn-tab-'+id0,name)}
+    btns.forEach(function(x){x.addEventListener('click',function(){show(x.dataset.tab);history.replaceState(null,'','#'+x.dataset.tab)})});
+    var h=location.hash.replace('#','');var names=[].map.call(btns,function(x){return x.dataset.tab});
+    show(names.indexOf(h)>=0?h:(names.indexOf(get('kyn-tab-'+id0))>=0?get('kyn-tab-'+id0):names[0]));
+  });
+  document.querySelectorAll('input[type=checkbox][data-k]').forEach(function(c){var k='kyn-d2-'+c.dataset.k;c.checked=get(k)==='1';c.addEventListener('change',function(){set(k,c.checked?'1':'0');count()})});
+  function count(){var all=document.querySelectorAll('input[type=checkbox][data-k]');var d=0;all.forEach(function(c){if(c.checked)d++});var el=document.getElementById('progress');if(el&&all.length)el.textContent=d+' of '+all.length+' steps done'}
+  count();
+  document.querySelectorAll('.qz').forEach(function(q){var ans=q.dataset.answer;q.querySelectorAll('.opt').forEach(function(o){o.addEventListener('click',function(){if(q.dataset.done)return;q.dataset.done=1;q.querySelectorAll('.opt').forEach(function(x){if(x.dataset.o===ans)x.classList.add('right');else if(x===o)x.classList.add('wrong')});q.querySelector('.why').hidden=false})})});
+})();
+</script>
+<script>
+var D=[
+ {q:"How much data does Postpaid Max include?",hits:[["PLAN-101","Price and data","100 GB of data every month. Unused data rolls over up to 200 GB.",0.62],["PLAN-101","5G and extras","Unlimited 5G at no extra cost. Family add-on SIMs Rs 249.",0.41],["COV-701","Who gets 5G","5G is included in Postpaid Max 599...",0.33]],ans:"Postpaid Max includes 100 GB of data every month, and unused data rolls over up to 200 GB. [PLAN-101]"},
+ {q:"What does error code E-4107 mean?",hits:[["BILL-302","E-4107","E-4107 means the payment gateway timed out. Money may be debited; auto-reversal in 3 working days.",0.58],["BILL-302","E-4120","E-4120 means a duplicate payment was detected...",0.37],["BILL-301","Refund timeline","Approved refunds are paid within 7 working days.",0.29]],ans:"E-4107 means the payment gateway timed out. If money was debited it is reversed automatically within 3 working days. [BILL-302]"},
+ {q:"Which cafeteria serves vegan food on Fridays?",hits:[["COV-701","Where is 5G live","NetNova 5G is live in Chennai, Mumbai...",0.12],["NET-502","Wi-Fi calling","Wi-Fi calling works on supported phones...",0.11],["SIM-401","eSIM","You need an eSIM-capable phone...",0.10]],ans:"I don't know based on the knowledge base."}
+];
+var S=["Ask","Search","Augment","Generate","Check"],cur=0,qi=0;
+var sel=document.getElementById('qsel');D.forEach(function(d,i){var o=document.createElement('option');o.value=i;o.textContent=d.q;sel.appendChild(o)});
+var stg=document.getElementById('stg');
+S.forEach(function(s,i){var b=document.createElement('button');b.type='button';b.textContent=(i+1)+' '+s;b.onclick=function(){cur=i;draw()};stg.appendChild(b)});
+sel.onchange=function(){qi=+sel.value;draw()};
+function esc(t){return t.replace(/&/g,'&amp;').replace(/</g,'&lt;')}
+function draw(){
+ var d=D[qi],h='';
+ [].forEach.call(stg.children,function(b,i){b.setAttribute('aria-pressed',i===cur?'true':'false')});
+ if(cur===0)h='<h3>1 · Ask</h3><p style="font-size:1.4rem;margin:.6rem 0"><b>"'+esc(d.q)+'"</b></p><p class="muted">The user types a normal question. Nothing special happens yet.</p>';
+ if(cur===1){h='<h3>2 · Search</h3><p class="muted">The question becomes numbers. We find the chunks whose numbers are nearest.</p>';d.hits.forEach(function(x){h+='<div class="barrow"><div><b>'+x[0]+'</b> <small>'+x[1]+'</small><br><small>'+esc(x[2])+'</small></div><div><div class="bar" style="width:'+Math.round(x[3]*100)+'%"></div></div><div class="num"><b>'+x[3].toFixed(2)+'</b></div></div>'});
+  if(qi===2)h+='<div class="callout warn" style="margin-top:.8rem"><b>Look at the scores</b>Everything is below 0.15. Search still returns "the nearest" chunks, even when none is relevant. We need a guard.</div>';}
+ if(cur===2){var ctx=d.hits.slice(0,2).map(function(x){return '['+x[0]+'] '+x[2]}).join('\n');h='<h3>3 · Augment</h3><p class="muted">We build one prompt: rules + evidence + question. This is the step that gives the model your facts.</p><div class="doc">RULES: Answer only from the CONTEXT. Cite document ids. If the answer is not there, say I don\'t know.\n\nCONTEXT:\n'+esc(ctx)+'\n\nQUESTION: '+esc(d.q)+'</div>'}
+ if(cur===3)h='<h3>4 · Generate</h3><p class="muted">The model writes the answer using only the evidence.</p><div class="callout '+(qi===2?'warn':'good')+'" style="font-size:1.3rem">'+esc(d.ans)+'</div>';
+ if(cur===4){h='<h3>5 · Check</h3><p class="muted">Every fact has a document id. A reviewer can open that document and verify.</p>';
+  h+=qi===2?'<div class="callout acc"><b>Good behaviour</b>Saying "I don\'t know" is a correct answer when the knowledge base has nothing. An invented answer would be the failure.</div>':'<div class="callout acc"><b>Verify</b>Open '+d.hits[0][0]+', section "'+d.hits[0][1]+'". The sentence is there.</div>'}
+ document.getElementById('stbody').innerHTML=h}
+draw();
+var wa=document.getElementById('wans'),w0=document.getElementById('w0'),w1=document.getElementById('w1');
+function w(n){w0.setAttribute('aria-pressed',n==0);w1.setAttribute('aria-pressed',n==1);
+ if(n==0){wa.className='callout bad';wa.innerHTML='<b>Model alone (a guess)</b>Most Indian postpaid plans around this price offer between 50 and 100 GB. Please check the NetNova website.'}
+ else{wa.className='callout good';wa.innerHTML='<b>Model + PLAN-101</b>100 GB every month. Unused data rolls over up to 200 GB. [PLAN-101]'}}
+w0.onclick=function(){w(0)};w1.onclick=function(){w(1)};w(0);
+</script>
+</body></html>

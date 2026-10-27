@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Day 2 · M2 Chunks and vectors</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>/* Day 1 design tokens. Layout: sticky top bar, one wide column (max 1500px) sized for a classroom TV. */
+:root{
+  --bg:#F1F5F4; --surface:#FFFFFF; --surface2:#E6EDEB; --ink:#0D2226; --muted:#475F63; --line:#C5D3D0;
+  --accent:#0A7A72; --accent-ink:#FFFFFF; --accent-soft:#D3EDE9;
+  --warn:#9A5B00; --warn-soft:#FAEBD0; --bad:#B3261E; --bad-soft:#F8DBD8; --good:#1B7A3A; --good-soft:#D7EEDD;
+  --code-bg:#0D2226; --code-ink:#DCEFEA; --code-dim:#8FB0AB;
+  --font:"Aptos Narrow","Barlow Semi Condensed","Arial Narrow",sans-serif;
+  --mono:"JetBrains Mono","Cascadia Mono",Consolas,monospace;
+  --shadow:0 1px 2px rgba(13,34,38,.08);
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0A1517; --surface:#12262A; --surface2:#1A343A; --ink:#E3EFED; --muted:#9DB6B3; --line:#2A4549;
+    --accent:#4FD1C5; --accent-ink:#04201D; --accent-soft:#12383A;
+    --warn:#F0B35A; --warn-soft:#3A2B10; --bad:#FF8E85; --bad-soft:#3F1B18; --good:#7ED99A; --good-soft:#143322;
+    --code-bg:#07100F; --code-ink:#DCEFEA; --code-dim:#7FA09B; --shadow:none; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0A1517; --surface:#12262A; --surface2:#1A343A; --ink:#E3EFED; --muted:#9DB6B3; --line:#2A4549;
+  --accent:#4FD1C5; --accent-ink:#04201D; --accent-soft:#12383A;
+  --warn:#F0B35A; --warn-soft:#3A2B10; --bad:#FF8E85; --bad-soft:#3F1B18; --good:#7ED99A; --good-soft:#143322;
+  --code-bg:#07100F; --code-ink:#DCEFEA; --code-dim:#7FA09B; --shadow:none; color-scheme:dark;
+}
+
+*{box-sizing:border-box}
+html{font-size:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:1.2rem;line-height:1.5;-webkit-text-size-adjust:100%}
+h1,h2,h3,h4{line-height:1.15;margin:0;text-wrap:balance;font-weight:700}
+h1{font-size:2.45rem;letter-spacing:-.01em}
+h2{font-size:1.85rem}
+h3{font-size:1.4rem}
+h4{font-size:1.2rem}
+p{margin:0}
+a{color:var(--accent)}
+code,kbd,pre{font-family:var(--mono)}
+code{font-size:.92em;background:var(--surface2);padding:.05em .35em;border-radius:4px}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+[hidden]{display:none!important}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* top bar */
+.topbar{position:sticky;top:0;z-index:30;background:var(--bg);border-bottom:1px solid var(--line)}
+.topbar-in{max-width:1500px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;gap:.4rem 1.2rem;padding:.55rem max(16px,env(safe-area-inset-right,0px)) .55rem max(16px,env(safe-area-inset-left,0px))}
+.brand{font-weight:700;letter-spacing:.01em;white-space:nowrap}
+.brand small{color:var(--muted);font-weight:500;margin-left:.5rem}
+.nav{display:flex;flex-wrap:wrap;gap:.25rem;margin-left:auto}
+.nav a{padding:.2rem .75rem;border-radius:7px;color:var(--muted);text-decoration:none;font-weight:600;font-size:1.05rem}
+.nav a:hover{background:var(--surface2);color:var(--ink)}
+.nav a[aria-current="page"]{background:var(--accent);color:var(--accent-ink)}
+.themebtn{border:1px solid var(--line);background:var(--surface);border-radius:7px;padding:.2rem .7rem;cursor:pointer;font-size:1.05rem;color:var(--muted)}
+
+/* page */
+.wrap{max-width:1500px;margin:0 auto;padding:1.6rem max(16px,env(safe-area-inset-right,0px)) 4rem max(16px,env(safe-area-inset-left,0px))}
+.kicker{font-size:1.05rem;letter-spacing:.09em;text-transform:uppercase;color:var(--accent);font-weight:700;margin-bottom:.3rem}
+.lede{color:var(--muted);max-width:62rem;margin-top:.6rem}
+.head{display:flex;flex-wrap:wrap;gap:.6rem 2rem;justify-content:space-between;align-items:flex-end;margin-bottom:1.2rem}
+.timebox{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:.4rem .9rem;font-weight:600;color:var(--muted);white-space:nowrap}
+.timebox b{color:var(--ink)}
+
+/* tabs */
+.tabs{display:flex;flex-wrap:wrap;gap:.35rem;border-bottom:2px solid var(--line);margin-bottom:1.4rem}
+.tabs button{border:0;background:transparent;padding:.55rem 1.1rem;font-weight:700;font-size:1.15rem;color:var(--muted);cursor:pointer;border-radius:8px 8px 0 0;margin-bottom:-2px;border-bottom:3px solid transparent}
+.tabs button:hover{color:var(--ink);background:var(--surface2)}
+.tabs button[aria-selected="true"]{color:var(--accent);border-bottom-color:var(--accent);background:var(--surface)}
+.panel[hidden]{display:none!important}
+
+/* blocks */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:1.1rem 1.3rem;box-shadow:var(--shadow);min-width:0}
+.card h3{margin-bottom:.4rem}
+.grid{display:grid;gap:1rem;min-width:0}
+.g2{grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr))}
+.g4{grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr))}
+.split{display:grid;gap:1.2rem;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);align-items:start}
+@media (max-width:980px){.split{grid-template-columns:minmax(0,1fr)}}
+.muted{color:var(--muted)}
+.row{display:flex;flex-wrap:wrap;gap:.6rem;align-items:center}
+.stack{display:flex;flex-direction:column;gap:.8rem}
+
+.pill{display:inline-block;border-radius:999px;padding:.05rem .7rem;font-size:1rem;font-weight:700;border:1px solid var(--line);background:var(--surface2);color:var(--muted);white-space:nowrap}
+.pill.ok{background:var(--good-soft);color:var(--good);border-color:transparent}
+.pill.warn{background:var(--warn-soft);color:var(--warn);border-color:transparent}
+.pill.bad{background:var(--bad-soft);color:var(--bad);border-color:transparent}
+.pill.acc{background:var(--accent-soft);color:var(--accent);border-color:transparent}
+
+.btn{border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:.45rem 1.05rem;border-radius:9px;font-weight:700;cursor:pointer;font-size:1.1rem}
+.btn:hover{background:var(--surface2)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.sm{padding:.2rem .7rem;font-size:1rem}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+
+.callout{border-radius:10px;padding:.8rem 1.1rem;border:1px solid var(--line);background:var(--surface2)}
+.callout.warn{background:var(--warn-soft);border-color:transparent}
+.callout.bad{background:var(--bad-soft);border-color:transparent}
+.callout.good{background:var(--good-soft);border-color:transparent}
+.callout.acc{background:var(--accent-soft);border-color:transparent}
+.callout b:first-child{display:block;margin-bottom:.15rem}
+
+ul.clean{margin:.3rem 0 0;padding-left:1.25rem}
+ul.clean li{margin:.2rem 0}
+.tbl{width:100%;border-collapse:collapse;font-size:1.1rem}
+.tbl th,.tbl td{text-align:left;padding:.5rem .7rem;border-bottom:1px solid var(--line);vertical-align:top}
+.tbl th{font-size:1rem;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.tblwrap{overflow-x:auto;min-width:0}
+.num{font-variant-numeric:tabular-nums}
+
+/* code */
+.codeblock{background:var(--code-bg);border-radius:10px;overflow:hidden;min-width:0}
+.cb-head{display:flex;justify-content:space-between;align-items:center;gap:1rem;padding:.35rem .5rem .35rem .9rem;border-bottom:1px solid rgba(255,255,255,.1);color:var(--code-dim);font-family:var(--mono);font-size:1rem}
+.cb-head button{background:transparent;border:1px solid rgba(255,255,255,.25);color:var(--code-ink);border-radius:6px;padding:.1rem .7rem;cursor:pointer;font-size:1rem;font-family:var(--font);font-weight:600}
+.cb-head button:hover{background:rgba(255,255,255,.12)}
+.codeblock pre{margin:0;padding:.8rem 1rem;overflow-x:auto;color:var(--code-ink);font-size:1.12rem;line-height:1.5;tab-size:4}
+.codeblock.short pre{padding:.6rem 1rem}
+
+/* form bits */
+.field{display:flex;flex-direction:column;gap:.25rem;min-width:0}
+.field label{font-weight:700;font-size:1.05rem;color:var(--muted)}
+.field select,.field input[type=number],.field input[type=text],.field textarea{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:.4rem .6rem;min-width:0;width:100%}
+input[type=range]{width:100%;accent-color:var(--accent)}
+
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+
+.agenda{display:flex;flex-direction:column;gap:.55rem;margin:0;padding:0;list-style:none}
+.slot{display:grid;grid-template-columns:6.6rem minmax(0,1fr) auto;gap:.2rem 1rem;align-items:center;background:var(--surface);border:2px solid var(--line);border-radius:12px;padding:.65rem 1rem;cursor:pointer;text-align:left;width:100%;font:inherit;color:inherit}
+.slot:hover{border-color:var(--accent)}
+.slot .t{font-weight:700;font-size:1.3rem;font-variant-numeric:tabular-nums}
+.slot .nowbtn{margin-top:.3rem;white-space:nowrap;font-size:.9rem;padding:.05rem .5rem}
+.slot .t small{display:block;color:var(--muted);font-size:.95rem;font-weight:600}
+.slot h3{font-size:1.3rem}
+.slot p{color:var(--muted);font-size:1.08rem}
+.slot .links{display:flex;flex-wrap:wrap;gap:.4rem;justify-content:flex-end}
+.slot .links a{text-decoration:none;font-weight:700;border:1px solid var(--accent);color:var(--accent);padding:.15rem .7rem;border-radius:8px;font-size:1.02rem;background:var(--surface)}
+.slot .links a:hover{background:var(--accent);color:var(--accent-ink)}
+.slot.now{border-color:var(--accent);background:var(--accent-soft);box-shadow:0 0 0 3px var(--accent-soft)}
+.slot.past{opacity:.55}
+.slot.brk{background:var(--surface2);border-style:dashed}
+.slot.brk h3{font-weight:600;color:var(--muted)}
+@media (max-width:760px){.slot{grid-template-columns:4.4rem minmax(0,1fr)}.slot .links{grid-column:1 / -1;justify-content:flex-start}}
+.clock{font-variant-numeric:tabular-nums;font-weight:700;font-size:1.6rem}
+.rules li{margin:.35rem 0}
+.mode-t{background:var(--surface2)}
+.legend{display:flex;flex-wrap:wrap;gap:.5rem 1.2rem;color:var(--muted);font-size:1.05rem}
+
+.fl{display:flex;flex-wrap:wrap;gap:.5rem}
+.steps{display:flex;flex-wrap:wrap;gap:.4rem;margin:.6rem 0}
+.steps button{border:2px solid var(--line);background:var(--surface);border-radius:999px;padding:.25rem .9rem;font-weight:700;cursor:pointer;font-size:1.05rem}
+.steps button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.chunk{display:inline;padding:.1rem .15rem;border-radius:5px;border-bottom:3px solid var(--line);line-height:2.1}
+.chunk.c0{background:#D3EDE9}.chunk.c1{background:#FAEBD0}.chunk.c2{background:#E3DDF5}.chunk.c3{background:#F8DBD8}.chunk.c4{background:#D7EEDD}.chunk.c5{background:#DDE8F8}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .chunk{color:#0D2226}}
+:root[data-theme="dark"] .chunk{color:#0D2226}
+.chunk.hit{border-bottom-color:var(--good);box-shadow:0 0 0 2px var(--good)}
+.bar{height:1.1rem;border-radius:6px;background:var(--accent);min-width:2px}
+.barrow{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr) 3.2rem;gap:.7rem;align-items:center;padding:.3rem 0;border-bottom:1px solid var(--line)}
+.barrow.out{opacity:.4}
+.barrow small{color:var(--muted)}
+.qz .opt{display:block;width:100%;text-align:left;margin:.35rem 0;border:2px solid var(--line);background:var(--surface);border-radius:10px;padding:.5rem .9rem;cursor:pointer;font-size:1.1rem}
+.qz .opt:hover{border-color:var(--accent)}
+.qz .opt.right{border-color:var(--good);background:var(--good-soft)}
+.qz .opt.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.qz .why{margin-top:.4rem}
+.flow{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.6rem;align-items:stretch}
+.flow .node{background:var(--surface);border:2px solid var(--line);border-radius:12px;padding:.6rem .8rem;text-align:center;font-weight:700}
+.flow .node small{display:block;font-weight:500;color:var(--muted);font-size:.95rem}
+.flow .node.bad{border-color:var(--bad)}.flow .node.good{border-color:var(--good)}
+.mark{background:var(--warn-soft);color:var(--warn);padding:0 .25rem;border-radius:4px;font-weight:700}
+.doc{font-family:var(--mono);font-size:1.02rem;background:var(--surface2);border-radius:10px;padding:.8rem 1rem;white-space:pre-wrap}
+.sec{margin-top:2.6rem}
+.sec>h2{margin-bottom:.5rem}
+.toc{display:flex;flex-wrap:wrap;gap:.4rem;margin:.8rem 0 0}
+.toc a{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:.15rem .8rem;text-decoration:none;font-weight:700;font-size:1.05rem}
+.step{display:grid;grid-template-columns:2.2rem minmax(0,1fr);gap:.7rem;margin:.9rem 0}
+.step>.n{width:2.2rem;height:2.2rem;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font-weight:700}
+.step label.chk{display:flex;gap:.6rem;align-items:flex-start;cursor:pointer}
+.step input[type=checkbox]{width:1.3rem;height:1.3rem;margin-top:.25rem;accent-color:var(--accent)}
+.pcard{border:2px solid var(--accent);border-radius:12px;background:var(--surface);padding:.9rem 1.1rem;margin:1rem 0}
+.pcard h3{display:flex;flex-wrap:wrap;gap:.6rem;align-items:center}
+.legend{display:flex;flex-wrap:wrap;gap:.6rem 1.4rem;color:var(--muted)}
+.panel>p.muted{margin:.4rem 0 .9rem}.panel .codeblock{margin:.6rem 0}.panel h3{margin:.2rem 0 .3rem}.panel .callout{margin:.8rem 0}.pcard p{margin:.4rem 0}
+</style></head>
+<body>
+<header class="topbar"><div class="topbar-in"><div class="brand">Day 2<small>Kyndryl · Enterprise Agentic AI Engineering</small></div><nav class="nav" aria-label="Day 2 pages"><a href="index.html">Control Room</a><a href="M1_rag_walkthrough.html">M1 RAG from zero</a><a href="M2_chunk_embed.html" aria-current="page">M2 Chunks and vectors</a><a href="M3_advanced_retrieval.html">M3 Advanced retrieval</a><a href="../labs/Day2_Lab_Guide.html">Lab guide</a></nav><button class="themebtn" id="themebtn" type="button">Theme</button></div></header>
+<main class="wrap">
+
+<div class="head"><div><div class="kicker">Module 2 · Chunks and vectors</div><h1>Cut it well, then turn meaning into numbers</h1>
+<p class="lede">Two decisions decide most of your RAG quality: how you cut documents, and how you search the pieces. Try both here before you code them.</p></div></div>
+<div class="toc"><a href="#chunk">1 · Chunking</a><a href="#embed">2 · Embeddings</a><a href="#store">3 · Vector database</a></div>
+
+<section class="sec" id="chunk"><h2>1 · Chunking: where you cut matters</h2>
+<p class="muted">This is the real PLAN-101 article. Question: <b>"How much data does Postpaid Max include?"</b> Move the slider and watch the chunk that holds the answer.</p>
+<div class="split"><div class="card">
+<div class="row"><div class="field"><label>Strategy</label><div class="steps" style="margin:0"><button type="button" id="sf" aria-pressed="true">Fixed size</button><button type="button" id="ss" aria-pressed="false">By section</button></div></div>
+<div class="field" style="flex:1;min-width:200px" id="szbox"><label for="sz">Words per chunk: <b id="szv">25</b></label><input type="range" id="sz" min="6" max="60" value="25"></div></div>
+<div id="chunks" style="margin-top:1rem"></div></div>
+<div class="card"><h3>What the model would see</h3><div id="verdict"></div>
+<div class="callout acc" style="margin-top:.8rem"><b>Rule of thumb</b>Cut where the author cut: by heading. Put the document title inside every chunk so a piece never loses its subject.</div></div></div></section>
+
+<section class="sec" id="embed"><h2>2 · Embeddings: same meaning, different words</h2>
+<p class="muted">An embedding turns text into a list of numbers. Texts with similar meaning get similar numbers. <b>Teaching toy:</b> here each text has only 6 hand-set numbers (topics). Real models use about 1,500. The idea is identical.</p>
+<div class="split"><div class="card"><div class="field"><label for="eq">Question</label><select id="eq"></select></div>
+<div class="callout" style="margin-top:.8rem"><b>Keyword search sees</b><span id="kwinfo"></span></div>
+<div id="embrows" style="margin-top:.8rem"></div></div>
+<div class="card"><h3>Read the result</h3><ul class="clean"><li>The bar is <b>cosine similarity</b>: 1.00 means the same direction, 0 means unrelated.</li><li>Pick <b>"How many gigabytes on my top plan?"</b>. It shares no important word with "100 GB", yet it still finds the plan.</li><li>Pick <b>"vegan food Fridays"</b>. Everything is near zero.</li><li>Notice the old <b>PLAN-101 v2</b> scores almost the same as v3. Meaning cannot tell old from new. Metadata can.</li></ul></div></div></section>
+
+<section class="sec" id="store"><h2>3 · The vector database: nearest chunks, with filters and a floor</h2>
+<p class="muted">Qdrant stores each vector with a <b>payload</b> (doc id, roles, status). A search is: nearest vectors, <i>after</i> the payload filter. Set the dials and see what reaches the model.</p>
+<div class="card"><div class="grid g4">
+<div class="field"><label for="sq">Question</label><select id="sq"></select></div>
+<div class="field"><label for="sr">Who is asking</label><select id="sr"><option value="postpaid">Postpaid customer</option><option value="prepaid">Prepaid customer</option><option value="noc">NOC engineer</option></select></div>
+<div class="field"><label for="sk">Top-k: <b id="skv">3</b></label><input type="range" id="sk" min="1" max="6" value="3"></div>
+<div class="field"><label for="sg">"I don't know" below: <b id="sgv">0.30</b></label><input type="range" id="sg" min="0" max="60" value="30"></div></div>
+<div class="row" style="margin-top:.6rem"><label><input type="checkbox" id="sf1"> Filter: only chunks this role may see</label><label><input type="checkbox" id="sf2"> Filter: status = current</label></div>
+<div id="strows" style="margin-top:.8rem"></div><div id="stout" style="margin-top:.8rem"></div></div></section>
+
+</main>
+<script>
+(function(){
+  var root=document.documentElement;
+  function get(k){try{return localStorage.getItem(k)}catch(e){return null}}
+  function set(k,v){try{localStorage.setItem(k,v)}catch(e){}}
+  var t=get('kyn-theme'); if(t) root.setAttribute('data-theme',t);
+  var b=document.getElementById('themebtn');
+  if(b) b.addEventListener('click',function(){var cur=root.getAttribute('data-theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');var n=cur==='dark'?'light':'dark';root.setAttribute('data-theme',n);set('kyn-theme',n)});
+  document.querySelectorAll('.codeblock').forEach(function(cb){var btn=cb.querySelector('button');if(!btn)return;btn.addEventListener('click',function(){var txt=cb.querySelector('pre').innerText;var done=function(){btn.textContent='Copied';setTimeout(function(){btn.textContent='Copy'},1400)};if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(done,function(){fallback(txt);done()})}else{fallback(txt);done()}})});
+  function fallback(txt){var ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();try{document.execCommand('copy')}catch(e){}ta.remove()}
+  document.querySelectorAll('[data-tabs]').forEach(function(box){
+    var btns=box.querySelectorAll('[role=tab]');var id0=box.getAttribute('data-tabs');
+    function show(name){btns.forEach(function(x){x.setAttribute('aria-selected',x.dataset.tab===name?'true':'false')});document.querySelectorAll('[data-panel-group="'+id0+'"]').forEach(function(p){p.hidden=p.dataset.panel!==name});set('kyn-tab-'+id0,name)}
+    btns.forEach(function(x){x.addEventListener('click',function(){show(x.dataset.tab);history.replaceState(null,'','#'+x.dataset.tab)})});
+    var h=location.hash.replace('#','');var names=[].map.call(btns,function(x){return x.dataset.tab});
+    show(names.indexOf(h)>=0?h:(names.indexOf(get('kyn-tab-'+id0))>=0?get('kyn-tab-'+id0):names[0]));
+  });
+  document.querySelectorAll('input[type=checkbox][data-k]').forEach(function(c){var k='kyn-d2-'+c.dataset.k;c.checked=get(k)==='1';c.addEventListener('change',function(){set(k,c.checked?'1':'0');count()})});
+  function count(){var all=document.querySelectorAll('input[type=checkbox][data-k]');var d=0;all.forEach(function(c){if(c.checked)d++});var el=document.getElementById('progress');if(el&&all.length)el.textContent=d+' of '+all.length+' steps done'}
+  count();
+  document.querySelectorAll('.qz').forEach(function(q){var ans=q.dataset.answer;q.querySelectorAll('.opt').forEach(function(o){o.addEventListener('click',function(){if(q.dataset.done)return;q.dataset.done=1;q.querySelectorAll('.opt').forEach(function(x){if(x.dataset.o===ans)x.classList.add('right');else if(x===o)x.classList.add('wrong')});q.querySelector('.why').hidden=false})})});
+})();
+</script>
+<script>
+var TXT="Postpaid Max 599 costs Rs 599 per month plus GST. The bill cycle starts on the activation date. There is no lock-in period. The plan includes 100 GB of data every month. Unused data rolls over up to 200 GB. Voice calls are unlimited and 100 SMS per day are included. Unlimited 5G is included at no extra cost in all NetNova 5G cities. The plan includes NetNova TV and one more OTT app of your choice. Family add-on SIMs cost Rs 249 per month each, up to 3 members.";
+var SECS=[["Price and validity","Postpaid Max 599 costs Rs 599 per month plus GST. The bill cycle starts on the activation date. There is no lock-in period."],["Data and calls","The plan includes 100 GB of data every month. Unused data rolls over up to 200 GB. Voice calls are unlimited and 100 SMS per day are included."],["5G and extras","Unlimited 5G is included at no extra cost in all NetNova 5G cities. The plan includes NetNova TV and one more OTT app of your choice. Family add-on SIMs cost Rs 249 per month each, up to 3 members."]];
+var mode='fixed',sz=document.getElementById('sz');
+function setMode(m){mode=m;document.getElementById('sf').setAttribute('aria-pressed',m==='fixed');document.getElementById('ss').setAttribute('aria-pressed',m==='section');document.getElementById('szbox').style.opacity=m==='fixed'?1:.35;drawC()}
+document.getElementById('sf').onclick=function(){setMode('fixed')};document.getElementById('ss').onclick=function(){setMode('section')};
+sz.oninput=function(){document.getElementById('szv').textContent=sz.value;drawC()};
+function drawC(){
+ var ch=[];
+ if(mode==='fixed'){var w=TXT.split(' '),n=+sz.value;for(var i=0;i<w.length;i+=n)ch.push(w.slice(i,i+n).join(' '))}
+ else ch=SECS.map(function(s){return 'Postpaid Max 599 - '+s[0]+': '+s[1]});
+ var html='',hit=-1;
+ ch.forEach(function(c,i){var has=/100 GB/.test(c);if(has&&hit<0)hit=i;html+='<span class="chunk c'+(i%6)+(has?' hit':'')+'">'+c+'</span> '});
+ document.getElementById('chunks').innerHTML=html+'<p class="muted" style="margin-top:.6rem">'+ch.length+' chunks. Green outline = contains "100 GB".</p>';
+ var v='';
+ if(hit<0)v='<div class="callout bad"><b>The answer is split in two</b>"100" and "GB" ended up in different chunks. Search will never find this fact.</div>';
+ else{var c=ch[hit],name=/Postpaid Max/.test(c),every=/every month/.test(c);
+  v='<div class="doc">'+c+'</div>';
+  v+='<p style="margin-top:.6rem">Mentions the plan name: '+(name?'<span class="pill ok">yes</span>':'<span class="pill bad">no</span>')+' &nbsp; Says "every month": '+(every?'<span class="pill ok">yes</span>':'<span class="pill bad">no</span>')+'</p>';
+  if(!name)v+='<div class="callout warn" style="margin-top:.6rem"><b>Lost its subject</b>This chunk says "100 GB" but never says which plan. The model may attach it to the wrong plan.</div>';
+  else if(!every)v+='<div class="callout warn" style="margin-top:.6rem"><b>Half the sentence</b>100 GB per what? The unit of time got cut off.</div>';
+  else v+='<div class="callout good" style="margin-top:.6rem"><b>Good chunk</b>The fact, its subject and its unit are together.</div>'}
+ document.getElementById('verdict').innerHTML=v}
+setMode('fixed');
+/* toy meaning space: [money, network, roaming, sim-security, plan-data, off-topic] */
+var C=[["PLAN-101 v3","100 GB data every month, rollover to 200 GB",[.3,0,0,0,.95,0],"postpaid,noc","current"],
+["PLAN-101 v2","75 GB data per month, no rollover",[.3,0,0,0,.94,0],"postpaid,noc","superseded"],
+["PLAN-102","Prepaid Smart 299: 1.5 GB per day",[.3,0,0,0,.9,0],"prepaid,noc","current"],
+["ROAM-201","10-day roaming pack Rs 2,999 (postpaid)",[.4,.1,.9,0,.2,0],"postpaid,noc","current"],
+["ROAM-202","10-day roaming pack Rs 3,499 (prepaid)",[.4,.1,.9,0,.2,0],"prepaid,noc","current"],
+["BILL-301","Refund within 7 working days",[.95,0,0,0,0,0],"postpaid,prepaid,noc","current"],
+["SIM-402","SMS blocked 24 hours after SIM swap",[0,.1,0,.95,0,0],"postpaid,prepaid,noc","current"],
+["NET-501","Slow data: toggle airplane mode, check APN",[0,.95,0,0,.2,0],"postpaid,prepaid,noc","current"],
+["ESC-901","Level 2 Transport on-call: extension 4101",[0,.4,0,0,0,.1],"noc","current"]];
+var Q=[["How many gigabytes on my top plan?",[.1,0,0,0,.95,0],"gigabytes top plan"],["I want my money back for a wrong bill",[.95,0,0,0,0,0],"money back wrong bill"],["My internet is crawling at home",[0,.9,0,0,.4,0],"internet crawling home"],["What do 10 days of roaming abroad cost?",[.5,0,.9,0,.1,0],"10 days roaming abroad cost"],["Phone number stolen, SIM swapped",[0,0,0,.95,0,0],"phone number stolen sim swapped"],["Who do I call for transport escalation?",[0,.4,0,0,0,.2],"call transport escalation"],["Which cafeteria serves vegan food?",[0,0,0,0,0,1],"cafeteria vegan food"]];
+function cos(a,b){var d=0,x=0,y=0;for(var i=0;i<a.length;i++){d+=a[i]*b[i];x+=a[i]*a[i];y+=b[i]*b[i]}return x&&y?d/Math.sqrt(x*y):0}
+function fill(id){var s=document.getElementById(id);Q.forEach(function(q,i){var o=document.createElement('option');o.value=i;o.textContent=q[0];s.appendChild(o)})}
+fill('eq');fill('sq');
+function words(t){return t.toLowerCase().match(/[a-z0-9]+/g)||[]}
+function drawE(){var q=Q[+document.getElementById('eq').value],qw=words(q[2]);
+ var rows=C.map(function(c){var ov=words(c[1]).filter(function(w){return qw.indexOf(w)>=0}).length;return {c:c,s:cos(q[1],c[2]),ov:ov}}).sort(function(a,b){return b.s-a.s});
+ var h='';rows.forEach(function(r){h+='<div class="barrow"><div><b>'+r.c[0]+'</b> <small>'+r.c[1]+'</small><br><small>shared words: '+r.ov+'</small></div><div><div class="bar" style="width:'+Math.max(1,Math.round(r.s*100))+'%"></div></div><div class="num"><b>'+r.s.toFixed(2)+'</b></div></div>'});
+ document.getElementById('embrows').innerHTML=h;
+ var top=rows.slice().sort(function(a,b){return b.ov-a.ov})[0];
+ document.getElementById('kwinfo').innerHTML=top.ov>0?' best word match: <b>'+top.c[0]+'</b> ('+top.ov+' shared word'+(top.ov>1?'s':'')+')':' <b>no shared words at all</b> with any chunk';}
+document.getElementById('eq').onchange=drawE;drawE();
+function drawS(){var q=Q[+document.getElementById('sq').value],role=document.getElementById('sr').value,k=+document.getElementById('sk').value,g=document.getElementById('sg').value/100;
+ document.getElementById('skv').textContent=k;document.getElementById('sgv').textContent=g.toFixed(2);
+ var f1=document.getElementById('sf1').checked,f2=document.getElementById('sf2').checked;
+ var rows=C.map(function(c){var ok=true,why=[];if(f1&&c[3].split(',').indexOf(role)<0){ok=false;why.push('role not allowed')}if(f2&&c[4]!=='current'){ok=false;why.push('old version')}return {c:c,s:cos(q[1],c[2]),ok:ok,why:why.join(', ')}}).sort(function(a,b){return b.s-a.s});
+ var kept=rows.filter(function(r){return r.ok}),n=0,h='';
+ rows.forEach(function(r){var inK=r.ok&&n<k;if(inK)n++;r.inK=inK;
+  h+='<div class="barrow'+(inK?'':' out')+'"><div><b>'+r.c[0]+'</b> <small>'+r.c[1]+'</small><br><small>visible to: '+r.c[3]+' · '+r.c[4]+(r.ok?'':' · <b>FILTERED OUT ('+r.why+')</b>')+'</small></div><div><div class="bar" style="width:'+Math.max(1,Math.round(r.s*100))+'%"></div></div><div class="num"><b>'+r.s.toFixed(2)+'</b></div></div>'});
+ document.getElementById('strows').innerHTML=h;
+ var sel=rows.filter(function(r){return r.inK}),best=sel.length?sel[0].s:0,o='';
+ if(!sel.length||best<g)o='<div class="callout warn"><b>Guard says: I don\'t know</b>Best similarity '+best.toFixed(2)+' is below '+g.toFixed(2)+'. Nothing is sent to the model.</div>';
+ else{o='<div class="callout good"><b>Sent to the model ('+sel.length+' chunks)</b>'+sel.map(function(r){return r.c[0]}).join(', ')+'</div>';
+  var leak=sel.filter(function(r){return r.c[3].split(',').indexOf(role)<0}),old=sel.filter(function(r){return r.c[4]!=='current'});
+  if(leak.length)o+='<div class="callout bad" style="margin-top:.5rem"><b>Leak</b>'+leak.map(function(r){return r.c[0]}).join(', ')+' must not be shown to this user. Turn on the role filter.</div>';
+  if(old.length)o+='<div class="callout bad" style="margin-top:.5rem"><b>Old article in the evidence</b>'+old.map(function(r){return r.c[0]+' (superseded)'}).join(', ')+'. Turn on the status filter.</div>'}
+ document.getElementById('stout').innerHTML=o}
+['sq','sr','sk','sg'].forEach(function(i){document.getElementById(i).oninput=drawS});['sf1','sf2'].forEach(function(i){document.getElementById(i).onchange=drawS});drawS();
+</script>
+</body></html>

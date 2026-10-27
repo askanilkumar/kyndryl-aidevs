@@ -1,0 +1,7 @@
+streamlit>=1.40
+openai>=1.40
+qdrant-client>=1.10
+numpy
+pandas
+python-dotenv
+pytest>=8.0
