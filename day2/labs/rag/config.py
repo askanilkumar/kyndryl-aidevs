@@ -4,6 +4,8 @@ from dotenv import load_dotenv
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 load_dotenv(os.path.join(HERE, ".env"))
+# key saved by set_key.py lives in your home folder, OUTSIDE the repo, so it can never be pushed to GitHub
+load_dotenv(os.path.join(os.path.expanduser("~"), ".askrag.env"))
 
 KB_DIR = os.path.join(HERE, "kb")
 UPLOAD_DIR = os.path.join(HERE, "sample_uploads")

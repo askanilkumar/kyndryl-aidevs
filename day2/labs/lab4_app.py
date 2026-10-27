@@ -51,6 +51,12 @@ def current_cfg():
 with st.sidebar:
     st.title("📡 AskTelco")
     st.caption("NetNova Telecom knowledge assistant")
+    _k = st.text_input("OpenAI API key (kept in memory only, never saved)", type="password", key="ui_key",
+                       help="Paste the key from the trainer. Not written to any file, so it cannot reach GitHub.")
+    if _k and _k.strip() != os.environ.get("OPENAI_API_KEY"):
+        os.environ["OPENAI_API_KEY"] = _k.strip()
+        st.session_state.kb = KB()   # rebuild the index with real embeddings
+        kb = st.session_state.kb
     mode_online = llm.online()
     (st.success if mode_online else st.warning)(f"Mode: {llm.mode_name()}" + ("" if mode_online else " (no API key: numbers will differ)"))
     who = st.selectbox("Who is asking?", list(ROLES))

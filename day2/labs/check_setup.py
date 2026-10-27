@@ -16,7 +16,7 @@ if llm.online():
         v = llm.embed(["hello"]); print("OK   embeddings work, vector size", v.shape[1])
         print("OK   chat works:", llm.plain_chat("Say OK")[:40])
     except Exception as e:
-        ok = False; print("FAIL OpenAI call ->", str(e)[:200], "\n     check OPENAI_API_KEY in the .env file")
+        ok = False; print("FAIL OpenAI call ->", str(e)[:200], "\n     run: python set_key.py")
 else:
-    print("NOTE no OPENAI_API_KEY found. Labs still run in OFFLINE mode (simple stand-ins). Ask the trainer for the key.")
+    print("NOTE no OpenAI key found. Run: python set_key.py (or paste it in the app sidebar). Labs still run OFFLINE meanwhile.")
 print("\nALL GOOD" if ok else "\nFIX THE FAIL LINES ABOVE")
