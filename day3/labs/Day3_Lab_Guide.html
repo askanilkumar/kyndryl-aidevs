@@ -1,0 +1,189 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Day 3 Lab Guide</title><style>
+:root{--bg:#f6f7fb;--card:#ffffff;--ink:#1b2333;--mut:#5b6b8c;--line:#d5dbe8;--acc:#4b3aa8;--acc2:#7a68d8;
+--good:#0f7b3a;--goodbg:#e3f5ea;--bad:#b3261e;--badbg:#fde7e5;--warn:#9a5b00;--warnbg:#fff0d6;--info:#14508f;--infobg:#e3efff;}
+@media (prefers-color-scheme: dark){:root{--bg:#10141f;--card:#18202f;--ink:#eef1f8;--mut:#a3aec7;--line:#2c3750;--acc:#b6a8ff;--acc2:#8c7cf0;
+--good:#6fdc9a;--goodbg:#143222;--bad:#ff8a80;--badbg:#3a1a18;--warn:#ffc266;--warnbg:#3a2a10;--info:#8fc2ff;--infobg:#142a45;}}
+*{box-sizing:border-box}
+html{font-size:19px}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Aptos Narrow","Aptos","Segoe UI",system-ui,Arial,sans-serif;line-height:1.5}
+.wrap{max-width:1180px;margin:0 auto;padding:22px 18px 60px}
+h1{font-size:2.05rem;line-height:1.15;margin:.2em 0 .3em}
+h2{font-size:1.5rem;margin:1.6em 0 .4em}
+h3{font-size:1.15rem;margin:1.1em 0 .3em}
+p{margin:.5em 0}
+.sub{color:var(--mut);font-size:1.05rem}
+.nav{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px}
+.nav a{color:var(--acc);text-decoration:none;font-weight:700;padding:5px 12px;border:1px solid var(--line);border-radius:999px;background:var(--card)}
+.nav a.on{background:var(--acc);color:var(--bg)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 20px;margin:14px 0}
+.grid{display:grid;gap:14px}.g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:repeat(3,1fr)}.g4{grid-template-columns:repeat(4,1fr)}
+@media(max-width:820px){.g2,.g3,.g4{grid-template-columns:1fr}html{font-size:17px}}
+.chip{display:inline-block;padding:2px 12px;border-radius:999px;font-weight:700;font-size:.85rem;background:var(--infobg);color:var(--info)}
+.chip.good{background:var(--goodbg);color:var(--good)}.chip.bad{background:var(--badbg);color:var(--bad)}.chip.warn{background:var(--warnbg);color:var(--warn)}
+.habits{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+.habit{padding:6px 14px;border-radius:12px;background:var(--goodbg);color:var(--good);font-weight:700}
+button,.btn{font:inherit;font-weight:700;border:1px solid var(--acc);background:var(--acc);color:var(--bg);padding:8px 16px;border-radius:10px;cursor:pointer;text-decoration:none;display:inline-block}
+button.ghost,.btn.ghost{background:transparent;color:var(--acc)}
+button.bad{background:var(--bad);border-color:var(--bad);color:#fff}
+button:disabled{opacity:.45;cursor:not-allowed}
+input[type=range]{width:100%;accent-color:var(--acc2)}
+select,input[type=text]{font:inherit;padding:7px 10px;border-radius:9px;border:1px solid var(--line);background:var(--card);color:var(--ink)}
+code,pre{font-family:Consolas,"Cascadia Mono",monospace;font-size:.9rem}
+pre{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 14px;overflow-x:auto;white-space:pre-wrap}
+code.i{background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:1px 6px}
+.msg{padding:6px 12px;border-radius:10px;margin:4px 0;border:1px solid var(--line)}
+.msg.u{background:var(--infobg)}.msg.a{background:var(--card)}.msg.out{opacity:.35;text-decoration:line-through}
+.bar{height:16px;border-radius:99px;background:var(--line);overflow:hidden}.bar>i{display:block;height:100%;background:var(--acc2);width:0;transition:width .3s}
+.ok{color:var(--good);font-weight:700}.no{color:var(--bad);font-weight:700}
+table{border-collapse:collapse;width:100%}th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}th{background:var(--bg)}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}
+.tabs button{background:var(--card);color:var(--acc);border-color:var(--line)}
+.tabs button.on{background:var(--acc);color:var(--bg);border-color:var(--acc)}
+.pane{display:none}.pane.on{display:block}
+.step{counter-increment:s;margin:10px 0;padding-left:46px;position:relative}
+.step:before{content:counter(s);position:absolute;left:0;top:0;width:32px;height:32px;border-radius:50%;background:var(--acc);color:var(--bg);display:flex;align-items:center;justify-content:center;font-weight:800}
+.steps{counter-reset:s}
+.try{border-left:5px solid var(--acc2);background:var(--card);border-radius:0 12px 12px 0;padding:10px 16px;margin:12px 0}
+.try b{color:var(--acc)}
+.warnbox{border-left:5px solid var(--warn);background:var(--warnbg);border-radius:0 12px 12px 0;padding:10px 16px;margin:12px 0}
+.done{display:flex;gap:10px;align-items:center;margin:6px 0}
+.done input{width:22px;height:22px;accent-color:var(--acc2)}
+svg text{font-family:inherit}
+</style></head><body><div class="wrap"><div class="nav"><a href="../content/index.html">Control room</a><a href="../content/M1_memory.html">M1 · Memory</a><a href="../content/M2_agent_graph.html">M2 · Agent & graph</a><a href="../content/M3_what_goes_wrong.html">M3 · What goes wrong</a><a href="Day3_Lab_Guide.html" class=on>Lab guide</a></div>
+<h1>Day 3 · Lab Guide</h1>
+<p class="sub">Memory and agents for the NetNova support bot. Every lab: <b>run it</b>, <b>read it</b>, then <b>change it</b>.</p>
+<div class="habits"><span class="habit">🔒 Secure</span><span class="habit">💰 FinOps</span><span class="habit">🛡️ Guardrails</span><span class="habit">✅ Evals</span></div>
+<div class="tabs" id="tabs"></div>
+<div class="pane" id="p0">
+<h2>Lab 0 · Setup check <span class="chip">10 min</span></h2>
+<div class="steps">
+<div class="step"><b>Open a terminal in the lab folder.</b><pre>cd day3\labs</pre></div>
+<div class="step"><b>Install the packages</b> (already done on your VM; this just confirms it).<pre>python -m pip install -r requirements.txt</pre></div>
+<div class="step"><b>Create your settings file.</b><pre>copy .env.example .env</pre>
+ Leave <code class="i">GATEWAY_BASE_URL</code> and <code class="i">GATEWAY_KEY</code> empty to run <b>offline</b> with the stand-in model. To use your Day 1 gateway, paste the URL and the key from your key card. <b>Never share or commit .env.</b></div>
+<div class="step"><b>Run the check.</b><pre>python check_setup.py</pre>You should see <code class="i">Agent test: ok</code>.</div>
+<div class="step"><b>Start the Studio</b> and look at the 4 habit tiles on the left.<pre>python -m streamlit run app_v1.py</pre>Opens at http://localhost:8501. Stop it with Ctrl+C.</div>
+</div>
+<div class="try"><b>Offline vs gateway.</b> Offline gives the same answer every time, so it is perfect for tests. The gateway gives real model answers. The Studio sidebar shows which one you are using.</div>
+</div>
+<div class="pane" id="p1">
+<h2>Lab 1 · Memory in 3 small steps <span class="chip">45 min</span></h2>
+<p class="sub">Goal: see that "memory" is only text we send again, then move it into Redis, then make it safe.</p>
+<h3>1a · Memory is a list</h3>
+<pre>python lab1a_list_memory.py</pre>
+<div class="try"><b>Try.</b> Change <code class="i">MAX_KEEP</code> from 10 to 4 and run again. Which question does the bot now get wrong? Why?</div>
+<h3>1b · The same list in Redis</h3>
+<pre>python lab1b_redis_memory.py</pre>
+<p>Run it <b>twice</b>. Compare the two outputs.</p>
+<div class="try"><b>Try.</b> Change the key name <code class="i">demo:chat</code> to <code class="i">demo:chat2</code>. What happens to the old messages? What does <code class="i">TTL</code> print?</div>
+<h3>1c · One memory per user, with a TTL</h3>
+<pre>python lab1c_user_memory_ttl.py</pre>
+<div class="try"><b>Try.</b> (1) Change <code class="i">DEMO_TTL</code> to 5. (2) Put both customers on the same session name. Are they still separate? Why? (3) Set <code class="i">MAX_MESSAGES=4</code> in .env and run again.</div>
+<h3>See it in the Studio</h3>
+<pre>python -m streamlit run app_v1.py</pre>
+<ol><li>Tab <b>1 · Architecture</b>: find where memory sits.</li>
+<li>Tab <b>3 · Memory</b>: add the message with the phone number. Is it saved raw or masked?</li>
+<li>Add 15 messages with N = 5. How many are kept?</li>
+<li>Press <b>Set a 10-second TTL</b>, then <b>Refresh TTLs</b> until the chat disappears.</li>
+<li>Press <b>Forget this customer</b>. What was deleted?</li></ol>
+<div class="try"><b>Habit check.</b> 🔒 Which part of every key keeps customers apart? &nbsp; 💰 Which two numbers did you choose on purpose (N and TTL)? &nbsp; 🛡️ Why mask the phone number before saving?</div></div>
+<div class="pane" id="p2">
+<h2>Lab 2 · From RAG to an agent <span class="chip">40 min</span></h2>
+<p class="sub">Goal: the model writes a plan, <b>we</b> run the tool. Then your RAG becomes one tool among several.</p>
+<h3>2a · One tool call, by hand</h3>
+<pre>python lab2a_tool_by_hand.py</pre>
+<p>Read the JSON plan. Find: the tool name, the arguments, the "thought".</p>
+<div class="try"><b>Try.</b> Change <code class="i">QUESTION</code> to <i>"Which plan am I on?"</i>, then to <i>"Check ticket TKT-2003"</i>. Does the plan change?</div>
+<h3>2b · Your RAG as a tool</h3>
+<pre>python lab2b_rag_as_tool.py</pre>
+<div class="try"><b>Try.</b> Add a new article to <code class="i">KB</code> in <code class="i">agentlib/tools.py</code> (id <code class="i">KB-070</code>, title "Data rollover", any text). Ask a question about it. Does the agent find it? Which tool did it choose for "Which plan am I on?"</div>
+<h3>2c · The same loop as a LangGraph</h3>
+<pre>python lab2c_agent_langgraph.py</pre>
+<p>Copy the Mermaid text into <b>mermaid.live</b> to see the graph. Then open <code class="i">agentlib/agent.py</code>, find <code class="i">build_graph()</code> and count the 5 nodes.</p>
+<h3>See it in the Studio</h3>
+<pre>python -m streamlit run app_v2.py</pre>
+<ol><li>Tab <b>2 · Think first</b>: preview "Risky: upgrade plan" with the checkbox ticked. Read the 4 cards. Nothing has run yet.</li>
+<li>Tab <b>4 · Agent run</b>: run "Two things at once". Count the 💾 checkpoints.</li>
+<li>Scroll to the FinOps table. What did each question cost? What if FAQs used the small model?</li>
+<li>Tab <b>1 · Architecture</b>: drag the slider and watch the boxes light up for your run.</li></ol>
+<div class="try"><b>Habit check.</b> 🛡️ Why does the guard sit between the plan and the tool? &nbsp; 💰 Which question cost the most, and why? &nbsp; ✅ Which tools should an eval check for the question 'Which plan am I on?'</div></div>
+<div class="pane" id="p3">
+<h2>Lab 3 · Crash, limits and approval <span class="chip">45 min</span></h2>
+<p class="sub">Goal: an agent you can trust: it resumes after a crash, it cannot run forever, and a human approves risky writes.</p>
+<h3>3a · Save progress, crash, resume</h3>
+<pre>python lab3a_checkpoint_resume.py</pre>
+<div class="try"><b>Try.</b> Set <code class="i">CRASH_AT</code> to 0, then 1. Where does it die? Which events are <b>not</b> repeated after the resume?</div>
+<h3>3b · Two limits: steps and money</h3>
+<pre>python lab3b_limits.py</pre>
+<div class="try"><b>Try.</b> (1) <code class="i">MAX_STEPS = 3</code>. (2) <code class="i">BUDGET = 0.0004</code>. Which limit fires first? (3) Read what the customer sees. Would you change that sentence?</div>
+<h3>3c · A human approves the risky write</h3>
+<pre>python lab3c_approval.py</pre>
+<div class="try"><b>Try.</b> Reject it and read the final answer. Then open <code class="i">agentlib/guard.py</code>: which tools are risky, and why only those?</div>
+<h3>See it in the Studio</h3>
+<pre>python -m streamlit run app_v3.py</pre>
+<ol><li>Tab <b>5 · Safety</b> → <b>Approvals</b>: ask for the upgrade, then approve. Check the plan in the system.</li>
+<li><b>Crash &amp; Resume</b>: crash, read the checkpoint card, resume.</li>
+<li><b>Limits</b>: run the confused model with max steps 10 and budget 0.0005.</li>
+<li><b>Guardrails</b>: press the three attack buttons. Read the guardrail log.</li>
+<li><b>Eval gate</b>: run the 8 cases. What makes the gate close?</li></ol>
+<div class="try"><b>Habit check.</b> 🔒 Why can Meena not read Ravi's ticket? &nbsp; 💰 What is your cost per answered question? &nbsp; 🛡️ Which of the 3 guards (input, tool, output) caught each attack? &nbsp; ✅ Which eval case protects the approval rule?</div></div>
+<div class="pane" id="p4">
+<h2>Independent challenge <span class="chip">100 min · you drive</span></h2>
+<p class="sub">Work through A, B, C in order. Stuck for more than 10 minutes? Flag it. Checkpoints are in the <code class="i">checkpoints</code> folder.</p>
+<h3>A · Failure Lab <span class="chip warn">35 min · faults 1, 2, 3</span></h3>
+<p>Open <code class="i">failure_lab/broken_agent.py</code>. It has 5 faults. Run the Studio, open tab <b>6 · Failure Lab</b>, and use <b>Run check</b> after each fix.</p>
+<pre>python -m streamlit run studio_app.py
+python -m failure_lab.checks        # or all five from the command line</pre>
+<table><tr><th>Fault</th><th>What users see</th><th>Habit</th></tr>
+<tr><td>F1</td><td>Two customers see each other's chat</td><td>🔒</td></tr>
+<tr><td>F2</td><td>History grows forever</td><td>💰</td></tr>
+<tr><td>F3</td><td>The agent loops forever</td><td>💰 🛡️</td></tr>
+<tr><td>F4 stretch</td><td>One flaky tool call kills the answer</td><td>🛡️</td></tr>
+<tr><td>F5 stretch</td><td>A ticket note gives orders to the agent</td><td>🔒 🛡️</td></tr></table>
+<p>After each fix: write your <b>lesson learnt</b> in the Studio (one sentence), and add <b>one eval case</b> to <code class="i">agentlib/evals.py</code>.</p>
+<h3>B · Extend the agent <span class="chip warn">30 min</span></h3>
+<p>Add a 5th tool, <code class="i">usage_alert</code>: "is this customer's data use over 80 GB?" A new tool touches <b>five places</b>:</p>
+<ol><li>the function in <code class="i">agentlib/tools.py</code></li><li>the registry and the tool description in <code class="i">tools.py</code></li><li>the allow-list in <code class="i">agentlib/guard.py</code></li><li>one rule so the offline brain can choose it (<code class="i">agentlib/llm.py</code>), or just use the gateway model</li><li>two eval cases in <code class="i">agentlib/evals.py</code></li></ol>
+<p>Done when: <code class="i">python run_evals.py</code> says <b>10/10, GATE: OPEN</b> and the Studio answers "Is my data usage over the alert limit?" for Arjun (over) and Meena (under).</p>
+<h3>C · Memory decision record <span class="chip warn">15 min</span></h3>
+<p>In the Studio tab <b>7 · Lessons</b>, fill the four boxes and press <b>Save</b>: what we store and never store · N and TTL and why · who can read it and how it is erased · cost and quality gate. Half a page. Be ready to defend it.</p>
+<h3>Stretch <span class="chip">if you finish early</span></h3>
+<ul><li>Fix faults 4 and 5, with an eval case each.</li><li>Make the agent greet a returning customer with their <code class="i">last_ticket</code> from long-term memory.</li><li>Switch the Studio to the gateway brain and run the eval gate again. Is it still open? What changed in cost?</li></ul>
+<h3>Before you present</h3>
+<div class="card" id="dod"></div>
+<pre>git add -A
+git commit -m "day3 done"
+git tag day3</pre>
+</div>
+<div class="pane" id="p5">
+<h2>Stuck? Read this first</h2>
+<div class="warnbox"><b>Stuck for more than 10 minutes? Flag it.</b> Say what you tried and what you saw. A 2-minute hint beats a 10-minute copy.</div>
+<h3>Common errors</h3>
+<table><tr><th>You see</th><th>Do this</th></tr>
+<tr><td><code class="i">ModuleNotFoundError: agentlib</code></td><td>You are in the wrong folder. <code class="i">cd day3\labs</code> first.</td></tr>
+<tr><td><code class="i">'streamlit' is not recognized</code></td><td>Use <code class="i">python -m streamlit run ...</code></td></tr>
+<tr><td>Port 8501 already in use</td><td><code class="i">python -m streamlit run studio_app.py --server.port 8502</code></td></tr>
+<tr><td>Gateway answers 401</td><td>Wrong key. Copy it again from your key card into <code class="i">.env</code>, then restart the Studio.</td></tr>
+<tr><td>Gateway answers 404 or "model not found"</td><td><code class="i">CHAT_MODEL</code> must match an alias on the gateway (default <code class="i">chat-llm</code>).</td></tr>
+<tr><td>Memory has old data from earlier runs</td><td>Delete <code class="i">redis_snapshot.json</code> and run again.</td></tr>
+<tr><td>Failure check says "still running after 6 s"</td><td>Your code loops forever. That is fault 3 (or a new bug you wrote).</td></tr>
+<tr><td>Failure check says "your code raised an error"</td><td>Read the last line of the message. Run <code class="i">python -m failure_lab.checks F1</code> to see more.</td></tr>
+<tr><td>The agent says it does not know the answer</td><td>Offline brain: check the wording of your question against the rules in <code class="i">llm.standin_plan</code>.</td></tr></table>
+<h3>Failure Lab hints (open one at a time)</h3>
+<div class="card"><b>F1 · Two customers see each other's chat</b><details><summary><b>Hint 1</b></summary><p>Look at <code class=i>_key()</code>. What does the key contain? Compare it with <code class=i>agentlib/memory.py</code> → <code class=i>chat_key()</code>.</p></details><details><summary><b>Hint 2</b></summary><p>Two users with the same session name get the same key. Which piece of information tells them apart?</p></details><details><summary><b>Hint 3</b></summary><p>The key must have three parts: a label, the user id and the session name.</p></details></div><div class="card"><b>F2 · The history grows forever</b><details><summary><b>Hint 1</b></summary><p>Redis has a command that keeps only the last N items of a list, and another that sets an expiry. Look at <code class=i>memory.add_message()</code>.</p></details><details><summary><b>Hint 2</b></summary><p>The commands are <code class=i>LTRIM</code> and <code class=i>EXPIRE</code>. The numbers live in <code class=i>agentlib/config.py</code>.</p></details><details><summary><b>Hint 3</b></summary><p>After <code class=i>rpush</code>: trim to <code class=i>-config.MAX_MESSAGES</code> through <code class=i>-1</code>, then expire the key after <code class=i>config.TTL_SHORT</code> seconds.</p></details></div><div class="card"><b>F3 · The agent loops forever</b><details><summary><b>Hint 1</b></summary><p>What stops a <code class=i>while True</code> loop? Look at how <code class=i>lab3b_limits.py</code> ended the loop.</p></details><details><summary><b>Hint 2</b></summary><p>Count the steps. The limit is <code class=i>config.MAX_STEPS</code>. What should the function return when the limit is hit?</p></details><details><summary><b>Hint 3</b></summary><p>Loop while steps &lt; limit. After the loop return a dict with <code class=i>stop_reason</code> set to <code class=i>'max_steps'</code> and a polite answer for the customer.</p></details></div><div class="card"><b>F4 · One flaky tool call kills the answer (stretch)</b><details><summary><b>Hint 1</b></summary><p>A single attempt fails on the first timeout. How many attempts would be sensible for a read?</p></details><details><summary><b>Hint 2</b></summary><p>Try up to 3 times, pause a little between attempts, and re-raise the last error if all fail.</p></details><details><summary><b>Hint 3</b></summary><p>A <code class=i>for</code> loop of 3 attempts with <code class=i>try / except</code> and <code class=i>time.sleep()</code>. Never retry forever.</p></details></div><div class="card"><b>F5 · A ticket note gives orders (stretch)</b><details><summary><b>Hint 1</b></summary><p>Text that comes from a tool or a document is data. Is there a helper in <code class=i>agentlib/guard.py</code> that looks for orders?</p></details><details><summary><b>Hint 2</b></summary><p><code class=i>guard.scan_injection(text)</code> returns the patterns it found. Use it before the text goes into the prompt.</p></details><details><summary><b>Hint 3</b></summary><p>If it finds something, replace the note with a short placeholder and return <code class=i>True</code> as the second value. Otherwise leave the note unchanged.</p></details></div>
+<h3>Checkpoints</h3>
+<p>The <code class="i">checkpoints</code> folder has the working Failure Lab file and the five pieces of the 5th tool. <b>Read before you copy</b>: find the lines that changed and say why.</p>
+</div>
+</div><script>
+function store(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}}
+
+const T=['Lab 0','Lab 1','Lab 2','Lab 3','Independent','Stuck'];
+const tb=document.getElementById('tabs');
+tb.innerHTML=T.map((t,i)=>`<button data-i="${i}" onclick="show(${i})">${t}</button>`).join('');
+function show(i){document.querySelectorAll('.pane').forEach((p,k)=>p.classList.toggle('on',k==i));tb.querySelectorAll('button').forEach((b,k)=>b.classList.toggle('on',k==i));store('d3tab',String(i));window.scrollTo(0,0)}
+show(+(store('d3tab')||0));
+const DOD=['Faults 1, 2 and 3 pass in the Failure Lab','I wrote one lesson per fault','python run_evals.py: GATE OPEN with my new cases','The 5th tool works for Arjun and for Meena','Memory decision record saved','I can explain: where my memory keys, TTL and N come from'];
+document.getElementById('dod').innerHTML=DOD.map((t,i)=>`<label class="done"><input type="checkbox" id="d${i}"> ${t}</label>`).join('');
+DOD.forEach((t,i)=>{const c=document.getElementById('d'+i);c.checked=store('d3d'+i)=='1';c.onchange=()=>store('d3d'+i,c.checked?'1':'0')});
+</script></body></html>

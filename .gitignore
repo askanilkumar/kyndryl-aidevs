@@ -4,3 +4,11 @@
 .cache/
 __pycache__/
 *.pyc
+.env
+redis_snapshot.json
+__pycache__/
+*.pyc
+.cache
+.cache_check
+submission/
+advanced_rag_parameter_test_plan.txt

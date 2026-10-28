@@ -1,0 +1,101 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Day 3 Control Room</title><style>
+:root{--bg:#f6f7fb;--card:#ffffff;--ink:#1b2333;--mut:#5b6b8c;--line:#d5dbe8;--acc:#4b3aa8;--acc2:#7a68d8;
+--good:#0f7b3a;--goodbg:#e3f5ea;--bad:#b3261e;--badbg:#fde7e5;--warn:#9a5b00;--warnbg:#fff0d6;--info:#14508f;--infobg:#e3efff;}
+@media (prefers-color-scheme: dark){:root{--bg:#10141f;--card:#18202f;--ink:#eef1f8;--mut:#a3aec7;--line:#2c3750;--acc:#b6a8ff;--acc2:#8c7cf0;
+--good:#6fdc9a;--goodbg:#143222;--bad:#ff8a80;--badbg:#3a1a18;--warn:#ffc266;--warnbg:#3a2a10;--info:#8fc2ff;--infobg:#142a45;}}
+*{box-sizing:border-box}
+html{font-size:19px}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Aptos Narrow","Aptos","Segoe UI",system-ui,Arial,sans-serif;line-height:1.5}
+.wrap{max-width:1180px;margin:0 auto;padding:22px 18px 60px}
+h1{font-size:2.05rem;line-height:1.15;margin:.2em 0 .3em}
+h2{font-size:1.5rem;margin:1.6em 0 .4em}
+h3{font-size:1.15rem;margin:1.1em 0 .3em}
+p{margin:.5em 0}
+.sub{color:var(--mut);font-size:1.05rem}
+.nav{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px}
+.nav a{color:var(--acc);text-decoration:none;font-weight:700;padding:5px 12px;border:1px solid var(--line);border-radius:999px;background:var(--card)}
+.nav a.on{background:var(--acc);color:var(--bg)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 20px;margin:14px 0}
+.grid{display:grid;gap:14px}.g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:repeat(3,1fr)}.g4{grid-template-columns:repeat(4,1fr)}
+@media(max-width:820px){.g2,.g3,.g4{grid-template-columns:1fr}html{font-size:17px}}
+.chip{display:inline-block;padding:2px 12px;border-radius:999px;font-weight:700;font-size:.85rem;background:var(--infobg);color:var(--info)}
+.chip.good{background:var(--goodbg);color:var(--good)}.chip.bad{background:var(--badbg);color:var(--bad)}.chip.warn{background:var(--warnbg);color:var(--warn)}
+.habits{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+.habit{padding:6px 14px;border-radius:12px;background:var(--goodbg);color:var(--good);font-weight:700}
+button,.btn{font:inherit;font-weight:700;border:1px solid var(--acc);background:var(--acc);color:var(--bg);padding:8px 16px;border-radius:10px;cursor:pointer;text-decoration:none;display:inline-block}
+button.ghost,.btn.ghost{background:transparent;color:var(--acc)}
+button.bad{background:var(--bad);border-color:var(--bad);color:#fff}
+button:disabled{opacity:.45;cursor:not-allowed}
+input[type=range]{width:100%;accent-color:var(--acc2)}
+select,input[type=text]{font:inherit;padding:7px 10px;border-radius:9px;border:1px solid var(--line);background:var(--card);color:var(--ink)}
+code,pre{font-family:Consolas,"Cascadia Mono",monospace;font-size:.9rem}
+pre{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 14px;overflow-x:auto;white-space:pre-wrap}
+code.i{background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:1px 6px}
+.msg{padding:6px 12px;border-radius:10px;margin:4px 0;border:1px solid var(--line)}
+.msg.u{background:var(--infobg)}.msg.a{background:var(--card)}.msg.out{opacity:.35;text-decoration:line-through}
+.bar{height:16px;border-radius:99px;background:var(--line);overflow:hidden}.bar>i{display:block;height:100%;background:var(--acc2);width:0;transition:width .3s}
+.ok{color:var(--good);font-weight:700}.no{color:var(--bad);font-weight:700}
+table{border-collapse:collapse;width:100%}th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}th{background:var(--bg)}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}
+.tabs button{background:var(--card);color:var(--acc);border-color:var(--line)}
+.tabs button.on{background:var(--acc);color:var(--bg);border-color:var(--acc)}
+.pane{display:none}.pane.on{display:block}
+.step{counter-increment:s;margin:10px 0;padding-left:46px;position:relative}
+.step:before{content:counter(s);position:absolute;left:0;top:0;width:32px;height:32px;border-radius:50%;background:var(--acc);color:var(--bg);display:flex;align-items:center;justify-content:center;font-weight:800}
+.steps{counter-reset:s}
+.try{border-left:5px solid var(--acc2);background:var(--card);border-radius:0 12px 12px 0;padding:10px 16px;margin:12px 0}
+.try b{color:var(--acc)}
+.warnbox{border-left:5px solid var(--warn);background:var(--warnbg);border-radius:0 12px 12px 0;padding:10px 16px;margin:12px 0}
+.done{display:flex;gap:10px;align-items:center;margin:6px 0}
+.done input{width:22px;height:22px;accent-color:var(--acc2)}
+svg text{font-family:inherit}
+</style></head><body><div class="wrap"><div class="nav"><a href="index.html" class=on>Control room</a><a href="M1_memory.html">M1 · Memory</a><a href="M2_agent_graph.html">M2 · Agent & graph</a><a href="M3_what_goes_wrong.html">M3 · What goes wrong</a><a href="../labs/Day3_Lab_Guide.html">Lab guide</a></div>
+<h1>Day 3 · Scalable Memory and Agentic AI</h1>
+<p class="sub">NetNova Telecom support agent. Today it learns to <b>remember</b>, <b>act</b>, <b>stay safe</b>, <b>stay cheap</b> and <b>prove it works</b>.</p>
+<div class="habits"><span class="habit">🔒 Secure</span><span class="habit">💰 FinOps</span><span class="habit">🛡️ Guardrails</span><span class="habit">✅ Evals</span></div>
+<div class="grid g3">
+ <a class="card" href="M1_memory.html" style="text-decoration:none;color:inherit"><span class="chip">Module 1</span><h3>Memory</h3><p>Why a chatbot forgets. Short-term vs long-term. TTL. Session bleed.</p></a>
+ <a class="card" href="M2_agent_graph.html" style="text-decoration:none;color:inherit"><span class="chip">Module 2</span><h3>Agent and graph</h3><p>The loop, LangGraph as boxes and arrows, checkpoints.</p></a>
+ <a class="card" href="M3_what_goes_wrong.html" style="text-decoration:none;color:inherit"><span class="chip">Module 3</span><h3>What goes wrong</h3><p>Loops, flaky tools, hidden orders, runaway cost.</p></a>
+</div>
+<div class="grid g2">
+ <a class="card" href="../labs/Day3_Lab_Guide.html" style="text-decoration:none;color:inherit"><span class="chip good">Your guide</span><h3>Day 3 Lab Guide</h3><p>Lab 0 to Lab 3, the independent block, and the Stuck tab.</p></a>
+ <div class="card"><span class="chip good">The Studio</span><h3>NetNova Agent Studio</h3>
+  <pre>cd day3\labs
+python -m streamlit run studio_app.py</pre><p class="sub">Opens at http://localhost:8501. It grows through the day: app_v1 → app_v2 → app_v3 → studio_app.</p></div>
+</div>
+
+<h2>Today's plan</h2>
+<table><tr><th>Time</th><th>What</th></tr>
+<tr><td>2:00</td><td>Day 2 recap quiz · environment check (Lab 0)</td></tr>
+<tr><td>2:10</td><td>Talk 1 · why a chatbot forgets (Module 1 + Studio tabs 1, 3)</td></tr>
+<tr><td>2:35</td><td><b>Lab 1</b> · memory in 3 small steps</td></tr>
+<tr><td>3:20</td><td>Break</td></tr>
+<tr><td>3:30</td><td>Talk 2 · what an agent is, LangGraph as boxes (Module 2 + Studio tabs 2, 4)</td></tr>
+<tr><td>3:55</td><td><b>Lab 2</b> · tool by hand → RAG as a tool → LangGraph agent</td></tr>
+<tr><td>4:35</td><td>Break</td></tr>
+<tr><td>4:45</td><td>Talk 3 · what goes wrong, and why a human approves (Module 3 + Studio tab 5)</td></tr>
+<tr><td>5:10</td><td><b>Lab 3</b> · checkpoint and resume · limits · approval</td></tr>
+<tr><td>5:55</td><td><b>Independent challenge</b> · Failure Lab · extend the agent · decision record</td></tr>
+<tr><td>7:35</td><td>Demo · explain your design choices · git tag day3 · Day 4 preview</td></tr></table>
+
+<h2>The 4 habits (they are part of every lab, not extra topics)</h2>
+<div class="grid g4">
+ <div class="card"><h3>🔒 Secure</h3><p>User id in every key. Secrets in .env. Mask personal data.</p></div>
+ <div class="card"><h3>💰 FinOps</h3><p>Every call has a price. Every run has a budget.</p></div>
+ <div class="card"><h3>🛡️ Guardrails</h3><p>Check input, tool calls and output. Humans approve risky writes.</p></div>
+ <div class="card"><h3>✅ Evals</h3><p>No change ships until the eval gate is open.</p></div>
+</div>
+
+<h2>My progress</h2>
+<div class="card" id="prog"></div>
+</div><script>
+function store(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}}
+
+const items=['Lab 0 · setup check passes','Lab 1 · memory (1a, 1b, 1c)','Lab 2 · agent (2a, 2b, 2c)','Lab 3 · checkpoint, limits, approval (3a, 3b, 3c)','Failure Lab · faults 1 to 3 fixed','Extended the agent with a 5th tool + 2 eval cases','Memory decision record saved','Stretch · faults 4 and 5','git tag day3'];
+const P=document.getElementById('prog');
+P.innerHTML=items.map((t,i)=>`<label class="done"><input type="checkbox" id="p${i}"> ${t}</label>`).join('')+'<div class="bar" style="margin-top:8px"><i id="pb"></i></div>';
+function upd(){let n=0;items.forEach((t,i)=>{const c=document.getElementById('p'+i);if(c.checked)n++;});document.getElementById('pb').style.width=(n/items.length*100)+'%'}
+items.forEach((t,i)=>{const c=document.getElementById('p'+i);c.checked=store('d3p'+i)=='1';c.onchange=()=>{store('d3p'+i,c.checked?'1':'0');upd()}});upd();
+</script></body></html>
