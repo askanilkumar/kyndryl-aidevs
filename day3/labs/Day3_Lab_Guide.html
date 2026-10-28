@@ -60,8 +60,7 @@ svg text{font-family:inherit}
 <div class="steps">
 <div class="step"><b>Open a terminal in the lab folder.</b><pre>cd day3\labs</pre></div>
 <div class="step"><b>Install the packages</b> (already done on your VM; this just confirms it).<pre>python -m pip install -r requirements.txt</pre></div>
-<div class="step"><b>Create your settings file.</b><pre>copy .env.example .env</pre>
- Leave <code class="i">GATEWAY_BASE_URL</code> and <code class="i">GATEWAY_KEY</code> empty to run <b>offline</b> with the stand-in model. To use your Day 1 gateway, paste the URL and the key from your key card. <b>Never share or commit .env.</b></div>
+<div class="step"><b>No settings file, no key in any file.</b> Everything runs <b>offline</b> with the stand-in model, so you need no key. To use your Day 1 gateway later, type the URL and your key into the Studio sidebar (<b>Gateway</b> box). It stays in the browser session only. <b>Never put a key in a file inside the git folder.</b></div>
 <div class="step"><b>Run the check.</b><pre>python check_setup.py</pre>You should see <code class="i">Agent test: ok</code>.</div>
 <div class="step"><b>Start the Studio</b> and look at the 4 habit tiles on the left.<pre>python -m streamlit run app_v1.py</pre>Opens at http://localhost:8501. Stop it with Ctrl+C.</div>
 </div>
@@ -79,7 +78,7 @@ svg text{font-family:inherit}
 <div class="try"><b>Try.</b> Change the key name <code class="i">demo:chat</code> to <code class="i">demo:chat2</code>. What happens to the old messages? What does <code class="i">TTL</code> print?</div>
 <h3>1c · One memory per user, with a TTL</h3>
 <pre>python lab1c_user_memory_ttl.py</pre>
-<div class="try"><b>Try.</b> (1) Change <code class="i">DEMO_TTL</code> to 5. (2) Put both customers on the same session name. Are they still separate? Why? (3) Set <code class="i">MAX_MESSAGES=4</code> in .env and run again.</div>
+<div class="try"><b>Try.</b> (1) Change <code class="i">DEMO_TTL</code> to 5. (2) Put both customers on the same session name. Are they still separate? Why? (3) In the terminal run <code class="i">set MAX_MESSAGES=4</code> and run again.</div>
 <h3>See it in the Studio</h3>
 <pre>python -m streamlit run app_v1.py</pre>
 <ol><li>Tab <b>1 · Architecture</b>: find where memory sits.</li>
@@ -164,7 +163,7 @@ git tag day3</pre>
 <tr><td><code class="i">ModuleNotFoundError: agentlib</code></td><td>You are in the wrong folder. <code class="i">cd day3\labs</code> first.</td></tr>
 <tr><td><code class="i">'streamlit' is not recognized</code></td><td>Use <code class="i">python -m streamlit run ...</code></td></tr>
 <tr><td>Port 8501 already in use</td><td><code class="i">python -m streamlit run studio_app.py --server.port 8502</code></td></tr>
-<tr><td>Gateway answers 401</td><td>Wrong key. Copy it again from your key card into <code class="i">.env</code>, then restart the Studio.</td></tr>
+<tr><td>Gateway answers 401</td><td>Wrong key. Type it again from your key card into the sidebar Gateway box.</td></tr>
 <tr><td>Gateway answers 404 or "model not found"</td><td><code class="i">CHAT_MODEL</code> must match an alias on the gateway (default <code class="i">chat-llm</code>).</td></tr>
 <tr><td>Memory has old data from earlier runs</td><td>Delete <code class="i">redis_snapshot.json</code> and run again.</td></tr>
 <tr><td>Failure check says "still running after 6 s"</td><td>Your code loops forever. That is fault 3 (or a new bug you wrote).</td></tr>

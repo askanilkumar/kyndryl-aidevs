@@ -52,13 +52,18 @@ def sidebar():
     st.sidebar.title("🧠 Agent Studio")
     user = st.sidebar.selectbox("Customer (login)", list(USERS), format_func=USERS.get)
     session = st.sidebar.text_input("Session name", "default")
+    with st.sidebar.expander("🔑 Gateway (optional)"):
+        g_url = st.text_input("Gateway URL", config.GATEWAY_BASE_URL or "http://172.16.0.6:4000/v1", key="gw_url")
+        g_key = st.text_input("Your key (stays in this browser session)", type="password", key="gw_key",
+                              help="Never written to a file. Leave empty to stay offline.")
+        config.set_gateway(g_url if g_key else "", g_key)
     mode = st.sidebar.radio("Brain", ["Auto", "Offline stand-in", "Gateway (chat-llm)"], index=0,
-                            help="Auto = gateway if GATEWAY_* is set in .env, else the offline stand-in")
+                            help="Auto = gateway if a key is entered above, else the offline stand-in")
     use_gateway = None if mode == "Auto" else (mode.startswith("Gateway"))
     real = config.online() if use_gateway is None else use_gateway
     st.sidebar.caption("Running on: **" + (f"gateway · {config.CHAT_MODEL}" if real else "offline stand-in") + "**")
     if real and not config.online():
-        st.sidebar.error("Set GATEWAY_BASE_URL and GATEWAY_KEY in .env first.")
+        st.sidebar.error("Enter the gateway URL and your key in the sidebar first.")
     delay = st.sidebar.slider("Slow-motion (seconds per step)", 0.0, 1.5, 0.4, 0.1)
     agent.login(user)
     box = st.sidebar.container()          # filled at the END of the page run, so it shows the latest numbers

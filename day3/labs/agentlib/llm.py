@@ -5,7 +5,7 @@
 
 Two engines, same output shape:
    * stand-in  : simple rules, runs OFFLINE, no key, same answer every time (great for tests)
-   * gateway   : your Day 1 LiteLLM gateway (chat-llm), set GATEWAY_BASE_URL + GATEWAY_KEY in .env
+   * gateway   : your Day 1 LiteLLM gateway (chat-llm), enter URL + key in the Studio sidebar (never in a file)
 """
 import json
 import re

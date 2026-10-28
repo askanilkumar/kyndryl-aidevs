@@ -5,7 +5,7 @@ from . import config
 def footer(state=None, evals_rate=None):
     print("\n" + "=" * 62)
     print("HABITS CHECK")
-    print("  [SECURE] every key has the user id, PII is masked before saving, secrets live in .env")
+    print("  [SECURE] every key has the user id, PII is masked before saving, secrets never in files (sidebar or OS env var)")
     if state:
         print(f"  [COST]   this run: {state['tokens_in']}+{state['tokens_out']} tokens = ${state['usd']:.5f} (budget ${state['budget']})")
         n = len(state.get("guard_log", []))

@@ -9,7 +9,7 @@ SUB = Path(__file__).resolve().parent.parent / "submission"
 
 PRACTICES = [
     ("🔒", "Every memory key contains the user id"),
-    ("🔒", "Secrets live in .env, never in code or chat"),
+    ("🔒", "Secrets never live in files, code or chat: type them in the app"),
     ("🔒", "Personal data is masked BEFORE it is logged or stored"),
     ("💰", "Every key has a TTL; history is trimmed to the last N messages"),
     ("💰", "Every run has a step limit AND a cost budget"),

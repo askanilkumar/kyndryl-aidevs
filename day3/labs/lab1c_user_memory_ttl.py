@@ -7,7 +7,7 @@ Two kinds of memory:
 RUN:   python lab1c_user_memory_ttl.py
 THEN:  (1) change DEMO_TTL to 5 and watch the chat disappear.
        (2) change the session names so BOTH customers use "default". Are they still separate? Why?
-       (3) set MAX_MESSAGES=4 in .env and run again. How many messages are kept?
+       (3) run "set MAX_MESSAGES=4" in the terminal and run again. How many messages are kept?
 """
 import time
 

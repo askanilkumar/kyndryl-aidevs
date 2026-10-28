@@ -1,16 +1,13 @@
-"""Settings for Day 3. Values come from .env (copy .env.example to .env)."""
+"""Settings for Day 3. Gateway URL + key are entered in the Studio sidebar (memory only). Numbers can be set with OS env vars."""
 import os
 from pathlib import Path
 
-try:
-    from dotenv import load_dotenv
-    load_dotenv(Path(__file__).resolve().parent.parent / ".env")
-except Exception:  # dotenv is optional
-    pass
+# No .env file on purpose: keys never live in files inside the git folder.
+# Enter the gateway URL + key in the Studio sidebar (kept in memory only), or set OS env vars.
 
 ROOT = Path(__file__).resolve().parent.parent
 
-# --- Model (your Day 1 gateway). Leave blank to run OFFLINE with the stand-in model.
+# --- Model (your Day 1 gateway). Blank = run OFFLINE with the stand-in model.
 GATEWAY_BASE_URL = os.getenv("GATEWAY_BASE_URL", "").strip()
 GATEWAY_KEY = os.getenv("GATEWAY_KEY", "").strip()
 CHAT_MODEL = os.getenv("CHAT_MODEL", "chat-llm").strip()
@@ -34,6 +31,13 @@ PRICES = {
     "local-small": (0.05, 0.10),
     "offline-standin": (0.60, 2.50),   # priced like chat-llm so the cost numbers feel real
 }
+
+
+def set_gateway(url: str, key: str):
+    """Called by the Studio sidebar. Keeps the key in memory only (never written to disk)."""
+    global GATEWAY_BASE_URL, GATEWAY_KEY
+    GATEWAY_BASE_URL = (url or "").strip()
+    GATEWAY_KEY = (key or "").strip()
 
 
 def online() -> bool:
