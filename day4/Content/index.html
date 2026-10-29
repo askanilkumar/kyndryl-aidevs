@@ -1,0 +1,403 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Day 3 — Memory · Tools · MCP · Agent</title>
+<style>
+  :root{
+    --bg:#0b1020; --panel:#11182e; --panel2:#172043; --ink:#e8ecff; --sub:#9aa5d6;
+    --accent:#7cf0d2; --accent2:#ffd166; --warn:#ff6b6b; --ok:#80ffb4;
+    --rule:#2a356d;
+  }
+  @media (prefers-color-scheme: light){
+    :root{ --bg:#f6f8ff; --panel:#ffffff; --panel2:#eef1ff; --ink:#121833; --sub:#4d577e;
+           --accent:#117a63; --accent2:#8a5a00; --warn:#b4232b; --ok:#1b7a3f; --rule:#c8cfe8;}
+  }
+  *{box-sizing:border-box} html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
+    font:18px/1.5 Aptos,Aptos Narrow,"Segoe UI",system-ui,sans-serif}
+  header{padding:22px 32px;border-bottom:1px solid var(--rule);display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+  header h1{margin:0;font-size:28px;font-weight:700}
+  header .sub{color:var(--sub);font-size:16px}
+  nav{display:flex;gap:6px;flex-wrap:wrap;padding:12px 24px;background:var(--panel);border-bottom:1px solid var(--rule);position:sticky;top:0;z-index:10}
+  nav button{background:var(--panel2);color:var(--ink);border:1px solid var(--rule);
+    padding:8px 14px;border-radius:8px;font:600 14px/1 Aptos,system-ui;cursor:pointer}
+  nav button.active{background:var(--accent);color:#0b1020;border-color:transparent}
+  main{padding:24px 32px;max-width:1100px;margin:0 auto}
+  section{display:none;animation:fade .25s ease}
+  section.active{display:block}
+  @keyframes fade{from{opacity:.3;transform:translateY(4px)}to{opacity:1;transform:none}}
+  h2{font-size:26px;margin:0 0 8px}
+  h3{font-size:20px;margin:20px 0 6px;color:var(--accent)}
+  p,li{font-size:17px}
+  code,pre{font-family:Consolas,ui-monospace,monospace}
+  pre{background:var(--panel);padding:12px 14px;border-radius:10px;border:1px solid var(--rule);overflow:auto;font-size:15px}
+  code{background:var(--panel);padding:1px 6px;border-radius:4px;font-size:15px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:14px 0}
+  @media (max-width:780px){.grid{grid-template-columns:1fr}}
+  .card{background:var(--panel);border:1px solid var(--rule);border-radius:14px;padding:16px}
+  .card h4{margin:0 0 6px;font-size:16px;color:var(--accent2);letter-spacing:.5px;text-transform:uppercase}
+  .lab{background:var(--panel2);border:1px solid var(--rule);border-radius:14px;padding:18px;margin:16px 0}
+  .lab .label{color:var(--accent2);font-weight:700;letter-spacing:.4px}
+  .four{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:10px}
+  @media (max-width:780px){.four{grid-template-columns:1fr 1fr}}
+  .four div{background:var(--panel);border:1px solid var(--rule);border-radius:10px;padding:10px}
+  .four h5{margin:0 0 4px;font-size:12px;letter-spacing:.6px;color:var(--sub);text-transform:uppercase}
+  .pill{display:inline-block;background:var(--accent);color:#0b1020;border-radius:999px;padding:2px 10px;font-weight:700;font-size:12px;margin-right:8px}
+  .warn{color:var(--warn);font-weight:700}
+  .ok{color:var(--ok);font-weight:700}
+  .flow{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:14px 0}
+  .flow .step{background:var(--panel);border:1px solid var(--rule);border-radius:10px;padding:10px;text-align:center;font-size:14px}
+  .flow .step strong{display:block;color:var(--accent)}
+  footer{color:var(--sub);text-align:center;padding:20px;font-size:14px}
+  .ask{background:var(--panel);border-left:4px solid var(--accent2);padding:10px 14px;border-radius:4px;margin:10px 0;font-style:italic}
+  .quiz li{margin:8px 0}
+  .quiz button{background:var(--panel2);color:var(--ink);border:1px solid var(--rule);padding:8px 12px;border-radius:8px;margin:4px 6px 0 0;cursor:pointer;font:16px Aptos,system-ui}
+  .quiz button.correct{background:var(--ok);color:#0b1020}
+  .quiz button.wrong{background:var(--warn);color:#fff}
+  .adr textarea{width:100%;min-height:70px;background:var(--panel);color:var(--ink);border:1px solid var(--rule);border-radius:8px;padding:10px;font:15px Aptos,system-ui;margin:4px 0 10px}
+  .adr label{font-weight:700;display:block;margin-top:8px}
+  .adr .out{background:var(--panel);border:1px dashed var(--rule);padding:12px;border-radius:8px;white-space:pre-wrap;font-family:Consolas,ui-monospace,monospace;font-size:14px}
+  .big{font-size:22px;line-height:1.4}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>Day 3 — Memory · Tool calling · MCP · Agent loop</h1>
+    <div class="sub">Kyndryl Enterprise Agentic AI · NetNova Telecom · One day, four short cycles</div>
+  </div>
+  <div class="sub">6 hrs · 1:1 · CLI-first</div>
+</header>
+
+<nav id="nav">
+  <button data-s="s0" class="active">Agenda</button>
+  <button data-s="s1">C1 Memory</button>
+  <button data-s="s2">C2 Tool calling</button>
+  <button data-s="s3">C3 MCP</button>
+  <button data-s="s4">C4 Agent loop</button>
+  <button data-s="s5">Incident</button>
+  <button data-s="s6">Boss quiz</button>
+  <button data-s="s7">ADR + Day end</button>
+</nav>
+
+<main>
+
+<!-- ============ Agenda ============ -->
+<section id="s0" class="active">
+  <h2>Today, at a glance</h2>
+  <p class="big">One domain — <strong>NetNova Telecom helpdesk</strong>. Same 4 tools. Four short cycles, one incident, one decision log. Walk out with a working agent you built from scratch.</p>
+
+  <table style="width:100%;border-collapse:collapse;margin-top:14px;font-size:16px">
+    <thead><tr style="text-align:left;background:var(--panel)">
+      <th style="padding:10px">Time</th><th>Block</th><th>Mode</th><th>Min</th></tr></thead>
+    <tbody id="tbl"></tbody>
+  </table>
+
+  <h3>Why NetNova</h3>
+  <p>Telecom helpdesk. Everyone knows it: SIM, roaming, billing, outage, VPN. No new business domain to learn. Four tools, 10 tickets, 10 users, 8 KB articles. That's it, all day.</p>
+
+  <h3>The 4 tools</h3>
+  <div class="grid">
+    <div class="card"><h4>search_kb(query)</h4>Searches KB articles. Read-only.</div>
+    <div class="card"><h4>get_ticket(ticket_id)</h4>Reads one ticket. Read-only.</div>
+    <div class="card"><h4>update_ticket(id, note)</h4>Adds a note. <span class="warn">Write</span>.</div>
+    <div class="card"><h4>reset_sim(user_id)</h4>Reactivates a SIM. <span class="warn">Write</span>.</div>
+  </div>
+
+  <h3>How the day works</h3>
+  <p>Each cycle: <span class="pill">10′ concept</span> <span class="pill" style="background:var(--accent2)">30′ guided</span> <span class="pill" style="background:var(--panel2);color:var(--ink);border:1px solid var(--rule)">20′ solo</span>. One lab README per cycle is your complete guide. Hints file has the full answer if stuck 10 min. Autograder `python check.py` tells you when done.</p>
+</section>
+
+<!-- ============ C1 Memory ============ -->
+<section id="s1">
+  <h2>Cycle 1 — Memory</h2>
+
+  <h3>The one slide (talk against this, 10 min)</h3>
+  <p class="big">A plain chat call is <strong>stateless</strong>. The model knows <strong>nothing</strong> between calls. To make it feel like a conversation, YOU send the past turns every time. Those past turns are "memory".</p>
+
+  <div class="flow">
+    <div class="step"><strong>Call 1</strong>"I am Anil"</div>
+    <div class="step"><strong>No memory</strong>Call 2 is a stranger</div>
+    <div class="step"><strong>Add memory</strong>send history each time</div>
+    <div class="step"><strong>Cap it</strong>last N or token budget</div>
+  </div>
+
+  <h3>Where to keep it</h3>
+  <div class="grid">
+    <div class="card"><h4>Python dict (RAM)</h4>Easy. Dies on restart. Not shared across workers. Fine for demos / tests.</div>
+    <div class="card"><h4>Redis</h4>Survives restarts. Shared. Same simple commands. Standard answer in production. Today we use <code>fakeredis</code> — same commands, no server to install.</div>
+  </div>
+
+  <div class="ask">Ask the trainee: in a web app with 4 Gunicorn workers, where does conversation memory have to live? Why?</div>
+
+  <div class="lab">
+    <div class="label">LAB 1 — guided (30 min) + solo (20 min)</div>
+    <div class="four">
+      <div><h5>What we do</h5>Watch a bot forget. Fix it with dict. Swap dict for Redis. Cap it.</div>
+      <div><h5>Why</h5>Every chatbot needs this; most teams get it wrong twice before they get it right.</div>
+      <div><h5>Outcome</h5>Per-user Redis memory with a hard cap.</div>
+      <div><h5>How</h5>run_1a → 1b → 1c → solo_1. One README.</div>
+    </div>
+    <p style="margin-top:12px">Open: <code>C:\Kyndryl\Day3-v2\Labs\lab1-memory\README.md</code></p>
+  </div>
+</section>
+
+<!-- ============ C2 Tool calling ============ -->
+<section id="s2">
+  <h2>Cycle 2 — Tool calling</h2>
+
+  <h3>The one slide (10 min)</h3>
+  <p class="big">The model <strong>cannot run anything</strong>. It only <strong>asks</strong>. Your code runs the tool. Your code sends the result back. The model reads it and writes the answer.</p>
+
+  <div class="flow">
+    <div class="step"><strong>1</strong>you ask</div>
+    <div class="step"><strong>2</strong>model asks for tool</div>
+    <div class="step"><strong>3</strong>YOUR code runs it</div>
+    <div class="step"><strong>4</strong>model writes answer</div>
+  </div>
+
+  <p>Three things to burn in:</p>
+  <ol>
+    <li>The model never executes code. It writes a request.</li>
+    <li>You pick the schema (name, description, parameters). The <strong>description</strong> is how the model picks which tool.</li>
+    <li>The <code>tool_call_id</code> on the way out <strong>must match</strong> on the way back — like a return address.</li>
+  </ol>
+
+  <div class="ask">Ask the trainee: what happens if two parallel tool calls get the same id?</div>
+
+  <div class="lab">
+    <div class="label">LAB 2 — guided (30 min) + solo (20 min)</div>
+    <div class="four">
+      <div><h5>What we do</h5>Run ONE tool call by hand. See all 4 steps print. Then predict 3 of your own.</div>
+      <div><h5>Why</h5>Every framework (LangChain, LangGraph, CrewAI) is this round trip, in a loop.</div>
+      <div><h5>Outcome</h5>You can read any agent's log and know who ran what.</div>
+      <div><h5>How</h5>run_2a.py — one script, four prints.</div>
+    </div>
+    <p style="margin-top:12px">Open: <code>C:\Kyndryl\Day3-v2\Labs\lab2-tool-calling\README.md</code></p>
+  </div>
+</section>
+
+<!-- ============ C3 MCP ============ -->
+<section id="s3">
+  <h2>Cycle 3 — MCP (Model Context Protocol)</h2>
+
+  <h3>The one slide (10 min)</h3>
+  <p class="big"><strong>MCP = USB-C for tools.</strong> One standard shape (list tools, call tool). Your agent's code does not change when the tool moves to another server or language.</p>
+
+  <div class="flow">
+    <div class="step"><strong>Lab 2</strong>tool is a local Python function</div>
+    <div class="step"><strong>Wrap</strong>@mcp.tool() in a tiny server</div>
+    <div class="step"><strong>Agent calls</strong>same request/result shape, over MCP</div>
+    <div class="step"><strong>Inspector</strong>browser view of any MCP server</div>
+  </div>
+
+  <p>Who speaks MCP today: Claude Desktop, VS Code, Cursor, enterprise agents. Any tool you publish once, every agent can use.</p>
+
+  <div class="ask">Ask the trainee: which of our 4 NetNova tools would you put behind MCP first? Why?</div>
+
+  <div class="lab">
+    <div class="label">LAB 3 — guided (30 min) + solo (20 min)</div>
+    <div class="four">
+      <div><h5>What we do</h5>Wrap search_kb as an MCP server. Agent calls it over MCP. Add get_ticket as 2nd tool (solo).</div>
+      <div><h5>Why</h5>You will see MCP everywhere this year.</div>
+      <div><h5>Outcome</h5>You can run the Inspector and point at the tools.</div>
+      <div><h5>How</h5>~15-line server. One decorator. Compare run_3.py with Lab 2 — only step 3 changed.</div>
+    </div>
+    <p style="margin-top:12px">Open: <code>C:\Kyndryl\Day3-v2\Labs\lab3-mcp\README.md</code></p>
+  </div>
+</section>
+
+<!-- ============ C4 Agent loop ============ -->
+<section id="s4">
+  <h2>Cycle 4 — Agent loop</h2>
+
+  <h3>The one slide (10 min)</h3>
+  <p class="big">An <strong>agent</strong> is Lab 2, in a <strong>loop</strong>, with 3 safety rules.</p>
+
+  <pre>loop:
+    ask model (with tool menu)   <-- THINK
+    if model asked for tools:
+        run each one             <-- ACT
+        send results back        <-- OBSERVE
+        continue
+    else:
+        got the answer. STOP.
+    stop also if step limit hit.</pre>
+
+  <div class="grid">
+    <div class="card"><h4>1. Step limit</h4>Hard cap on rounds. No infinite bills.</div>
+    <div class="card"><h4>2. Approval</h4>Any <strong>write</strong> tool asks a human first.</div>
+    <div class="card"><h4>3. Stop on repeat</h4>Same tool, same args, twice → stop and hand over.</div>
+  </div>
+
+  <div class="ask">Ask the trainee: where does the approval check belong — in the prompt or in the code? Why?</div>
+
+  <div class="lab">
+    <div class="label">LAB 4 — guided (30 min) + solo (20 min) + Incident (25 min)</div>
+    <div class="four">
+      <div><h5>What we do</h5>Write TODO-1 (the loop) and TODO-2 (approval). Add a 5th tool (solo). Run the Incident.</div>
+      <div><h5>Why</h5>Every framework builds on this exact shape.</div>
+      <div><h5>Outcome</h5>Working safe-by-default agent + repeat detection.</div>
+      <div><h5>How</h5>agent.py, two small edits. run_agent.py "...".</div>
+    </div>
+    <p style="margin-top:12px">Open: <code>C:\Kyndryl\Day3-v2\Labs\lab4-agent-loop\README.md</code></p>
+  </div>
+</section>
+
+<!-- ============ Incident ============ -->
+<section id="s5">
+  <h2>Incident of the day — "AskNova is burning tokens on TKT-0004"</h2>
+  <p class="big">The CIO just pinged you. The agent has been "working on" one ticket for 5 minutes. Costs climbing.</p>
+
+  <ol>
+    <li>Switch the bug on: add <code>ASKIT_INCIDENT=loop</code> + <code>ASKIT_MODEL=offline</code> to <code>.env</code>.</li>
+    <li>Run <code>python run_agent.py "What is the status of ticket TKT-0004?"</code>. See <code>get_ticket</code> repeat until step limit.</li>
+    <li>Fix: in <code>agent.py</code> set <code>STOP_ON_REPEAT = True</code>.</li>
+    <li>Rerun. Should stop after 2 steps with "handing over to a human".</li>
+    <li>Clean <code>.env</code>.</li>
+  </ol>
+
+  <p><strong>Lesson:</strong> step limit stops the loop, but after every step has been paid for. Repeat-detection stops the loop <strong>as soon as it starts</strong>. Both belong in production.</p>
+</section>
+
+<!-- ============ Boss quiz ============ -->
+<section id="s6">
+  <h2>Boss quiz (10 Qs, basic → advanced)</h2>
+  <div id="quiz" class="quiz"></div>
+  <p id="qscore" style="margin-top:16px;font-weight:700"></p>
+</section>
+
+<!-- ============ ADR + Day end ============ -->
+<section id="s7">
+  <h2>Decision log — ADR-003</h2>
+  <p>Write it in your own words. Save it to <code>submission\ADR-003.md</code>.</p>
+  <div class="adr">
+    <label>Context (why we need to decide)</label>
+    <textarea id="a1">We built AskNova today — memory + 4 tools + MCP + an agent loop. We need to lock three choices before Day 4.</textarea>
+
+    <label>Decision 1 — Memory backend</label>
+    <textarea id="a2">...e.g. per-user Redis list with last-6-messages cap...</textarea>
+
+    <label>Decision 2 — Tool transport</label>
+    <textarea id="a3">...e.g. local Python functions for internal, MCP for anything shared with another team or product...</textarea>
+
+    <label>Decision 3 — Agent safety</label>
+    <textarea id="a4">...e.g. MAX_STEPS=6, approval on all write tools, STOP_ON_REPEAT=True...</textarea>
+
+    <label>Still open / Day 4 questions</label>
+    <textarea id="a5">...e.g. do we move to LangGraph, do we add eval, how do we trace to Langfuse...</textarea>
+
+    <h3>Rendered ADR</h3>
+    <div class="out" id="out"></div>
+    <p><button id="copy" style="background:var(--accent);color:#0b1020;border:none;padding:10px 16px;border-radius:8px;font:700 15px Aptos,system-ui;cursor:pointer">Copy to clipboard</button></p>
+  </div>
+
+  <h3>Day end</h3>
+  <ol>
+    <li>Each lab: <code>python check.py</code> — all should pass.</li>
+    <li>Each lab's <code>submission\notes.md</code> — no <code>&lt;fill&gt;</code> left.</li>
+    <li>git tag <code>day3-v2</code>.</li>
+  </ol>
+</section>
+
+</main>
+
+<footer>DevPro Academy · NetNova Day 3 · built for 1:1 coaching</footer>
+
+<script>
+// nav
+const nav = document.getElementById('nav');
+nav.addEventListener('click', e => {
+  if (e.target.tagName !== 'BUTTON') return;
+  [...nav.children].forEach(b => b.classList.remove('active'));
+  [...document.querySelectorAll('section')].forEach(s => s.classList.remove('active'));
+  e.target.classList.add('active');
+  document.getElementById(e.target.dataset.s).classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+});
+
+// agenda table
+const rows = [
+  ['2:00','Recap + Lab 0 setup check','guided','10'],
+  ['2:10','C1 Memory — talk (10) + Lab 1 guided (30) + Solo (20)','guided+solo','60'],
+  ['3:10','Break','—','10'],
+  ['3:20','C2 Tool calling — talk (10) + Lab 2 guided (30) + Solo (20)','guided+solo','60'],
+  ['4:20','Break','—','10'],
+  ['4:30','C3 MCP — talk (10) + Lab 3 guided (30) + Solo (20)','guided+solo','60'],
+  ['5:30','Break','—','10'],
+  ['5:40','C4 Agent loop — talk (10) + Lab 4 guided (30) + Solo (20)','guided+solo','60'],
+  ['6:40','Break','—','10'],
+  ['6:50','Incident — loop bug → STOP_ON_REPEAT','guided','25'],
+  ['7:15','Boss quiz + ADR-003','mixed','30'],
+  ['7:45','Day end + git tag + Day 4 preview','wrap','15'],
+];
+const tbl = document.getElementById('tbl');
+rows.forEach(r => {
+  const tr = document.createElement('tr');
+  tr.style.borderBottom = '1px solid var(--rule)';
+  tr.innerHTML = r.map((c,i)=>`<td style="padding:8px 10px${i===2?';color:var(--sub)':''}">${c}</td>`).join('');
+  tbl.appendChild(tr);
+});
+
+// quiz
+const QS = [
+  ['Why does a chat bot "forget"?',
+   ['The model has no memory of its own', 'The chat UI is buggy', 'Models are too small'], 0],
+  ['Where does memory for a chat API live?',
+   ['In the model', 'In YOUR code — you send history every call', 'Nowhere, it is magic'], 1],
+  ['What is the main reason to pick Redis over a Python dict for memory?',
+   ['Redis is written in C', 'Survives restarts and is shared across workers', 'Faster than RAM'], 1],
+  ['When the model wants a tool, who actually runs it?',
+   ['The model', 'Your code', 'The HTTPS proxy'], 1],
+  ['What role does `tool_call_id` play?',
+   ['Cosmetic', 'A return address — matches request to result', 'Billing identifier'], 1],
+  ['What decides which tool the model picks?',
+   ['The order in the list', 'The tool description + the user question', 'The alphabet'], 1],
+  ['In one word, what does MCP standardise?',
+   ['Models', 'Tools', 'Vectors'], 1],
+  ['After moving a tool from local Python to MCP, which step of the 4-step flow changed?',
+   ['Step 1 (ask)', 'Step 3 (run)', 'Step 4 (answer)'], 1],
+  ['Where should an approval check live for a write tool?',
+   ['In the prompt', 'In your code, between the model and the tool', 'In the UI'], 1],
+  ['Why is a step limit alone not enough against a looping agent?',
+   ['It is only a soft hint', 'You still pay for every step until the limit', 'It only works offline'], 1],
+];
+const qdiv = document.getElementById('quiz');
+let score = 0, answered = 0;
+QS.forEach((q, i) => {
+  const el = document.createElement('div');
+  el.innerHTML = `<p><strong>Q${i+1}.</strong> ${q[0]}</p>`;
+  q[1].forEach((opt, j) => {
+    const b = document.createElement('button');
+    b.textContent = opt;
+    b.onclick = () => {
+      if (el.dataset.done) return;
+      el.dataset.done = '1'; answered++;
+      if (j === q[2]) { b.classList.add('correct'); score++; }
+      else { b.classList.add('wrong'); el.querySelectorAll('button')[q[2]].classList.add('correct'); }
+      document.getElementById('qscore').textContent = `Score: ${score}/${answered}`;
+    };
+    el.appendChild(b);
+  });
+  qdiv.appendChild(el);
+});
+
+// ADR renderer
+function render() {
+  const g = id => document.getElementById(id).value.trim();
+  document.getElementById('out').textContent =
+    `# ADR-003 — NetNova AskNova agent, Day 3\n\nDate: ${new Date().toISOString().slice(0,10)}\nAuthor: <your name>\n\n## Context\n${g('a1')}\n\n## Decision 1 — Memory backend\n${g('a2')}\n\n## Decision 2 — Tool transport\n${g('a3')}\n\n## Decision 3 — Agent safety\n${g('a4')}\n\n## Open items\n${g('a5')}\n`;
+}
+['a1','a2','a3','a4','a5'].forEach(id => document.getElementById(id).addEventListener('input', render));
+render();
+document.getElementById('copy').onclick = () => {
+  const t = document.getElementById('out').textContent;
+  navigator.clipboard.writeText(t);
+  const b = document.getElementById('copy'); const old = b.textContent;
+  b.textContent = 'Copied!'; setTimeout(()=>b.textContent=old, 1200);
+};
+</script>
+</body>
+</html>

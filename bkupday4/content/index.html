@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Day 4 Control Room — Governed Agents</title>
+<style>
+  :root{--bg:#0b1020;--panel:#121a33;--ink:#e8edff;--muted:#9aa6c7;--line:#223059;--acc:#7cc4ff}
+  @media (prefers-color-scheme:light){:root:not([data-theme=dark]){--bg:#f6f8ff;--panel:#fff;--ink:#15213f;--muted:#5a6a93;--line:#dde3f4;--acc:#1860c8}}
+  html,body{background:var(--bg);color:var(--ink);font:16px/1.6 system-ui,"Segoe UI",Inter,sans-serif;margin:0}
+  main{max-width:1000px;margin:0 auto;padding:36px 24px 80px}
+  h1{font-size:34px;margin:0 0 6px}
+  .sub{color:var(--muted);margin-bottom:28px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px}
+  .card h3{margin:0 0 6px;font-size:17px;color:var(--acc)}
+  .card p{color:var(--muted);font-size:14px;margin:4px 0 10px}
+  .card a{color:var(--acc);text-decoration:none;font-weight:600;font-size:14px}
+  .row{display:flex;gap:10px;margin:20px 0;flex-wrap:wrap}
+  .tag{background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:4px 12px;color:var(--muted);font-size:12px}
+</style></head><body>
+<main>
+<h1>📡 Day 4 · Control Room</h1>
+<div class="sub">Governed agents — MCP, Registry, RBAC, Human-in-the-Loop, Audit. The agent you built on Day 3, now production-shaped.</div>
+<div class="row">
+  <span class="tag">1 participant · 1:1 coaching</span>
+  <span class="tag">70% Anil-led · 30% solo</span>
+  <span class="tag">ONE Streamlit app · ONE MCP server</span>
+</div>
+
+<div class="grid">
+  <div class="card"><h3>M1 · Why MCP</h3>
+    <p>Tool chaos → one protocol. Clients, servers, transports.</p>
+    <a href="M1_mcp.html">Open →</a></div>
+  <div class="card"><h3>M2 · Registry + RBAC</h3>
+    <p>One file lists every tool. Roles decide who may call what.</p>
+    <a href="M2_registry_rbac.html">Open →</a></div>
+  <div class="card"><h3>M3 · HITL + Audit</h3>
+    <p>Risk gates. Approvals as graph nodes. Audit as truth source.</p>
+    <a href="M3_hitl_audit.html">Open →</a></div>
+  <div class="card"><h3>Lab Guide</h3>
+    <p>Setup, Labs 1–3, Solo lab, hints.</p>
+    <a href="../labs/Day4_Lab_Guide.html">Open →</a></div>
+</div>
+
+<h2 style="margin-top:40px;color:var(--acc)">Agenda (2:00–8:00 PM)</h2>
+<table style="width:100%;border-collapse:collapse;font-size:14px">
+<tr><th style="text-align:left;border-bottom:1px solid var(--line);padding:8px 6px">Time</th>
+    <th style="text-align:left;border-bottom:1px solid var(--line);padding:8px 6px">Block</th></tr>
+<tr><td style="padding:6px">2:00</td><td style="padding:6px">Day 3 catch-up — finish memory + agent + HITL from Day 3 (60 min)</td></tr>
+<tr><td style="padding:6px">3:00</td><td style="padding:6px">Talk 1: Why MCP (25 min)</td></tr>
+<tr><td style="padding:6px">3:25</td><td style="padding:6px">Lab 1: MCP server (40 min)</td></tr>
+<tr><td style="padding:6px">4:05</td><td style="padding:6px">Break</td></tr>
+<tr><td style="padding:6px">4:15</td><td style="padding:6px">Talk 2: Registry + RBAC (25 min)</td></tr>
+<tr><td style="padding:6px">4:40</td><td style="padding:6px">Lab 2: Agent + Registry (40 min)</td></tr>
+<tr><td style="padding:6px">5:20</td><td style="padding:6px">Break</td></tr>
+<tr><td style="padding:6px">5:30</td><td style="padding:6px">Talk 3: HITL + Audit (25 min)</td></tr>
+<tr><td style="padding:6px">5:55</td><td style="padding:6px">Lab 3: Approvals + Audit (30 min)</td></tr>
+<tr><td style="padding:6px">6:25</td><td style="padding:6px"><strong>Solo Lab — Field-ops INC-5102 (90 min)</strong></td></tr>
+<tr><td style="padding:6px">7:55</td><td style="padding:6px">Demo, wrap, Day 5 preview</td></tr>
+</table>
+</main></body></html>

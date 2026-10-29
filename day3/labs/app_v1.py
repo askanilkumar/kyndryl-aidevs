@@ -1,4 +1,4 @@
-"""Agent Studio v1 (Lab 1): Architecture + Memory Inspector.   python -m streamlit run app_v1.py"""
+"""Same app as studio_app.py (kept so old commands still work).   python -m streamlit run studio_app.py"""
 from studio import main
 
-main(["arch", "memory"], "NetNova Agent Studio v1")
+main(["journey", "arch", "think", "memory", "run", "safety", "failure", "lessons"])

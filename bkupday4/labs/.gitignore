@@ -1,0 +1,6 @@
+audit.jsonl
+mcp_state.json
+__pycache__/
+*.pyc
+.pytest_cache/
+submission/

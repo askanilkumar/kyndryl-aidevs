@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>M3 · HITL + Audit</title>
+<style>
+:root{--bg:#0b1020;--panel:#121a33;--ink:#e8edff;--muted:#9aa6c7;--line:#223059;--acc:#7cc4ff;--ok:#8ef0a6;--warn:#ffd16a;--bad:#ff8e8e}
+@media (prefers-color-scheme:light){:root:not([data-theme=dark]){--bg:#f6f8ff;--panel:#fff;--ink:#15213f;--muted:#5a6a93;--line:#dde3f4;--acc:#1860c8;--ok:#1b8f3b;--warn:#8a6500;--bad:#b23434}}
+html,body{background:var(--bg);color:var(--ink);font:16px/1.6 system-ui,"Segoe UI",Inter,sans-serif;margin:0}
+main{max-width:1000px;margin:0 auto;padding:30px 24px 70px}
+h1{font-size:30px;margin:0 0 4px} h2{color:var(--acc);margin-top:28px}
+.sub{color:var(--muted);margin-bottom:18px}
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:13px}
+th,td{border:1px solid var(--line);padding:7px 9px;text-align:left}
+th{background:rgba(124,196,255,.08)}
+pre{background:rgba(0,0,0,.3);padding:12px 14px;border-radius:6px;border:1px solid var(--line);font:13px/1.5 ui-monospace,monospace;overflow:auto}
+code{font:13px ui-monospace,monospace;background:rgba(0,0,0,.25);padding:1px 5px;border-radius:4px}
+.ask{background:rgba(124,196,255,.08);border-left:3px solid var(--acc);padding:10px 14px;border-radius:0 6px 6px 0;margin:14px 0}
+svg text{fill:var(--ink);font:12px system-ui}
+</style></head><body>
+<main>
+<h1>M3 · HITL + Audit</h1>
+<div class="sub">Three patterns, one truth source.</div>
+
+<h2>Three HITL patterns</h2>
+<table>
+<tr><th>Pattern</th><th>When</th><th>Example</th></tr>
+<tr><td><strong>Ask-before-act</strong></td><td>Risky, low frequency</td><td><code>plan_change</code> — supervisor approves each call</td></tr>
+<tr><td><strong>Propose-then-approve (batch)</strong></td><td>Risky, high frequency</td><td>Agent drafts 50 refunds, human approves the batch</td></tr>
+<tr><td><strong>Dual-control</strong></td><td>Very high risk</td><td>Mass tower restart — 2 supervisors must approve</td></tr>
+</table>
+
+<h2>HITL as a graph pause</h2>
+<svg viewBox="0 0 760 180" xmlns="http://www.w3.org/2000/svg">
+  <rect x="20"  y="60" width="110" height="50" rx="8" fill="none" stroke="var(--acc)" stroke-width="2"/>
+  <text x="75" y="90" text-anchor="middle" font-weight="700">plan</text>
+  <rect x="180" y="60" width="110" height="50" rx="8" fill="none" stroke="var(--warn)" stroke-width="2"/>
+  <text x="235" y="90" text-anchor="middle" font-weight="700">guard</text>
+  <rect x="340" y="60" width="130" height="50" rx="8" fill="none" stroke="var(--muted)" stroke-dasharray="4,3"/>
+  <text x="405" y="85" text-anchor="middle" fill="var(--muted)">pause</text>
+  <text x="405" y="100" text-anchor="middle" fill="var(--muted)" font-size="10">(human)</text>
+  <rect x="520" y="60" width="110" height="50" rx="8" fill="none" stroke="var(--ok)" stroke-width="2"/>
+  <text x="575" y="90" text-anchor="middle" font-weight="700">execute</text>
+  <rect x="680" y="60" width="60" height="50" rx="8" fill="none" stroke="var(--acc)" stroke-width="2"/>
+  <text x="710" y="90" text-anchor="middle" font-weight="700">end</text>
+
+  <line x1="130" y1="85" x2="180" y2="85" stroke="var(--acc)" stroke-width="2"/>
+  <polygon points="180,85 170,80 170,90" fill="var(--acc)"/>
+  <line x1="290" y1="85" x2="340" y2="85" stroke="var(--warn)" stroke-width="2"/>
+  <polygon points="340,85 330,80 330,90" fill="var(--warn)"/>
+  <line x1="470" y1="85" x2="520" y2="85" stroke="var(--ok)" stroke-width="2"/>
+  <polygon points="520,85 510,80 510,90" fill="var(--ok)"/>
+  <line x1="630" y1="85" x2="680" y2="85" stroke="var(--acc)" stroke-width="2"/>
+  <polygon points="680,85 670,80 670,90" fill="var(--acc)"/>
+
+  <!-- loop back -->
+  <path d="M 235 110 Q 235 160 75 160 Q 75 110 75 110" fill="none" stroke="var(--muted)" stroke-dasharray="3,3"/>
+  <text x="155" y="155" text-anchor="middle" fill="var(--muted)" font-size="11">denied → loop</text>
+</svg>
+
+<h2>The audit log — append-only JSONL</h2>
+<pre><code>{"ts":"...", "event":"proposed",  "role":"supervisor", "tool":"plan_change", "args":{...}, "outcome":"allow"}
+{"ts":"...", "event":"approved",  "role":"supervisor", "tool":"plan_change", "args":{...}, "outcome":"allow"}
+{"ts":"...", "event":"executed",  "role":"supervisor", "tool":"plan_change", "args":{...}, "outcome":"ok"}</code></pre>
+
+<p>Every path through the agent produces audit rows:</p>
+<table>
+<tr><th>Event</th><th>When it's written</th></tr>
+<tr><td><code>denied</code></td><td>RBAC blocked the call</td></tr>
+<tr><td><code>proposed</code></td><td>Agent proposed a tool that requires approval</td></tr>
+<tr><td><code>approved</code> / <code>rejected</code></td><td>Human decided</td></tr>
+<tr><td><code>executed</code></td><td>Tool actually ran (ok or fail)</td></tr>
+<tr><td><code>error</code></td><td>Tool threw</td></tr>
+</table>
+
+<h2>Why audit = eval source</h2>
+<p>You don't need a separate "eval dataset" to measure your agent. The audit log already tells you:</p>
+<ul>
+  <li>Denial rate per role — tightness of the registry.</li>
+  <li>Approval latency — human bottlenecks.</li>
+  <li>Rejection rate — how often the agent proposes bad calls.</li>
+  <li>Error rate per tool — reliability of the MCP server.</li>
+</ul>
+
+<div class="ask"><strong>Rule of thumb:</strong> if an action has <em>any</em> customer or money impact, it should at minimum be <em>proposed → approved</em>. Reads can be free; writes should pause.</div>
+</main></body></html>

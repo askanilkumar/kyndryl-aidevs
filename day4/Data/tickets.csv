@@ -1,0 +1,11 @@
+ticket_id,user_id,user_name,category,priority,status,summary,notes
+TKT-0001,EMP-1002,Ravi Kumar,Billing,P3,Open,Charged twice for Oct recharge,
+TKT-0002,EMP-1004,Suresh Nair,Network,P2,Open,No signal in Velachery since morning,
+TKT-0003,EMP-1024,Rohit Singh,eSIM,P2,Open,Cannot activate new eSIM on iPhone 15,
+TKT-0004,EMP-1021,Arjun Patel,Account,P3,Open,Need to reset my SIM after lost phone,
+TKT-0005,EMP-1005,Kavya Reddy,Roaming,P3,Open,Roaming not working in Dubai,
+TKT-0006,EMP-1001,Priya Rao,Plan,P2,Open,Want to upgrade from Gold to Platinum,
+TKT-0007,EMP-1022,Divya Shah,Data,P3,Open,4G data very slow in evenings,
+TKT-0008,EMP-1023,Neel Verma,Network,P1,Open,VIP line down since noon,
+TKT-0009,EMP-1003,Anjali Mehta,Billing,P4,Open,Request e-invoice for September,
+TKT-0010,EMP-1025,Meera Iyer,eSIM,P3,Open,eSIM QR expired before scan,

@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>M1 · Why MCP</title>
+<style>
+:root{--bg:#0b1020;--panel:#121a33;--ink:#e8edff;--muted:#9aa6c7;--line:#223059;--acc:#7cc4ff;--ok:#8ef0a6;--bad:#ff8e8e}
+@media (prefers-color-scheme:light){:root:not([data-theme=dark]){--bg:#f6f8ff;--panel:#fff;--ink:#15213f;--muted:#5a6a93;--line:#dde3f4;--acc:#1860c8;--ok:#1b8f3b;--bad:#b23434}}
+html,body{background:var(--bg);color:var(--ink);font:16px/1.6 system-ui,"Segoe UI",Inter,sans-serif;margin:0}
+main{max-width:1000px;margin:0 auto;padding:30px 24px 70px}
+h1{font-size:30px;margin:0 0 4px} h2{color:var(--acc);margin-top:28px}
+.sub{color:var(--muted);margin-bottom:18px}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:16px 0}
+@media(max-width:720px){.cols{grid-template-columns:1fr}}
+.box{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px}
+.bad{border-color:var(--bad)} .ok{border-color:var(--ok)}
+.badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:600}
+.badge.b{background:rgba(255,142,142,.15);color:var(--bad)}
+.badge.g{background:rgba(142,240,166,.15);color:var(--ok)}
+pre{background:rgba(0,0,0,.3);padding:12px 14px;border-radius:6px;border:1px solid var(--line);font:13px/1.5 ui-monospace,monospace;overflow:auto}
+code{font:13px ui-monospace,monospace;background:rgba(0,0,0,.25);padding:1px 5px;border-radius:4px}
+svg text{fill:var(--ink);font:12px system-ui}
+.ask{background:rgba(124,196,255,.08);border-left:3px solid var(--acc);padding:10px 14px;border-radius:0 6px 6px 0;margin:14px 0}
+</style></head><body>
+<main>
+<h1>M1 · Why MCP</h1>
+<div class="sub">Model Context Protocol — the one wire between agents and their tools.</div>
+
+<h2>The problem</h2>
+<div class="cols">
+  <div class="box bad"><div class="badge b">BEFORE</div>
+    <p>You wrote a Python function for each tool. Then another agent wants the same tool, so you wrap it again. Then a Go service wants it, so you re-wrap. Three teams, three implementations, three ways to break.</p>
+  </div>
+  <div class="box ok"><div class="badge g">AFTER</div>
+    <p>Each tool lives in <strong>one MCP server</strong>. Any agent — Python, Go, Claude Desktop, your in-house framework — speaks the same two endpoints. One server, N clients, zero re-implementations.</p>
+  </div>
+</div>
+
+<h2>MCP in one picture</h2>
+<svg viewBox="0 0 760 240" xmlns="http://www.w3.org/2000/svg">
+  <rect x="20" y="50" width="150" height="60" rx="8" fill="none" stroke="var(--acc)" stroke-width="2"/>
+  <text x="95" y="78" text-anchor="middle" font-weight="700">LangGraph Agent</text>
+  <text x="95" y="96" text-anchor="middle" fill="var(--muted)">(client)</text>
+
+  <rect x="310" y="50" width="150" height="60" rx="8" fill="none" stroke="var(--acc)" stroke-width="2"/>
+  <text x="385" y="78" text-anchor="middle" font-weight="700">MCP server</text>
+  <text x="385" y="96" text-anchor="middle" fill="var(--muted)">kb_search · ticket · tower · plan_change</text>
+
+  <rect x="590" y="20" width="150" height="40" rx="8" fill="none" stroke="var(--muted)"/>
+  <text x="665" y="45" text-anchor="middle" fill="var(--muted)">NetNova KB</text>
+  <rect x="590" y="80" width="150" height="40" rx="8" fill="none" stroke="var(--muted)"/>
+  <text x="665" y="105" text-anchor="middle" fill="var(--muted)">Incident DB</text>
+  <rect x="590" y="140" width="150" height="40" rx="8" fill="none" stroke="var(--muted)"/>
+  <text x="665" y="165" text-anchor="middle" fill="var(--muted)">EMS / NOC</text>
+
+  <line x1="170" y1="80" x2="310" y2="80" stroke="var(--acc)" stroke-width="2"/>
+  <text x="240" y="72" text-anchor="middle" fill="var(--acc)" font-size="11">HTTP / stdio</text>
+  <polygon points="310,80 300,75 300,85" fill="var(--acc)"/>
+
+  <line x1="460" y1="80" x2="590" y2="40" stroke="var(--muted)" stroke-dasharray="3,3"/>
+  <line x1="460" y1="80" x2="590" y2="100" stroke="var(--muted)" stroke-dasharray="3,3"/>
+  <line x1="460" y1="80" x2="590" y2="160" stroke="var(--muted)" stroke-dasharray="3,3"/>
+
+  <rect x="20" y="160" width="150" height="40" rx="8" fill="none" stroke="var(--muted)" stroke-dasharray="4,3"/>
+  <text x="95" y="185" text-anchor="middle" fill="var(--muted)">Streamlit UI</text>
+  <line x1="170" y1="180" x2="340" y2="110" stroke="var(--muted)" stroke-dasharray="3,3"/>
+  <text x="190" y="200" fill="var(--muted)" font-size="11">(same client)</text>
+</svg>
+
+<h2>The two endpoints</h2>
+<pre><code>GET  /tools/list                        → list of tools + schemas
+POST /tools/call  {name, args}          → {ok, result}</code></pre>
+
+<p>Real MCP has a few more (resources, prompts, sampling), but these two carry 90% of the signal. Our server is a thin FastAPI app that implements exactly this shape.</p>
+
+<h2>What MCP does NOT give you</h2>
+<ul>
+  <li>Auth — you add it (API key, OAuth, mTLS)</li>
+  <li>Role-based access — you add a <strong>registry</strong> (next module)</li>
+  <li>Approval — you add <strong>HITL</strong> (module after)</li>
+  <li>Rate limits, cost caps — you add them in a gateway in front</li>
+</ul>
+
+<div class="ask"><strong>When would you NOT use MCP?</strong> If the agent and tool live in the same process and will never be re-used elsewhere, a plain Python function is enough. MCP is for tools you want many agents (or many teams) to share.</div>
+</main></body></html>

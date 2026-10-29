@@ -1,0 +1,11 @@
+{
+  "name": "NetNova Agent Registry",
+  "version": "1.0",
+  "owner": "field-ops-team@netnova.example",
+  "tools": {
+    "kb_search":     {"risk": "low",  "requires_approval": false, "allowed_roles": ["viewer", "engineer", "supervisor"]},
+    "ticket_lookup": {"risk": "low",  "requires_approval": false, "allowed_roles": ["engineer", "supervisor"]},
+    "tower_status":  {"risk": "low",  "requires_approval": false, "allowed_roles": ["engineer", "supervisor"]},
+    "plan_change":   {"risk": "high", "requires_approval": true,  "allowed_roles": ["supervisor"]}
+  }
+}

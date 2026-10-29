@@ -1,4 +1,4 @@
-"""Agent Studio v3 (Lab 3): + Safety, approvals and evals.   python -m streamlit run app_v3.py"""
+"""Same app as studio_app.py (kept so old commands still work).   python -m streamlit run studio_app.py"""
 from studio import main
 
-main(["arch", "think", "memory", "run", "safety"], "NetNova Agent Studio v3")
+main(["journey", "arch", "think", "memory", "run", "safety", "failure", "lessons"])

@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Day 4 Lab Guide — Governed Agent (MCP · Registry · RBAC · HITL)</title>
+<style>
+  :root{--bg:#0b1020;--panel:#121a33;--ink:#e8edff;--muted:#9aa6c7;--line:#223059;--acc:#7cc4ff;--ok:#8ef0a6;--warn:#ffd16a;--bad:#ff8e8e}
+  @media (prefers-color-scheme:light){:root:not([data-theme=dark]){--bg:#f6f8ff;--panel:#fff;--ink:#15213f;--muted:#5a6a93;--line:#dde3f4;--acc:#1860c8;--ok:#1b8f3b;--warn:#8a6500;--bad:#b23434}}
+  html,body{background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,"Segoe UI",Inter,sans-serif;margin:0}
+  main{max-width:980px;margin:0 auto;padding:28px 20px 80px}
+  h1{font-size:30px;margin:0 0 4px} h2{font-size:22px;margin:28px 0 10px;color:var(--acc)}
+  h3{font-size:17px;margin:18px 0 6px}
+  .sub{color:var(--muted);margin-bottom:18px}
+  .tabs{display:flex;flex-wrap:wrap;gap:4px;border-bottom:1px solid var(--line);margin:14px 0 18px}
+  .tab{padding:9px 14px;border:1px solid var(--line);border-bottom:none;background:var(--panel);color:var(--muted);cursor:pointer;font-size:14px;border-radius:6px 6px 0 0}
+  .tab.on{background:var(--bg);color:var(--ink);font-weight:600}
+  .pane{display:none;background:var(--panel);border:1px solid var(--line);padding:18px;border-radius:0 10px 10px 10px}
+  .pane.on{display:block}
+  table{width:100%;border-collapse:collapse;margin:10px 0;font-size:14px}
+  th,td{border:1px solid var(--line);padding:7px 10px;text-align:left;vertical-align:top}
+  th{background:rgba(124,196,255,.08);font-weight:600}
+  code,pre{font-family:ui-monospace,SF Mono,Consolas,monospace;background:rgba(0,0,0,.25);border-radius:4px}
+  code{padding:1px 5px;font-size:13px} pre{padding:10px 12px;overflow:auto;font-size:13px;border:1px solid var(--line)}
+  .box{border-left:3px solid var(--acc);background:rgba(124,196,255,.06);padding:10px 14px;border-radius:0 6px 6px 0;margin:12px 0}
+  .ok{border-color:var(--ok);background:rgba(142,240,166,.06)}
+  .warn{border-color:var(--warn);background:rgba(255,209,106,.08)}
+  .bad{border-color:var(--bad);background:rgba(255,142,142,.08)}
+  details{border:1px solid var(--line);border-radius:6px;padding:10px 12px;margin:10px 0;background:rgba(0,0,0,.08)}
+  summary{cursor:pointer;font-weight:600}
+  kbd{background:#223059;color:#e8edff;border-radius:4px;padding:1px 6px;font:12px ui-monospace,monospace}
+</style>
+</head>
+<body>
+<main>
+<h1>Day 4 · Governed Agent — MCP, Registry, RBAC, HITL</h1>
+<div class="sub">NetNova Field Ops Control Tower · ONE Streamlit app · one MCP server</div>
+
+<div class="tabs" role="tablist">
+  <button class="tab on" data-t="t0">0 · Setup</button>
+  <button class="tab" data-t="t1">1 · MCP server</button>
+  <button class="tab" data-t="t2">2 · Agent + Registry (RBAC)</button>
+  <button class="tab" data-t="t3">3 · Approvals + Audit</button>
+  <button class="tab" data-t="t4">4 · Solo Lab (90 min)</button>
+  <button class="tab" data-t="t5">Stuck?</button>
+</div>
+
+<!-- SETUP -->
+<section class="pane on" id="t0">
+  <h2>Prereqs</h2>
+  <table>
+    <tr><th>Step</th><th>File / Command</th><th>Where</th><th>Expected</th></tr>
+    <tr><td>1. Pull latest</td><td><code>git pull</code></td><td>VM: <code>C:\Users\azureuser\training\kyndryl-aidevs</code></td><td>day4 folder present</td></tr>
+    <tr><td>2. Install deps</td><td><code>pip install -r requirements.txt</code></td><td>VM, in <code>day4\labs</code></td><td>streamlit, fastapi, langgraph, httpx installed</td></tr>
+    <tr><td>3. Sanity check</td><td><code>python check_setup.py</code></td><td>VM, in <code>day4\labs</code></td><td>all ✅</td></tr>
+    <tr><td>4. Start MCP server</td><td><code>python mcp_server.py</code></td><td>Terminal A — <strong>keep running</strong></td><td><code>Uvicorn running on http://127.0.0.1:8765</code></td></tr>
+    <tr><td>5. Start the app</td><td><code>streamlit run app.py</code></td><td>Terminal B</td><td>Browser opens http://localhost:8501</td></tr>
+    <tr><td>6. Gateway (optional)</td><td>Sidebar: paste GATEWAY_BASE_URL + GATEWAY_KEY</td><td>In the browser only</td><td>Sidebar shows <strong>Mode: ONLINE</strong></td></tr>
+  </table>
+  <div class="box warn"><strong>Key rule:</strong> no <code>.env</code>, no secrets in any file in the repo. Paste the gateway key into the Streamlit sidebar — it stays in your session only.</div>
+  <div class="box">Offline mode (no key) still runs the full agent loop deterministically. You will not miss any lesson.</div>
+</section>
+
+<!-- MCP SERVER -->
+<section class="pane" id="t1">
+  <h2>Lab 1 — the MCP server (40 min)</h2>
+  <h3>What you are building</h3>
+  <p>One HTTP server exposes 4 tools. The agent (and you) talk to it through two endpoints:
+     <code>GET /tools/list</code> and <code>POST /tools/call</code>.</p>
+  <h3>Steps</h3>
+  <ol>
+    <li>Open <code>mcp_server.py</code>. Read the <code>TOOLS</code> list — four entries, each with name, description, risk, args.</li>
+    <li>In the Streamlit app, open <strong>Tab 1 · MCP Server</strong>. You should see "MCP server is UP" and the 4 tools.</li>
+    <li>Call each tool once from the tab:
+      <table>
+        <tr><th>Tool</th><th>Args to try</th></tr>
+        <tr><td><code>kb_search</code></td><td><code>{"query":"escalation","role":"engineer"}</code></td></tr>
+        <tr><td><code>ticket_lookup</code></td><td><code>{"incident_id":"INC-5102"}</code></td></tr>
+        <tr><td><code>tower_status</code></td><td><code>{"tower_id":"TWR-CHN-11"}</code></td></tr>
+        <tr><td><code>plan_change</code></td><td><code>{"customer_id":"C-1002","new_plan_id":"PLAN-202"}</code></td></tr>
+      </table>
+    </li>
+    <li>Open <code>http://127.0.0.1:8765/tools/list</code> in a browser tab. Same output. MCP is just HTTP with a shape.</li>
+  </ol>
+  <div class="box ok"><strong>What you just learned:</strong> MCP decouples the agent from the tools. The agent only knows an endpoint and a tool name — same wire for anything.</div>
+</section>
+
+<!-- AGENT + RBAC -->
+<section class="pane" id="t2">
+  <h2>Lab 2 — Agent + Registry (RBAC) (40 min)</h2>
+  <h3>Files to look at (in order)</h3>
+  <ol>
+    <li><code>registry.json</code> — one tool per row: risk, allowed_roles, requires_approval. This is your <strong>policy</strong>.</li>
+    <li><code>rbac.py</code> — 10 lines: <code>can_call(role, tool)</code>, <code>requires_approval(tool)</code>, <code>audit(...)</code>.</li>
+    <li><code>agent.py</code> — LangGraph graph: <strong>plan → guard → execute</strong>. The guard is where RBAC lives.</li>
+  </ol>
+  <h3>Run these 4 presets in Tab 2</h3>
+  <table>
+    <tr><th>Role</th><th>Prompt</th><th>What should happen</th></tr>
+    <tr><td>engineer</td><td>Look up incident INC-5102 and check tower TWR-CHN-11.</td><td>Both tools run. Final summary.</td></tr>
+    <tr><td>engineer</td><td>Change customer C-1002 to PLAN-202 as goodwill compensation.</td><td><strong>DENIED</strong> by RBAC. Agent stops.</td></tr>
+    <tr><td>viewer</td><td>Look up incident INC-5102.</td><td>Denied — <code>ticket_lookup</code> is not viewer-allowed.</td></tr>
+    <tr><td>supervisor</td><td>What is the mass outage escalation procedure?</td><td><code>kb_search</code> runs, returns runbook.</td></tr>
+  </table>
+  <div class="box">The agent trace shows each tool call. The denial lines are what you'd ship to compliance.</div>
+</section>
+
+<!-- APPROVALS + AUDIT -->
+<section class="pane" id="t3">
+  <h2>Lab 3 — Approvals + Audit (30 min)</h2>
+  <ol>
+    <li>In Tab 2, as <strong>supervisor</strong>, run: <em>"Change customer C-1002 to PLAN-202 as goodwill compensation for the INC-5102 outage."</em></li>
+    <li>The trace shows the agent <strong>pauses</strong> before <code>plan_change</code>. Switch to <strong>Tab 3 · Approvals + Audit</strong>.</li>
+    <li>Read the pending approval card. Decide <strong>Approve</strong> or <strong>Reject</strong>. Watch what happens in the audit log below.</li>
+    <li>Scroll the audit log. Every event is one row: <em>proposed, approved/rejected, executed, denied, error</em>.</li>
+    <li>Download <code>audit.jsonl</code>. This is what your SOC team wants.</li>
+  </ol>
+  <div class="box ok"><strong>What you just learned:</strong> HITL is not a dialog — it is a <em>pause point</em> in the graph with an audit record on either side. The policy decides which tools pause; the human decides each call.</div>
+</section>
+
+<!-- SOLO LAB -->
+<section class="pane" id="t4">
+  <h2>Solo Lab — Field-ops incident INC-5102 (90 min)</h2>
+  <p>You are a <strong>supervisor</strong>. Three towers are down in Chennai North. Close the incident <em>inside the rules</em>.</p>
+
+  <h3>Pass gates (shown live in Tab 4)</h3>
+  <ol>
+    <li><code>ticket_lookup</code> executed</li>
+    <li><code>tower_status</code> executed (at least once)</li>
+    <li><code>kb_search</code> executed (for a runbook)</li>
+    <li><code>plan_change</code> proposed</li>
+    <li><code>plan_change</code> approved by human</li>
+    <li><code>plan_change</code> executed</li>
+  </ol>
+
+  <h3>Stretch (any one)</h3>
+  <ol>
+    <li><strong>Add a 5th tool</strong> <code>tower_restart(tower_id)</code>:
+      <ul>
+        <li>In <code>mcp_server.py</code>: new <code>TOOLS</code> entry + handler branch.</li>
+        <li>In <code>registry.json</code>: <code>"risk":"high","requires_approval":true,"allowed_roles":["supervisor"]</code>.</li>
+        <li>In <code>llm.py</code>: add the tool name to the system prompt.</li>
+        <li>Run the agent. Watch it propose and pause for approval.</li>
+      </ul>
+    </li>
+    <li><strong>Tighten over-permission</strong> — is <code>ticket_lookup</code> really engineer-only, or should viewer see too? Edit registry.json, defend your choice in a 3-line decision note.</li>
+    <li><strong>Prove the trail</strong> — download <code>audit.jsonl</code>, point out the 3 lines that prove: (a) no unauthorised call, (b) approval before execution, (c) incident touched only once.</li>
+  </ol>
+
+  <div class="box warn"><strong>Submission:</strong> drop a short <code>submission/day4_notes.md</code> with: role split (who was engineer, who was supervisor), one risk you added to the registry, one risk you removed.</div>
+</section>
+
+<!-- STUCK -->
+<section class="pane" id="t5">
+  <h2>Stuck? Three levels of hints</h2>
+  <details><summary>MCP server shows DOWN in Tab 1</summary>
+    <ol>
+      <li>Did you start it? Terminal A: <code>python mcp_server.py</code>. Leave it running.</li>
+      <li>Port 8765 free? <code>netstat -ano | findstr 8765</code> on Windows.</li>
+      <li>Firewall? localhost only — no NSG needed, it's inside the VM.</li>
+    </ol></details>
+  <details><summary>Agent says "step limit reached"</summary>
+    The planner kept proposing the same tool. Check the trace — if it's trying a denied tool,
+    the registry is working as designed. Change the role or the prompt.
+  </details>
+  <details><summary>Approval card never shows</summary>
+    Approval only fires on <code>requires_approval:true</code> tools. In <code>registry.json</code>, only <code>plan_change</code> has it today.
+  </details>
+  <details><summary>I want to see the LangGraph loop in code</summary>
+    Open <code>agent.py</code>. 60 lines. <code>plan → guard → execute → plan …</code> plus a conditional edge after the guard for "approval needed".
+  </details>
+</section>
+</main>
+<script>
+document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{
+  document.querySelectorAll(".tab").forEach(x=>x.classList.remove("on"));
+  document.querySelectorAll(".pane").forEach(x=>x.classList.remove("on"));
+  b.classList.add("on"); document.getElementById(b.dataset.t).classList.add("on");
+});
+</script>
+</body></html>

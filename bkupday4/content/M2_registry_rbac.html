@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>M2 · Registry + RBAC</title>
+<style>
+:root{--bg:#0b1020;--panel:#121a33;--ink:#e8edff;--muted:#9aa6c7;--line:#223059;--acc:#7cc4ff;--ok:#8ef0a6;--warn:#ffd16a;--bad:#ff8e8e}
+@media (prefers-color-scheme:light){:root:not([data-theme=dark]){--bg:#f6f8ff;--panel:#fff;--ink:#15213f;--muted:#5a6a93;--line:#dde3f4;--acc:#1860c8;--ok:#1b8f3b;--warn:#8a6500;--bad:#b23434}}
+html,body{background:var(--bg);color:var(--ink);font:16px/1.6 system-ui,"Segoe UI",Inter,sans-serif;margin:0}
+main{max-width:1000px;margin:0 auto;padding:30px 24px 70px}
+h1{font-size:30px;margin:0 0 4px} h2{color:var(--acc);margin-top:28px}
+.sub{color:var(--muted);margin-bottom:18px}
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:14px}
+th,td{border:1px solid var(--line);padding:8px 10px;text-align:left}
+th{background:rgba(124,196,255,.08)}
+.risk-low{color:var(--ok);font-weight:600}
+.risk-high{color:var(--bad);font-weight:600}
+pre{background:rgba(0,0,0,.3);padding:12px 14px;border-radius:6px;border:1px solid var(--line);font:13px/1.5 ui-monospace,monospace;overflow:auto}
+code{font:13px ui-monospace,monospace;background:rgba(0,0,0,.25);padding:1px 5px;border-radius:4px}
+.ask{background:rgba(124,196,255,.08);border-left:3px solid var(--acc);padding:10px 14px;border-radius:0 6px 6px 0;margin:14px 0}
+.q{background:rgba(255,209,106,.1);border-left:3px solid var(--warn);padding:10px 14px;border-radius:0 6px 6px 0;margin:14px 0}
+</style></head><body>
+<main>
+<h1>M2 · Registry + RBAC</h1>
+<div class="sub">One file that tells your agent what it may touch, and your SOC team how.</div>
+
+<h2>The registry</h2>
+<p>Flat JSON. Easy to review, easy to audit, easy to diff in Git.</p>
+<pre><code>{
+  "tools": {
+    "kb_search":     {"risk": "low",  "requires_approval": false, "allowed_roles": ["viewer","engineer","supervisor"]},
+    "ticket_lookup": {"risk": "low",  "requires_approval": false, "allowed_roles": ["engineer","supervisor"]},
+    "tower_status":  {"risk": "low",  "requires_approval": false, "allowed_roles": ["engineer","supervisor"]},
+    "plan_change":   {"risk": "high", "requires_approval": true,  "allowed_roles": ["supervisor"]}
+  }
+}</code></pre>
+
+<h2>Permission matrix</h2>
+<table>
+  <tr><th>Tool</th><th>viewer</th><th>engineer</th><th>supervisor</th><th>Risk</th><th>Approval</th></tr>
+  <tr><td>kb_search</td><td>✅</td><td>✅</td><td>✅</td><td class="risk-low">low</td><td>—</td></tr>
+  <tr><td>ticket_lookup</td><td>❌</td><td>✅</td><td>✅</td><td class="risk-low">low</td><td>—</td></tr>
+  <tr><td>tower_status</td><td>❌</td><td>✅</td><td>✅</td><td class="risk-low">low</td><td>—</td></tr>
+  <tr><td>plan_change</td><td>❌</td><td>❌</td><td>✅</td><td class="risk-high">high</td><td>human</td></tr>
+</table>
+
+<h2>Where RBAC fires in the agent</h2>
+<pre><code>plan → <strong>guard</strong> → execute → plan …
+       ↓ denied
+       loop back</code></pre>
+<p>The <strong>guard node</strong> runs before every tool call. It checks the registry. If denied, the result is a <code>DENIED</code> line in history — not a tool call. The LLM sees the denial on the next loop and chooses something else (or stops).</p>
+
+<h2>Design choices to defend</h2>
+<div class="q">Why is <code>ticket_lookup</code> not viewer-safe?<br>
+   Internal incident details reveal ongoing outages. A customer-facing viewer should not see "3 towers down in Chennai North" before NOC confirms.</div>
+<div class="q">Why only supervisor on <code>plan_change</code>?<br>
+   Changes customer billing. Even without a bug, an over-helpful engineer could cost real money. One role, one approval gate.</div>
+
+<h2>Pitfalls</h2>
+<ul>
+  <li><strong>Role sprawl</strong> — stop at 3–5 roles. 20 role names is a smell.</li>
+  <li><strong>God tools</strong> — one tool that "does everything" cannot be governed. Split by risk.</li>
+  <li><strong>Hidden policy</strong> — if the policy lives inside Python if-statements, you lost. The registry is the single source of truth.</li>
+</ul>
+
+<div class="ask"><strong>Where should this live in a real deployment?</strong> Keycloak, OPA, or a service you already run. The <em>shape</em> of the registry doesn't change — just where it is served from.</div>
+</main></body></html>

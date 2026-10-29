@@ -4,6 +4,7 @@ import streamlit as st
 from . import common
 
 TABS = {
+    "journey": ("0 · Journey", "tab_journey"),
     "arch": ("1 · Architecture", "tab_arch"),
     "think": ("2 · Think first", "tab_think"),
     "memory": ("3 · Memory", "tab_memory"),
