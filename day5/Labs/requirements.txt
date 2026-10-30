@@ -1,0 +1,6 @@
+streamlit>=1.40
+openai>=1.40
+pandas
+langsmith>=0.4
+langfuse>=5
+pytest

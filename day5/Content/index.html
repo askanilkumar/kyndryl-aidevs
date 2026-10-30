@@ -1,0 +1,333 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Day 5 · AskNova to Production</title>
+<style>
+:root{
+  --bg:#f6f7f9; --card:#ffffff; --ink:#1b1f24; --muted:#5b6470; --line:#dde1e6;
+  --brand:#0f62fe; --brand-soft:#e5eefe; --ok:#1e8e3e; --ok-soft:#e6f4ea; --warn:#b06000; --warn-soft:#fdf1e0;
+  --bad:#c5221f; --bad-soft:#fce8e6; --code:#f0f2f5;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#111418; --card:#1a1e24; --ink:#e9edf2; --muted:#a3acb8; --line:#2c323b;
+    --brand:#78a9ff; --brand-soft:#1c2a44; --ok:#6ccf8a; --ok-soft:#173022; --warn:#f2b45c; --warn-soft:#3a2a12;
+    --bad:#ff8a80; --bad-soft:#3d1a18; --code:#232831;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#111418; --card:#1a1e24; --ink:#e9edf2; --muted:#a3acb8; --line:#2c323b;
+  --brand:#78a9ff; --brand-soft:#1c2a44; --ok:#6ccf8a; --ok-soft:#173022; --warn:#f2b45c; --warn-soft:#3a2a12;
+  --bad:#ff8a80; --bad-soft:#3d1a18; --code:#232831;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:20px/1.5 "Aptos Narrow","Aptos","Segoe UI",Arial,sans-serif}
+.wrap{max-width:1180px;margin:0 auto;padding:24px 16px 80px}
+header{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}
+h1{font-size:40px;line-height:1.15;margin:0 0 6px}
+h2{font-size:32px;margin:0 0 10px}
+h3{font-size:24px;margin:18px 0 8px}
+.sub{color:var(--muted);font-size:20px;margin:0}
+.btn{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;padding:8px 14px;font:inherit;font-size:17px;cursor:pointer}
+nav{position:sticky;top:0;z-index:5;background:var(--bg);padding:10px 0;margin:16px 0 8px;border-bottom:1px solid var(--line);
+  display:flex;gap:8px;overflow-x:auto}
+nav a{white-space:nowrap;text-decoration:none;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:999px;padding:6px 14px;font-size:17px}
+nav a.done{background:var(--ok-soft);border-color:var(--ok);color:var(--ok)}
+section{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:24px;margin:20px 0;scroll-margin-top:70px}
+.tag{display:inline-block;font-size:16px;font-weight:600;border-radius:999px;padding:2px 12px;background:var(--brand-soft);color:var(--brand);margin-bottom:8px}
+table{width:100%;border-collapse:collapse;font-size:18px}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--muted);font-weight:600}
+.tablewrap{overflow-x:auto}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.box{border-radius:12px;padding:14px 16px;border:1px solid var(--line)}
+.use{background:var(--ok-soft);border-color:var(--ok)}
+.dont{background:var(--bad-soft);border-color:var(--bad)}
+.use b{color:var(--ok)} .dont b{color:var(--bad)}
+.key{background:var(--warn-soft);border-left:6px solid var(--warn);border-radius:10px;padding:12px 16px;margin-top:14px}
+ul{margin:6px 0;padding-left:24px} li{margin:4px 0}
+code{background:var(--code);border-radius:6px;padding:1px 6px;font-size:.92em;font-family:Consolas,Menlo,monospace}
+.lab{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:16px;padding-top:14px;border-top:1px dashed var(--line)}
+.lab label{font-size:18px;cursor:pointer;display:flex;align-items:center;gap:8px}
+.lab input{width:22px;height:22px}
+svg{width:100%;height:auto;display:block}
+svg text{font-family:"Aptos Narrow","Segoe UI",Arial,sans-serif}
+.flow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:18px}
+.flow span{background:var(--brand-soft);color:var(--brand);border-radius:8px;padding:6px 12px;font-weight:600}
+.flow i{color:var(--muted);font-style:normal}
+.check li{list-style:none;margin-left:-24px}
+.check input{width:20px;height:20px;vertical-align:-3px;margin-right:8px}
+@media (max-width:760px){
+  body{font-size:18px} h1{font-size:30px} h2{font-size:26px} .grid2{grid-template-columns:1fr} section{padding:18px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div>
+    <h1>Day 5 · AskNova goes to Production</h1>
+    <p class="sub">Guardrails · Tracing · Evals &amp; Monitoring · LLMOps / AgentOps · Deploy on Azure and AWS</p>
+  </div>
+  <button class="btn" id="theme" type="button">Light / Dark</button>
+</header>
+
+<nav id="nav">
+  <a href="#agenda">Agenda</a><a href="#big">Big picture</a><a href="#c1" data-k="c1">1 Guardrails</a>
+  <a href="#c2" data-k="c2">2 Tracing</a><a href="#c3" data-k="c3">3 Evals</a><a href="#c4" data-k="c4">4 LLMOps</a>
+  <a href="#c5" data-k="c5">5 Deploy</a><a href="#wrap">Wrap-up</a>
+</nav>
+
+<section id="agenda">
+  <span class="tag">2:00 – 8:00 PM</span>
+  <h2>Today's plan</h2>
+  <p>Each cycle: <b>short concept</b> → <b>guided lab</b> → <b>your TODO</b> → <b>solo</b>. One app all day: <code>python -m streamlit run app.py</code></p>
+  <div class="tablewrap"><table>
+    <tr><th>Time</th><th>Cycle</th><th>App tab</th><th>Lab guide</th></tr>
+    <tr><td>2:00</td><td>Recap + setup check (10)</td><td>—</td><td><code>README.md</code> Step 0</td></tr>
+    <tr><td>2:10</td><td><b>1 · Security and guardrails</b> (60)</td><td>🛡️ Attack test</td><td><code>lab1_guardrails.md</code></td></tr>
+    <tr><td>3:10</td><td><b>2 · Tracing with LangSmith + Langfuse</b> (60)</td><td>💬 Chat + sidebar</td><td><code>lab2_tracing.md</code></td></tr>
+    <tr><td>4:10</td><td>Break (10)</td><td></td><td></td></tr>
+    <tr><td>4:20</td><td><b>3 · Evals and monitoring</b> (50)</td><td>✅ Evals · 📈 Monitor</td><td><code>lab3_evals_monitoring.md</code></td></tr>
+    <tr><td>5:10</td><td><b>4 · LLMOps / AgentOps</b> (40)</td><td>🚀 Release</td><td><code>lab4_llmops.md</code></td></tr>
+    <tr><td>5:50</td><td>Break (10)</td><td></td><td></td></tr>
+    <tr><td>6:00</td><td><b>5 · Deploy on Azure and AWS</b> (90)</td><td>same app, public URL</td><td><code>lab5_deploy.md</code></td></tr>
+    <tr><td>7:30</td><td>Wrap-up: reference architecture + defend one decision (30)</td><td></td><td><code>submission/notes.md</code></td></tr>
+  </table></div>
+</section>
+
+<section id="big">
+  <span class="tag">Big picture</span>
+  <h2>From "works on my laptop" to "safe in production"</h2>
+  <p>The agent from Day 4 is the box in the middle. Today we add everything around it.</p>
+  <svg viewBox="0 0 1100 470" role="img" aria-label="AskNova production architecture">
+    <defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--muted)"/></marker></defs>
+    <rect x="200" y="10" width="890" height="300" rx="18" fill="none" stroke="var(--brand)" stroke-dasharray="8 6" stroke-width="2"/>
+    <text x="218" y="40" font-size="18" fill="var(--brand)" font-weight="700">Cloud host (Lab 5): Azure App Service or AWS EC2 · keys in env vars · app password</text>
+    <rect x="20" y="130" width="140" height="70" rx="12" fill="var(--card)" stroke="var(--line)" stroke-width="2"/>
+    <text x="90" y="162" font-size="20" text-anchor="middle" fill="var(--ink)" font-weight="700">Customer</text>
+    <text x="90" y="186" font-size="16" text-anchor="middle" fill="var(--muted)">browser</text>
+    <line x1="160" y1="165" x2="225" y2="165" stroke="var(--muted)" stroke-width="2" marker-end="url(#ar)"/>
+    <rect x="230" y="120" width="140" height="90" rx="12" fill="var(--bad-soft)" stroke="var(--bad)" stroke-width="2"/>
+    <text x="300" y="152" font-size="19" text-anchor="middle" fill="var(--bad)" font-weight="700">Input guard</text>
+    <text x="300" y="175" font-size="15" text-anchor="middle" fill="var(--ink)">injection · PII</text>
+    <text x="300" y="197" font-size="15" text-anchor="middle" fill="var(--muted)">Lab 1</text>
+    <line x1="370" y1="165" x2="425" y2="165" stroke="var(--muted)" stroke-width="2" marker-end="url(#ar)"/>
+    <rect x="430" y="70" width="380" height="200" rx="14" fill="var(--brand-soft)" stroke="var(--brand)" stroke-width="2"/>
+    <text x="620" y="100" font-size="20" text-anchor="middle" fill="var(--brand)" font-weight="700">AskNova agent loop (Day 4)</text>
+    <rect x="455" y="120" width="150" height="56" rx="10" fill="var(--card)" stroke="var(--line)"/>
+    <text x="530" y="146" font-size="17" text-anchor="middle" fill="var(--ink)" font-weight="700">LLM</text>
+    <text x="530" y="166" font-size="14" text-anchor="middle" fill="var(--muted)">OpenAI · prompt vN</text>
+    <rect x="635" y="120" width="150" height="56" rx="10" fill="var(--card)" stroke="var(--line)"/>
+    <text x="710" y="146" font-size="17" text-anchor="middle" fill="var(--ink)" font-weight="700">4 tools</text>
+    <text x="710" y="166" font-size="14" text-anchor="middle" fill="var(--muted)">writes need approval</text>
+    <line x1="605" y1="140" x2="632" y2="140" stroke="var(--muted)" stroke-width="2" marker-end="url(#ar)"/>
+    <line x1="635" y1="158" x2="608" y2="158" stroke="var(--muted)" stroke-width="2" marker-end="url(#ar)"/>
+    <text x="620" y="210" font-size="16" text-anchor="middle" fill="var(--ink)">max 5 steps · stop on repeat · tool allow-list</text>
+    <text x="620" y="236" font-size="16" text-anchor="middle" fill="var(--ink)">tool output guard: INTERNAL docs redacted</text>
+    <line x1="810" y1="165" x2="865" y2="165" stroke="var(--muted)" stroke-width="2" marker-end="url(#ar)"/>
+    <rect x="870" y="120" width="200" height="90" rx="12" fill="var(--bad-soft)" stroke="var(--bad)" stroke-width="2"/>
+    <text x="970" y="152" font-size="19" text-anchor="middle" fill="var(--bad)" font-weight="700">Output guard</text>
+    <text x="970" y="175" font-size="16" text-anchor="middle" fill="var(--ink)">no leaks · PII mask</text>
+    <text x="970" y="197" font-size="15" text-anchor="middle" fill="var(--muted)">Lab 1</text>
+    <line x1="620" y1="270" x2="620" y2="335" stroke="var(--muted)" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#ar)"/>
+    <text x="630" y="300" font-size="15" fill="var(--muted)">every step = a span</text>
+    <rect x="20" y="340" width="250" height="110" rx="12" fill="var(--card)" stroke="var(--line)" stroke-width="2"/>
+    <text x="145" y="372" font-size="19" text-anchor="middle" fill="var(--ink)" font-weight="700">🚀 Release (Lab 4)</text>
+    <text x="145" y="398" font-size="16" text-anchor="middle" fill="var(--muted)">prompt v1, v2 … in git</text>
+    <text x="145" y="422" font-size="16" text-anchor="middle" fill="var(--muted)">gate → release → rollback</text>
+    <rect x="290" y="340" width="250" height="110" rx="12" fill="var(--card)" stroke="var(--line)" stroke-width="2"/>
+    <text x="415" y="372" font-size="19" text-anchor="middle" fill="var(--ink)" font-weight="700">✅ Evals (Lab 3)</text>
+    <text x="415" y="398" font-size="16" text-anchor="middle" fill="var(--muted)">10 test cases, 6 safety</text>
+    <text x="415" y="422" font-size="16" text-anchor="middle" fill="var(--muted)">≥ 80% + all safety pass</text>
+    <rect x="560" y="340" width="250" height="110" rx="12" fill="var(--card)" stroke="var(--line)" stroke-width="2"/>
+    <text x="685" y="372" font-size="19" text-anchor="middle" fill="var(--ink)" font-weight="700">🔭 Tracing (Lab 2)</text>
+    <text x="685" y="398" font-size="16" text-anchor="middle" fill="var(--muted)">LangSmith or Langfuse</text>
+    <text x="685" y="422" font-size="16" text-anchor="middle" fill="var(--muted)">steps · tokens · cost · ms</text>
+    <rect x="830" y="340" width="250" height="110" rx="12" fill="var(--card)" stroke="var(--line)" stroke-width="2"/>
+    <text x="955" y="372" font-size="19" text-anchor="middle" fill="var(--ink)" font-weight="700">📈 Monitor (Lab 3)</text>
+    <text x="955" y="398" font-size="16" text-anchor="middle" fill="var(--muted)">latency · cost · errors</text>
+    <text x="955" y="422" font-size="16" text-anchor="middle" fill="var(--muted)">alerts when limits break</text>
+    <line x1="270" y1="395" x2="287" y2="395" stroke="var(--muted)" stroke-width="2" marker-end="url(#ar)"/>
+  </svg>
+  <div class="flow" style="margin-top:12px">
+    <span>Safe?</span><i>→</i><span>Visible?</span><i>→</i><span>Good?</span><i>→</i><span>Changeable?</span><i>→</i><span>Reachable?</span>
+  </div>
+</section>
+
+<section id="c1">
+  <span class="tag">Cycle 1 · 60 min</span>
+  <h2>Security and guardrails</h2>
+  <h3>The idea</h3>
+  <ul>
+    <li>A model follows text. An attacker writes text. So the model <b>can be talked out of its rules</b> (prompt injection).</li>
+    <li>A <b>guardrail</b> is a check in code, before and after the model. Same input → same decision, every time.</li>
+    <li>Three things to protect: <b>the instructions</b> (injection), <b>people's data</b> (PII), <b>company data</b> (internal docs).</li>
+    <li>Plus action safety from Day 4: tool allow-list, write actions need human approval, loop limit.</li>
+  </ul>
+  <h3>Layers, not one wall</h3>
+  <div class="tablewrap"><table>
+    <tr><th>Layer</th><th>Cheap and fast</th><th>Smarter (production)</th></tr>
+    <tr><td>Injection</td><td>regex patterns (our lab)</td><td>Llama Guard, NeMo Guardrails, Azure Prompt Shields, Bedrock Guardrails</td></tr>
+    <tr><td>Harmful content</td><td>—</td><td>OpenAI moderation (free, toggle in our app)</td></tr>
+    <tr><td>PII</td><td>regex for phone / email (our lab)</td><td>Microsoft Presidio</td></tr>
+    <tr><td>Data leaks</td><td>marker check on tool output + answer (our lab)</td><td>document-level access control in RAG (filter before retrieval)</td></tr>
+  </table></div>
+  <div class="grid2" style="margin-top:14px">
+    <div class="box use"><b>Use guardrails when</b><ul><li>users are outside your team</li><li>the agent can call write tools</li><li>data has PII or internal content</li></ul></div>
+    <div class="box dont"><b>Don't rely on them when</b><ul><li>you think one regex = secure</li><li>a guard blocks so much that real users can't get help (false positives)</li><li>you skip access control because "the prompt says never share"</li></ul></div>
+  </div>
+  <div class="key">Key line: <b>"The prompt is a request. The guard is a rule."</b></div>
+  <div class="lab"><span>Lab: <code>lab1_guardrails.md</code> · TODO in <code>asknova/guards.py</code> · goal 6/6 attacks stopped</span>
+    <label><input type="checkbox" data-k="c1"> Cycle 1 done</label></div>
+</section>
+
+<section id="c2">
+  <span class="tag">Cycle 2 · 60 min</span>
+  <h2>Tracing and observability</h2>
+  <h3>The idea</h3>
+  <ul>
+    <li>Normal apps log errors. AI apps can be <b>wrong without an error</b>: a polite, confident, wrong answer.</li>
+    <li>A <b>trace</b> records one request step by step. Each step is a <b>span</b>: input, output, time, tokens, cost.</li>
+    <li>With traces you can answer: <i>Which tool did it call? Why so slow? Why so expensive? What did the model actually see?</i></li>
+  </ul>
+  <div class="tablewrap"><table>
+    <tr><th></th><th>LangSmith</th><th>Langfuse</th></tr>
+    <tr><td>From</td><td>LangChain</td><td>open source (MIT core)</td></tr>
+    <tr><td>Self-host on-prem</td><td>enterprise plan</td><td>yes, free</td></tr>
+    <tr><td>Strong in</td><td>LangChain / LangGraph apps, datasets, experiments</td><td>any stack, cost tracking, prompt management</td></tr>
+    <tr><td>Standard</td><td colspan="2">both accept OpenTelemetry, so you are not locked in</td></tr>
+  </table></div>
+  <div class="grid2" style="margin-top:14px">
+    <div class="box use"><b>Trace when</b><ul><li>always in production (sample if traffic is huge)</li><li>debugging a wrong answer</li><li>cost reviews (FinOps)</li></ul></div>
+    <div class="box dont"><b>Be careful</b><ul><li>traces store prompts: mask PII <i>before</i> tracing</li><li>regulated data may not leave the country → self-host</li><li>don't trace secrets or full documents</li></ul></div>
+  </div>
+  <div class="key">Key line: <b>"If it isn't traced, it didn't happen — and you can't fix it."</b></div>
+  <div class="lab"><span>Lab: <code>lab2_tracing.md</code> · TODO in <code>asknova/agent.py</code> · goal: <code>guard:input</code> span visible</span>
+    <label><input type="checkbox" data-k="c2"> Cycle 2 done</label></div>
+</section>
+
+<section id="c3">
+  <span class="tag">Cycle 3 · 50 min</span>
+  <h2>Evals and monitoring</h2>
+  <h3>The idea</h3>
+  <ul>
+    <li><b>Evals</b> = unit tests for an AI app. A fixed set of questions with "what good looks like". Run before every release.</li>
+    <li><b>Safety cases</b> (attacks, write actions) must pass 100%. Quality cases need a pass rate (we use 80%).</li>
+    <li><b>Monitoring</b> = the same idea on live traffic: latency, p95, cost, block rate, error rate, with alert limits.</li>
+  </ul>
+  <div class="tablewrap"><table>
+    <tr><th>How to grade</th><th>Good at</th><th>Watch out</th></tr>
+    <tr><td>Rules (tool used, word present)</td><td>free, exact, fast</td><td>misses tone and quality</td></tr>
+    <tr><td>LLM-as-judge</td><td>quality, helpfulness</td><td>costs tokens, can be biased; check it against humans</td></tr>
+    <tr><td>Human review</td><td>hard and new cases</td><td>slow, expensive</td></tr>
+  </table></div>
+  <div class="grid2" style="margin-top:14px">
+    <div class="box use"><b>Good eval habits</b><ul><li>every bug becomes a new case</li><li>keep the set small and fast (runs in CI)</li><li>track pass rate per version</li></ul></div>
+    <div class="box dont"><b>Common mistakes</b><ul><li>only "happy path" questions</li><li>one big average score that hides a safety failure</li><li>alerts nobody reads</li></ul></div>
+  </div>
+  <div class="key">Key line: <b>"No evals, no release. No monitoring, no sleep."</b></div>
+  <div class="lab"><span>Lab: <code>lab3_evals_monitoring.md</code> · TODO in <code>asknova/evals.py</code> · goal 10/10, gate OPEN</span>
+    <label><input type="checkbox" data-k="c3"> Cycle 3 done</label></div>
+</section>
+
+<section id="c4">
+  <span class="tag">Cycle 4 · 40 min</span>
+  <h2>LLMOps / AgentOps</h2>
+  <h3>The idea</h3>
+  <ul>
+    <li>DevOps for AI. The "code" of an agent is <b>prompt + model + tools + guards + data</b>. Any of them can break it.</li>
+    <li>So each one is <b>versioned</b>, <b>tested by the eval gate</b>, <b>released</b> with a record, and <b>rolled back</b> fast.</li>
+    <li>AgentOps adds: watch tool calls and approvals, cost per conversation, loop limits, and who changed what.</li>
+  </ul>
+  <div class="flow"><span>edit v2</span><i>→</i><span>evals</span><i>→</i><span>gate</span><i>→</i><span>release</span><i>→</i><span>monitor</span><i>→</i><span>rollback?</span></div>
+  <div class="grid2" style="margin-top:14px">
+    <div class="box use"><b>In real teams</b><ul><li>prompts in git (or a prompt registry like Langfuse Prompts)</li><li>eval gate runs in CI (GitHub Actions) on every pull request</li><li>canary: 5% of traffic to v2 first</li></ul></div>
+    <div class="box dont"><b>Anti-patterns</b><ul><li>editing the prompt in production "just a little"</li><li>changing model and prompt in the same release</li><li>no way back to the last good version</li></ul></div>
+  </div>
+  <div class="key">Key line: <b>"A prompt change is a code change."</b></div>
+  <div class="lab"><span>Lab: <code>lab4_llmops.md</code> · TODO in <code>prompts/system_v2.txt</code> · goal v2 APPROVED</span>
+    <label><input type="checkbox" data-k="c4"> Cycle 4 done</label></div>
+</section>
+
+<section id="c5">
+  <span class="tag">Cycle 5 · 90 min</span>
+  <h2>Deploy on the cloud: Azure and AWS</h2>
+  <h3>The idea</h3>
+  <ul>
+    <li>Same code, new home. What changes is only <b>where the keys come from</b> (env vars) and <b>who can open it</b> (password, network rules).</li>
+    <li><b>PaaS</b> (Azure App Service): you give code, Azure runs it. <b>IaaS</b> (AWS EC2): you get a server and run it yourself.</li>
+  </ul>
+  <div class="tablewrap"><table>
+    <tr><th></th><th>Azure App Service</th><th>AWS EC2</th><th>Also know</th></tr>
+    <tr><td>Deploy</td><td><code>az webapp up</code></td><td>git clone + pip + systemd</td><td>containers: Azure Container Apps, AWS ECS Express Mode</td></tr>
+    <tr><td>You manage</td><td>code + settings</td><td>OS, patches, restarts</td><td>serverless agents: Bedrock AgentCore, Azure AI Foundry Agents</td></tr>
+    <tr><td>Keys</td><td>App settings (→ Key Vault)</td><td><code>/etc/asknova.env</code> (→ Secrets Manager)</td><td>never in git</td></tr>
+    <tr><td>Access</td><td>password + HTTPS by default</td><td>security group: 8501 from My IP</td><td>production: private network + SSO</td></tr>
+  </table></div>
+  <div class="grid2" style="margin-top:14px">
+    <div class="box use"><b>Pick PaaS when</b><ul><li>a normal web app or agent</li><li>small team, no ops people</li><li>you want HTTPS and scaling for free</li></ul></div>
+    <div class="box dont"><b>Pick a VM when</b><ul><li>you need custom software or a GPU (vLLM, Day 1)</li><li>strict network or OS control</li><li>but then you own patching and uptime</li></ul></div>
+  </div>
+  <div class="key">Key line: <b>"Deploy is the start of operations, not the end of the project."</b></div>
+  <div class="lab"><span>Lab: <code>lab5_deploy.md</code> · Part A Azure (40) · Part B AWS (40) · clean up (5)</span>
+    <label><input type="checkbox" data-k="c5"> Cycle 5 done</label></div>
+</section>
+
+<section id="wrap">
+  <span class="tag">7:30 · Wrap-up</span>
+  <h2>The whole week in one picture</h2>
+  <div class="flow"><span>Day 1 Gateway + models</span><i>→</i><span>Day 2 RAG</span><i>→</i><span>Day 3 Memory</span><i>→</i><span>Day 4 Tools + MCP + agent loop</span><i>→</i><span>Day 5 Production</span></div>
+  <h3>Production readiness checklist (tick what AskNova has now)</h3>
+  <ul class="check">
+    <li><label><input type="checkbox" data-k="w1">All model calls go through a gateway or one client (Day 1)</label></li>
+    <li><label><input type="checkbox" data-k="w2">Answers are grounded in company data, with access control (Day 2)</label></li>
+    <li><label><input type="checkbox" data-k="w3">Memory is per user and limited (Day 3)</label></li>
+    <li><label><input type="checkbox" data-k="w4">Tools are allow-listed; write actions need approval; loop limit (Day 4)</label></li>
+    <li><label><input type="checkbox" data-k="w5">Input guard, PII masking, output guard (Lab 1)</label></li>
+    <li><label><input type="checkbox" data-k="w6">Every step is traced (Lab 2)</label></li>
+    <li><label><input type="checkbox" data-k="w7">Eval set with safety cases and a release gate (Lab 3)</label></li>
+    <li><label><input type="checkbox" data-k="w8">Monitoring with alert limits (Lab 3)</label></li>
+    <li><label><input type="checkbox" data-k="w9">Versioned prompts, release record, rollback (Lab 4)</label></li>
+    <li><label><input type="checkbox" data-k="w10">Keys only in env vars / secret store, app behind a password (Lab 5)</label></li>
+    <li><label><input type="checkbox" data-k="w11">Cost known per request and per day (Labs 2-3)</label></li>
+    <li><label><input type="checkbox" data-k="w12">Cloud resources cleaned up (Lab 5)</label></li>
+  </ul>
+  <h3>Defend one decision (5 min)</h3>
+  <p>Pick one and explain it like you would to a Kyndryl architect: <i>LangSmith or Langfuse? App Service or EC2? Which guard layer would you add next? What is your release gate?</i> Write it in <code>submission/notes.md</code>.</p>
+</section>
+</div>
+
+<script>
+(function () {
+  var store = {
+    get: function (k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+    set: function (k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+  };
+  var root = document.documentElement;
+  var saved = store.get("d5-theme");
+  if (saved) root.setAttribute("data-theme", saved);
+  document.getElementById("theme").addEventListener("click", function () {
+    var dark = root.getAttribute("data-theme") === "dark" ||
+      (!root.getAttribute("data-theme") && window.matchMedia("(prefers-color-scheme: dark)").matches);
+    var next = dark ? "light" : "dark";
+    root.setAttribute("data-theme", next);
+    store.set("d5-theme", next);
+  });
+  function paintNav() {
+    document.querySelectorAll("#nav a[data-k]").forEach(function (a) {
+      a.classList.toggle("done", store.get("d5-" + a.getAttribute("data-k")) === "1");
+    });
+  }
+  document.querySelectorAll("input[type=checkbox][data-k]").forEach(function (box) {
+    var k = "d5-" + box.getAttribute("data-k");
+    box.checked = store.get(k) === "1";
+    box.addEventListener("change", function () { store.set(k, box.checked ? "1" : "0"); paintNav(); });
+  });
+  paintNav();
+})();
+</script>
+</body>
+</html>

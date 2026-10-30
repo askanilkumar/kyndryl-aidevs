@@ -1,0 +1,17 @@
+# systemd service for AskNova on an Ubuntu EC2 server (Lab 5, Part B)
+# Install:  sudo cp deploy/asknova.service /etc/systemd/system/ && sudo systemctl daemon-reload && sudo systemctl enable --now asknova
+[Unit]
+Description=AskNova Streamlit app (Day 5)
+After=network.target
+
+[Service]
+User=ubuntu
+WorkingDirectory=/home/ubuntu/asknova
+# Keys live OUTSIDE the git folder, readable only by root
+EnvironmentFile=/etc/asknova.env
+ExecStart=/home/ubuntu/venv/bin/python -m streamlit run app.py --server.port 8501 --server.address 0.0.0.0 --server.headless true
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
